@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit;
 
 import com.sprint.mission.discodeit.config.AppConfig;
+import com.sprint.mission.discodeit.config.DemoData;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
@@ -10,23 +11,51 @@ import com.sprint.mission.discodeit.service.UserService;
 
 import java.util.List;
 
+/*
+    JavaApplication
+
+    - AppConfig
+      • 구현체 생성 및 의존성 주입을 담당하는 설정 클래스.
+      • 구현체가 변경되더라도 AppConfig만 수정하면 되며,
+        JavaApplication은 인터페이스(UserService, ChannelService, MessageService)에만 의존한다.
+        (구현체에 의존하지 않는다.)
+
+    - DemoData (record)
+      • 등록 과정에서 생성된 User, Channel, Message를 한 번에 전달하기 위한 DTO.
+      • 기존에는 지역 변수로만 사용되던 값을 record로 묶어 메서드 간에 안전하게 전달하도록 리팩토링했다.
+ */
+
 public class JavaApplication {
 
 
     public static void main(String[] args) {
 
-        /*
-            - AppConfig를 통해 구현체들을 주입해준다.
-            - 구현체가 바뀌거나 추가되어도 AppConfig의 변경만 필요할 뿐
-            - JavaApplication의 코드는 변경하지 않아도 되고, && 구현체에 의존하지 않아도 된다.
-         */
         AppConfig config = new AppConfig();
 
         UserService userService = config.getUserService();
         ChannelService channelService = config.getChannelService();
         MessageService messageService = config.getMessageService();
 
+        // 등록 데모 실행 -> 결과(User/Channel/Message)를 DemoData로 받기
+        DemoData demoData = runCreateDemo(userService, channelService, messageService);
 
+        // 조회
+        runReadDemo(userService, channelService, messageService, demoData);
+
+        // 수정
+        runUpdateDemo(userService, channelService, messageService, demoData);
+
+        // 삭제
+        runDeleteDemo(userService, channelService, messageService, demoData);
+
+    }
+
+
+
+    // 등록 메서드
+    private static DemoData runCreateDemo(UserService userService,
+                                          ChannelService channelService,
+                                          MessageService messageService) {
 
         System.out.println("--------------- 등록 시작 ---------------");
 
@@ -44,9 +73,18 @@ public class JavaApplication {
 
         System.out.println("--------------- 등록 종료 ---------------\n");
 
+        return new DemoData(user, channel, message);
+    }
+
+    // 조회 메서드
+    private static void runReadDemo(UserService userService,
+                                    ChannelService channelService,
+                                    MessageService messageService,
+                                    DemoData demoData) {
+
         System.out.println("--------------- 조회 시작 ---------------");
 
-        User findUser = userService.findUser(user.getId());
+        User findUser = userService.findUser(demoData.user().getId());
         System.out.printf("단건 조회로 조회 된 유저의 이름은 \"%s\", 성별은 \"%s\", 나이는 \"%d\" 입니다.\n", findUser.getName(), findUser.getGender(), findUser.getAge());
         System.out.println();
 
@@ -70,7 +108,7 @@ public class JavaApplication {
         womanList.forEach(System.out::println);
         System.out.println();
 
-        Channel findChannel = channelService.findChannel(channel.getId());
+        Channel findChannel = channelService.findChannel(demoData.channel().getId());
         System.out.printf("단건 조회로 조회 된 채널의 이름은 \"%s\", 채널 설명은 \"%s\" 입니다.\n", findChannel.getName(), findChannel.getDescription());
         System.out.println();
 
@@ -79,7 +117,7 @@ public class JavaApplication {
         allChannels.forEach(System.out::println);
         System.out.println();
 
-        Message findMessage = messageService.findMessage(message.getId());
+        Message findMessage = messageService.findMessage(demoData.message().getId());
         System.out.printf("단건 조회로 조회 된 메시지의 내용은 \"%s\" 입니다.\n", findMessage.getContents());
         System.out.println();
 
@@ -89,26 +127,40 @@ public class JavaApplication {
         System.out.println();
 
         System.out.println("--------------- 조회 종료 ---------------\n");
+    }
+
+    // 수정 메서드
+    private static void runUpdateDemo(UserService userService,
+                                      ChannelService channelService,
+                                      MessageService messageService,
+                                      DemoData demoData) {
 
         System.out.println("--------------- 수정 시작 ---------------");
 
-        User updateUser = userService.update(findUser.getId(), new User("김희영", "여", 40));
+        User updateUser = userService.update(demoData.user().getId(), new User("김희영", "여", 40));
         System.out.printf("수정 된 유저의 이름은 \"%s\", 성별은 \"%s\", 나이는 \"%d\" 입니다.\n", updateUser.getName(), updateUser.getGender(), updateUser.getAge());
 
-        Channel updateChannel = channelService.updateChannel(findChannel.getId(), "새로운 채널", "새로운 채널 이기에 많은 관심 부탁드립니다.");
+        Channel updateChannel = channelService.updateChannel(demoData.channel().getId(), "새로운 채널", "새로운 채널 이기에 많은 관심 부탁드립니다.");
         System.out.printf("수정 된 채널의 이름은 \"%s\", 설명은 \"%s\" 입니다.\n", updateChannel.getName(), updateChannel.getDescription());
 
-        Message updateMessage = messageService.updateMessage(message.getId(), "수정 된 메시지");
+        Message updateMessage = messageService.updateMessage(demoData.message().getId(), "수정 된 메시지");
         System.out.printf("수정 된 메시지는 \"%s\" 입니다.\n", updateMessage.getContents());
         System.out.println("--------------- 수정 종료 ---------------\n");
 
+    }
+
+    // 삭제 메서드
+    private static void runDeleteDemo(UserService userService,
+                                      ChannelService channelService,
+                                      MessageService messageService,
+                                      DemoData demoData) {
 
         System.out.println("--------------- 삭제 및 삭제 후 조회 시작 ---------------");
 
         System.out.println("- 유저 삭제 전 데이터 -");
         List<User> userList2 = userService.findAll();
         userList2.forEach(System.out::println);
-        userService.delete(user.getId());
+        userService.delete(demoData.user().getId());
         System.out.println();
 
         System.out.println("- 유저 삭제 후 데이터 - ");
@@ -119,7 +171,7 @@ public class JavaApplication {
         System.out.println("- 채널 삭제 전 데이터 -");
         List<Channel> allChannels2 = channelService.findAllChannels();
         allChannels2.forEach(System.out::println);
-        channelService.deleteChannel(channel.getId());
+        channelService.deleteChannel(demoData.channel().getId());
         System.out.println();
 
         System.out.println("- 채널 삭제 후 데이터 -");
@@ -130,7 +182,7 @@ public class JavaApplication {
         System.out.println("- 메시지 삭제 전 데이터 -");
         List<Message> allMessages2 = messageService.findAllMessages();
         allMessages2.forEach(System.out::println);
-        messageService.deleteMessage(message.getId());
+        messageService.deleteMessage(demoData.message().getId());
         System.out.println();
 
         System.out.println("- 메시지 삭제 후 데이터 -");
@@ -138,9 +190,8 @@ public class JavaApplication {
         allMessages3.forEach(System.out::println);
         System.out.println();
 
-
-
         System.out.println("--------------- 삭제 및 삭제 후 조회 종료 ---------------\n");
+
     }
 
     // 등록 완료 출력 메서드
@@ -163,4 +214,5 @@ public class JavaApplication {
                 break;
         }
     }
+
 }
