@@ -11,6 +11,12 @@ public class JCFUserService implements UserService {
 
     private final Map<UUID, User> data = new HashMap<>();
 
+
+    // Dummy data 초기화
+    public JCFUserService() {
+        DummyData.DEFAULT_USERS.forEach(u -> data.put(u.getId(), u));
+    }
+
     // 유저 생성
     @Override
     public User create(String name, String gender, Integer age) {

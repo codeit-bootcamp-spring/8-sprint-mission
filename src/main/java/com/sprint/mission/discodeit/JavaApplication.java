@@ -1,41 +1,45 @@
 package com.sprint.mission.discodeit;
 
+import com.sprint.mission.discodeit.config.AppConfig;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.service.jcf.JCFChannelService;
-import com.sprint.mission.discodeit.service.jcf.JCFMessageService;
-import com.sprint.mission.discodeit.service.jcf.JCFUserService;
 
 import java.util.List;
 
 public class JavaApplication {
 
+
     public static void main(String[] args) {
 
-        // 서비스 구현체 생성
-        UserService userService = new JCFUserService();
-        ChannelService channelService = new JCFChannelService();
-        MessageService messageService = new JCFMessageService(userService, channelService);
+        /*
+            - AppConfig를 통해 구현체들을 주입해준다.
+            - 구현체가 바뀌거나 추가되어도 AppConfig의 변경만 필요할 뿐
+            - JavaApplication의 코드는 변경하지 않아도 되고, && 구현체에 의존하지 않아도 된다.
+         */
+        AppConfig config = new AppConfig();
+
+        UserService userService = config.getUserService();
+        ChannelService channelService = config.getChannelService();
+        MessageService messageService = config.getMessageService();
+
+
 
         System.out.println("--------------- 등록 시작 ---------------");
 
         // 유저 등록
         User user = userService.create("최준영", "남", 30);
-        userService.create("최준영10대", "남", 10);
-        userService.create("최준영20대", "남", 20);
-        userService.create("최준영30대", "남", 30);
         createOutput("user", user.getName());
 
         // 채널 등록
-        Channel channel = channelService.createChannel("메인 채널", "처음 생성 된 해당 서비스의 메인 채널입니다.");
+        Channel channel = channelService.createChannel("새로 등록 된 채널", "새로 생성 된 채널입니다.");
         createOutput("channel", channel.getName());
 
         // 메시지 등록
-        Message message = messageService.createMessage(user.getId(), channel.getId(), "첫번째 메시지 입니다.");
+        Message message = messageService.createMessage(user.getId(), channel.getId(), "새로 추가 된 메시지 입니다.");
         createOutput("message", message.getContents());
 
         System.out.println("--------------- 등록 종료 ---------------\n");

@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.service.jcf;
 
+import com.sprint.mission.discodeit.dummy.DummyData;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
@@ -20,9 +21,11 @@ public class JCFMessageService implements MessageService {
     private final ChannelService channelService;
 
 
+    // 생성자 초기화 (유저 service, 채널 Service 및 Dummy data)
     public JCFMessageService(UserService userService, ChannelService channelService) {
         this.userService = userService;
         this.channelService = channelService;
+        DummyData.DEFAULT_MESSAGES.forEach(message -> data.put(message.getId(), message));
     }
 
     @Override
