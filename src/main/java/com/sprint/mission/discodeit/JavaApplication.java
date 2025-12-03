@@ -84,7 +84,7 @@ public class JavaApplication {
                                     MessageService messageService,
                                     DemoData demoData) {
 
-        System.out.println("--------------- 조회 시작 ---------------");
+        printSectionTitle("조회 시작");
 
         User findUser = userService.findUser(demoData.user().getId());
         System.out.printf("단건 조회로 조회 된 유저의 이름은 \"%s\", 성별은 \"%s\", 나이는 \"%d\" 입니다.\n", findUser.getName(), findUser.getGender(), findUser.getAge());
@@ -128,7 +128,7 @@ public class JavaApplication {
         allMessages.forEach(System.out::println);
         System.out.println();
 
-        System.out.println("--------------- 조회 종료 ---------------\n");
+        printSectionTitle("조회 종료");
     }
 
     // 수정 메서드
@@ -137,7 +137,7 @@ public class JavaApplication {
                                       MessageService messageService,
                                       DemoData demoData) {
 
-        System.out.println("--------------- 수정 시작 ---------------");
+        printSectionTitle("수정 시작");
 
         User updateUser = userService.update(demoData.user().getId(), new User("김희영", "여", 40));
         System.out.printf("수정 된 유저의 이름은 \"%s\", 성별은 \"%s\", 나이는 \"%d\" 입니다.\n", updateUser.getName(), updateUser.getGender(), updateUser.getAge());
@@ -147,7 +147,9 @@ public class JavaApplication {
 
         Message updateMessage = messageService.updateMessage(demoData.message().getId(), "수정 된 메시지");
         System.out.printf("수정 된 메시지는 \"%s\" 입니다.\n", updateMessage.getContents());
-        System.out.println("--------------- 수정 종료 ---------------\n");
+
+        printSectionTitle("수정 종료");
+
 
     }
 
@@ -157,7 +159,8 @@ public class JavaApplication {
                                       MessageService messageService,
                                       DemoData demoData) {
 
-        System.out.println("--------------- 삭제 및 삭제 후 조회 시작 ---------------");
+        printSectionTitle("삭제 및 삭제 후 조회 시작");
+
 
         System.out.println("- 유저 삭제 전 데이터 -");
         List<User> userList2 = userService.findAll();
@@ -192,29 +195,15 @@ public class JavaApplication {
         allMessages3.forEach(System.out::println);
         System.out.println();
 
-        System.out.println("--------------- 삭제 및 삭제 후 조회 종료 ---------------\n");
+        printSectionTitle("삭제 및 삭제 후 조회 종료");
 
     }
 
-    // 등록 완료 출력 메서드
-    public static void createOutput(String entityName, String name) {
-        switch (entityName) {
-            case "user":
-                System.out.printf("- 유저 \"%s\"이 등록 되었습니다.\n", name);
-                break;
-
-            case "channel":
-                System.out.printf("- 채널 \"%s\"이 등록 되었습니다.\n", name);
-                break;
-
-            case "message":
-                System.out.printf("- 메시지 \"%s\" 등록 되었습니다.\n", name);
-                break;
-
-            default:
-                System.out.println("해당 엔티티가 존재 하지 않습니다.");
-                break;
-        }
+    private static void printSectionTitle(String title) {
+        System.out.println("\n" +
+                "====================================================\n" +
+                "  🔹 " + title + "\n" +
+                "====================================================\n");
     }
 
 }

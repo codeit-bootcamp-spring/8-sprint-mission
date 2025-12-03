@@ -27,9 +27,9 @@ public class AppConfig {
     private final MessageRepository messageRepository;
 
     // FILE 기반 사용
-//    private static final StorageMode MODE = StorageMode.FILE;
+    private static final StorageMode MODE = StorageMode.FILE;
     // JCF 기반 사용
-    private static final StorageMode MODE = StorageMode.JCF;
+//    private static final StorageMode MODE = StorageMode.JCF;
 
     public AppConfig() {
 
