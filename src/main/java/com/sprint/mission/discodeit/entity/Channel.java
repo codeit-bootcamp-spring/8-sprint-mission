@@ -12,7 +12,13 @@ package com.sprint.mission.discodeit.entity;
     • update(String name, String description)    : 채널 이름과 채널 설명 갱신하고, updateCall()로 updatedAt 수정.
  */
 
-public class Channel extends BaseEntity {
+import java.io.Serial;
+import java.io.Serializable;
+
+public class Channel extends BaseEntity implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     // 채널 이름
     private String name;

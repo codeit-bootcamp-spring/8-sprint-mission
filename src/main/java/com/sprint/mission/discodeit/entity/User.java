@@ -13,8 +13,13 @@ package com.sprint.mission.discodeit.entity;
     • update(User user)    : User 객체의 값을 현재 객체에 반영 및 updateCall()로 updatedAt 수정.
  */
 
-public class User extends BaseEntity{
+import java.io.Serial;
+import java.io.Serializable;
 
+public class User extends BaseEntity implements Serializable{
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     // User 이름 (수정 O)
     private String name;

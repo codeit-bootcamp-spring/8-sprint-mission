@@ -1,6 +1,8 @@
 package com.sprint.mission.discodeit.entity;
 
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.UUID;
 
 /*
@@ -16,7 +18,10 @@ import java.util.UUID;
     • update(String contents)    : 메시지 내용을 갱신하고, updateCall()로 updatedAt 수정.
  */
 
-public class Message extends BaseEntity{
+public class Message extends BaseEntity implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     // user 아이디 -> 유저가 있어야 메시지를 작성할 수 있다.
     private final UUID userId;

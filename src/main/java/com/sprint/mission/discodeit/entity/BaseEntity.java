@@ -1,5 +1,7 @@
 package com.sprint.mission.discodeit.entity;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.UUID;
 
 
@@ -15,7 +17,10 @@ import java.util.UUID;
     [메서드]
     • updateCall()    : 수정 시 호출하여 updatedAt 값을 현재 시각으로 갱신.
  */
-public class BaseEntity {
+public class BaseEntity implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     private final UUID id;
     private final Long createdAt; // 유닉스 타임스탬프
