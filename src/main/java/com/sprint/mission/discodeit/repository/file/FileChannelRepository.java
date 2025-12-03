@@ -66,10 +66,10 @@ public class FileChannelRepository implements ChannelRepository {
 
     private File getDataFile() {
 
-        File dir = new File(DATA_FILE + File.separator + CHANNEL_DIR);
+        File dir = new File(DATA_DIR + File.separator + CHANNEL_DIR);
 
         if (!dir.exists()) {
-            dir.mkdir();  // data/channel 디렉터리 없으면 생성
+            dir.mkdirs();  // data/channel 디렉터리 없으면 생성
         }
 
         return new File(DATA_FILE);

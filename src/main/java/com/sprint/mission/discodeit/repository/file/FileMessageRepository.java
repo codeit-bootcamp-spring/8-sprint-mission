@@ -69,7 +69,7 @@ public class FileMessageRepository implements MessageRepository {
         File dir = new File(DATA_DIR + File.separator + MESSAGE_DIR);
 
         if (!dir.exists()) {
-            dir.mkdir(); // data/message 디렉터리 없으면 생성
+            dir.mkdirs(); // data/message 디렉터리 없으면 생성
         }
 
         return new File(DATA_FILE);
@@ -96,7 +96,7 @@ public class FileMessageRepository implements MessageRepository {
         File file = getDataFile();
 
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
-
+            oos.writeObject(messages);
         } catch (Exception e) {
             throw new RuntimeException("파일 저장 실패", e);
         }

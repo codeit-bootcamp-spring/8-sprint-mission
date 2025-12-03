@@ -32,18 +32,11 @@ public class FileMessageService implements MessageService {
     @Override
     public Message createMessage(UUID userId, UUID channelId, String contents) {
 
-        // 유저가 존재하나?
+        // 유저/채널 검증
         User user = userService.findUser(userId);
-
-        if (user == null) {
-            throw new IllegalArgumentException("존재하지 않는 유저입니다. userId = " + userId);
-        }
-
-        // 채널이 존재하나?
         Channel channel = channelService.findChannel(channelId);
-
-        if (channel == null) {
-            throw new IllegalArgumentException("존재하지 않는 채널입니다. channelId = " + channelId);
+        if (user == null || channel == null) {
+            throw new IllegalArgumentException("유효하지 않은 유저/채널입니다.");
         }
 
         // 검증 완료

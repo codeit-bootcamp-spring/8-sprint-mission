@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit;
 
 import com.sprint.mission.discodeit.config.AppConfig;
 import com.sprint.mission.discodeit.config.DemoData;
+import com.sprint.mission.discodeit.dummy.DummyData;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
@@ -28,16 +29,41 @@ import java.util.List;
 public class JavaApplication {
 
 
+    static User setupUser(UserService userService) {
+        User user = userService.create("최준영", "남", 30);
+        return user;
+    }
+
+    static Channel setupChannel(ChannelService channelService) {
+
+        Channel channel = channelService.createChannel("새로 등록 된 채널", "새로 생성 된 채널입니다.");
+        return channel;
+    }
+
+    static Message messageCreateTest(MessageService messageService, Channel channel, User author) {
+
+        Message message = messageService.createMessage(author.getId(), channel.getId(), "추가 메시지 입니다." ) ;
+        System.out.println("메시지 생성: " + message.getId() + " " + message.getContents());
+
+        return message;
+    }
+
+
     public static void main(String[] args) {
 
         AppConfig config = new AppConfig();
 
+        // 저장 방식 (JCF / FILE)은 config 에서만 변경 해준다.
         UserService userService = config.getUserService();
         ChannelService channelService = config.getChannelService();
         MessageService messageService = config.getMessageService();
 
-        // 등록 데모 실행 -> 결과(User/Channel/Message)를 DemoData로 받기
-        DemoData demoData = runCreateDemo(userService, channelService, messageService);
+        User user = setupUser(userService);
+        Channel channel = setupChannel(channelService);
+        Message message = messageCreateTest(messageService, channel, user);
+
+        // 생성한 User/Channel/Message를 DemoData로 묶기
+        DemoData demoData = new DemoData(user, channel, message);
 
         // 조회
         runReadDemo(userService, channelService, messageService, demoData);
@@ -48,32 +74,8 @@ public class JavaApplication {
         // 삭제
         runDeleteDemo(userService, channelService, messageService, demoData);
 
-    }
+        System.out.println("=== JavaApplication 실행 완료 ===");
 
-
-
-    // 등록 메서드
-    private static DemoData runCreateDemo(UserService userService,
-                                          ChannelService channelService,
-                                          MessageService messageService) {
-
-        System.out.println("--------------- 등록 시작 ---------------");
-
-        // 유저 등록
-        User user = userService.create("최준영", "남", 30);
-        createOutput("user", user.getName());
-
-        // 채널 등록
-        Channel channel = channelService.createChannel("새로 등록 된 채널", "새로 생성 된 채널입니다.");
-        createOutput("channel", channel.getName());
-
-        // 메시지 등록
-        Message message = messageService.createMessage(user.getId(), channel.getId(), "새로 추가 된 메시지 입니다.");
-        createOutput("message", message.getContents());
-
-        System.out.println("--------------- 등록 종료 ---------------\n");
-
-        return new DemoData(user, channel, message);
     }
 
     // 조회 메서드
@@ -140,7 +142,7 @@ public class JavaApplication {
         User updateUser = userService.update(demoData.user().getId(), new User("김희영", "여", 40));
         System.out.printf("수정 된 유저의 이름은 \"%s\", 성별은 \"%s\", 나이는 \"%d\" 입니다.\n", updateUser.getName(), updateUser.getGender(), updateUser.getAge());
 
-        Channel updateChannel = channelService.updateChannel(demoData.channel().getId(), "새로운 채널", "새로운 채널 이기에 많은 관심 부탁드립니다.");
+        Channel updateChannel = channelService.updateChannel(demoData.channel().getId(), "수정 채널", "새롭게 수정된 채널 이기에 많은 관심 부탁드립니다.");
         System.out.printf("수정 된 채널의 이름은 \"%s\", 설명은 \"%s\" 입니다.\n", updateChannel.getName(), updateChannel.getDescription());
 
         Message updateMessage = messageService.updateMessage(demoData.message().getId(), "수정 된 메시지");
