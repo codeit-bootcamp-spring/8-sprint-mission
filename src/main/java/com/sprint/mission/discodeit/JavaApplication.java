@@ -1,3 +1,6 @@
+//pr 테스트 찐찐찐막
+
+
 package com.sprint.mission.discodeit;
 
 import com.sprint.mission.discodeit.entity.Channel;
