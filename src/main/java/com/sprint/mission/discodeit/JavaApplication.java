@@ -21,7 +21,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.NoSuchElementException;
 
-// PR 재시도를 위한 더미 커밋
+
 public class JavaApplication {
 
     /**
