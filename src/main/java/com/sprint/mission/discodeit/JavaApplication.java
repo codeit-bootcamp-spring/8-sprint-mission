@@ -1,3 +1,5 @@
+//pr 테스트 찌이ㅣㅣㅣㅣㅣㅣㅣㅣㄴ막
+
 package com.sprint.mission.discodeit;
 
 import com.sprint.mission.discodeit.entity.Channel;
