@@ -21,7 +21,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.NoSuchElementException;
 
-//PR 한줄 넣고 테스트
+
 public class JavaApplication {
 
     /**
