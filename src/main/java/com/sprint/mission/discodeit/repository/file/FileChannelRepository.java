@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 public class FileChannelRepository implements ChannelRepository {
 
     private static FileChannelRepository INSTANCE;
-    private static final String FILE_PATH = "repo_channels.dat";
+    private static final String FILE_PATH = "data/channel.json";
 
     private FileChannelRepository() {}
 

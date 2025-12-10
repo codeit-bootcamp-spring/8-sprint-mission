@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 public class FileMessageRepository implements MessageRepository {
 
     private static FileMessageRepository INSTANCE;
-    private static final String FILE_PATH = "repo_messages.dat";
+    private static final String FILE_PATH = "data/message.json";
 
     private FileMessageRepository() {}
 

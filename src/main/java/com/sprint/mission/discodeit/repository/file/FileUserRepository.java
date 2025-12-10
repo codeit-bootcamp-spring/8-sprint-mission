@@ -9,7 +9,8 @@ import java.util.stream.Collectors;
 public class FileUserRepository implements UserRepository {
 
     private static FileUserRepository INSTANCE;
-    private static final String FILE_PATH = "repo_users.dat";
+    // [수정 후] data/ 폴더 안의 user.json을 바라보도록 경로를 수정합니다.
+    private static final String FILE_PATH = "data/user.json";
 
     private FileUserRepository() {}
 

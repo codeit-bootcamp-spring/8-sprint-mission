@@ -41,3 +41,9 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### 멘토님 피드백 .idea 추가
+.idea
+
+# File Repository에서 생성되는 데이터 저장 폴더 무시
+data/
