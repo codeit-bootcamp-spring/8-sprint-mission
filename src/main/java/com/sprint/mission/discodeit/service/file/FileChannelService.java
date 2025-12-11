@@ -1,85 +1,72 @@
-package com.sprint.mission.discodeit.service.file;
+package com.sprint.mission.discodeit.service.file; // 패키지명은 프로젝트 구조에 따라 다를 수 있습니다.
 
 import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.repository.ChannelRepository; // Repository import
+import com.sprint.mission.discodeit.repository.file.FileChannelRepository; // 기본 초기화용 import
 import com.sprint.mission.discodeit.service.ChannelService;
-import java.io.*;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.sprint.mission.discodeit.util.ValidationUtil;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public class FileChannelService implements ChannelService {
 
-    private static FileChannelService INSTANCE;
-    private static final String FILE_PATH = "channels.dat";
+    // 1. Repository 필드 선언 (의존성 주입 대상)
+    private final ChannelRepository channelRepository;
 
-    private FileChannelService() {
-        // 싱글톤 패턴
+    // 2. Repository를 주입받는 생성자 (DI)
+    public FileChannelService(ChannelRepository channelRepository) {
+        this.channelRepository = channelRepository;
     }
 
-    public static FileChannelService getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new FileChannelService();
-        }
-        return INSTANCE;
+    // 3. (선택적) DI를 사용하지 않을 경우를 위한 기본 생성자
+    public FileChannelService() {
+        this.channelRepository = FileChannelRepository.getInstance();
     }
 
-    // --- 파일 IO 유틸리티 (역직렬화) ---
-    private Map<UUID, Channel> readAll() {
-        File file = new File(FILE_PATH);
-        if (!file.exists() || file.length() == 0) {
-            return new HashMap<>();
-        }
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-            return (Map<UUID, Channel>) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Channel 데이터 역직렬화 오류: " + e.getMessage());
-            return new HashMap<>();
-        }
-    }
-
-    // --- 파일 IO 유틸리티 (직렬화) ---
-    private void writeAll(Map<UUID, Channel> data) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_PATH))) {
-            oos.writeObject(data);
-        } catch (IOException e) {
-            System.err.println("Channel 데이터 직렬화 오류: " + e.getMessage());
-        }
-    }
-
-    // --- ChannelService 인터페이스 구현 (CRUD) ---
+    // --- Service 인터페이스 구현 (update 메서드 추가) ---
 
     @Override
-    public Channel save(Channel channel) {
-        Map<UUID, Channel> data = readAll();
-        data.put(channel.getId(), channel);
-        writeAll(data);
-        return channel;
+    public Channel create(String name, UUID ownerId) {
+        // 1. 유효성 검사
+        ValidationUtil.validateNotNullOrEmpty(name, "채널 이름");
+        if (ownerId == null) {
+            throw new IllegalArgumentException("소유자 ID는 필수입니다.");
+        }
+
+        // 2. Entity 객체 생성
+        Channel newChannel = new Channel(name, ownerId);
+
+        // 3. Repository에 저장 요청
+        return channelRepository.save(newChannel);
     }
 
     @Override
-    public Optional<Channel> findById(UUID id) {
-        return Optional.ofNullable(readAll().get(id));
-    }
-
-    @Override
-    public List<Channel> findAll() {
-        return readAll().values().stream().collect(Collectors.toList());
-    }
-
-    @Override
-    public Channel update(Channel channel) {
-        Map<UUID, Channel> data = readAll();
-        if (data.containsKey(channel.getId())) {
-            data.put(channel.getId(), channel);
-            writeAll(data);
-            return channel;
+    public Channel update(UUID channelId, String newName, UUID newOwnerId) {
+        //  1. 유효성 검사 (Service 책임)
+        ValidationUtil.validateNotNullOrEmpty(newName, "새 채널 이름");
+        if (newOwnerId == null) {
+            throw new IllegalArgumentException("새 소유자 ID는 필수입니다.");
         }
-        throw new NoSuchElementException("수정할 Channel ID가 존재하지 않습니다: " + channel.getId());
+
+        // 2. 대상 Entity를 Repository에서 조회
+        Channel channelToUpdate = channelRepository.findById(channelId)
+                .orElseThrow(() -> new IllegalArgumentException("수정할 채널을 찾을 수 없습니다: " + channelId));
+
+        // 3. Entity의 상태 변경 메서드 호출 (Channel.java에 update 메서드가 있어야 함)
+        channelToUpdate.update(newName, newOwnerId);
+
+        // 4. Repository에 수정된 Entity 저장
+        return channelRepository.save(channelToUpdate);
     }
 
+    // 나머지 findById, findAll, delete 메서드는 channelRepository를 호출하도록 유지
     @Override
-    public void delete(UUID id) {
-        Map<UUID, Channel> data = readAll();
-        data.remove(id);
-        writeAll(data);
-    }
+    public Optional<Channel> findById(UUID id) { return channelRepository.findById(id); }
+
+    @Override
+    public List<Channel> findAll() { return channelRepository.findAll(); }
+
+    @Override
+    public void delete(UUID id) { channelRepository.delete(id); }
 }

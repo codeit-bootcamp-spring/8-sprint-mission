@@ -1,8 +1,8 @@
 package com.sprint.mission.discodeit.service.impl;
 
 import com.sprint.mission.discodeit.entity.Channel;
-import com.sprint.mission.discodeit.repository.ChannelRepository;
-import com.sprint.mission.discodeit.repository.file.FileChannelRepository;
+import com.sprint.mission.discodeit.repository.ChannelRepository; //  Repository import
+import com.sprint.mission.discodeit.repository.file.FileChannelRepository; // DI가 아닐 때를 대비한 import
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.util.ValidationUtil;
 import java.util.List;
@@ -11,17 +11,30 @@ import java.util.UUID;
 
 public class ChannelServiceImpl implements ChannelService {
 
-    private final ChannelRepository channelRepository = FileChannelRepository.getInstance();
+    // 1. Repository 필드 선언
+    private final ChannelRepository channelRepository;
+
+    //  2. Repository를 주입받는 생성자 (DI의 핵심)
+    public ChannelServiceImpl(ChannelRepository channelRepository) {
+        this.channelRepository = channelRepository;
+    }
+
+    // 3. (선택적) DI를 사용하지 않을 경우를 위한 기본 생성자 유지
+    public ChannelServiceImpl() {
+        this.channelRepository = FileChannelRepository.getInstance();
+    }
+
+    // --- Service 인터페이스 구현 ---
 
     @Override
     public Channel create(String name, UUID ownerId) {
-        //  1. 유효성 검사
+        // 1. 유효성 검사
         ValidationUtil.validateNotNullOrEmpty(name, "채널 이름");
         if (ownerId == null) {
             throw new IllegalArgumentException("소유자 ID는 필수입니다.");
         }
 
-        //  2. Entity 객체 생성
+        // 2. Entity 객체 생성
         Channel newChannel = new Channel(name, ownerId);
 
         // 3. Repository에 저장 요청
@@ -40,14 +53,14 @@ public class ChannelServiceImpl implements ChannelService {
         Channel channelToUpdate = channelRepository.findById(channelId)
                 .orElseThrow(() -> new IllegalArgumentException("수정할 채널을 찾을 수 없습니다: " + channelId));
 
-        // ✨ 3. Entity의 상태 변경 메서드 호출
+        // 3. Entity의 상태 변경 메서드 호출
         channelToUpdate.update(newName, newOwnerId);
 
         // 4. Repository에 수정된 Entity 저장
         return channelRepository.save(channelToUpdate);
     }
 
-    // 나머지 조회 및 삭제 메서드는 변경 없이 유지
+    // 나머지 findById, findAll, delete 메서드는 channelRepository를 호출하도록 유지
     @Override
     public Optional<Channel> findById(UUID id) { return channelRepository.findById(id); }
 

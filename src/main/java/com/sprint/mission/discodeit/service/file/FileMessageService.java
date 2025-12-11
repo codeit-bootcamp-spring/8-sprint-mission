@@ -1,87 +1,90 @@
-package com.sprint.mission.discodeit.service.file;
+package com.sprint.mission.discodeit.service.file; // 패키지명은 프로젝트 구조에 따라 다를 수 있습니다.
 
 import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.repository.MessageRepository; // MessageRepository import
+import com.sprint.mission.discodeit.repository.ChannelRepository; // MessageService DI에 필요
+import com.sprint.mission.discodeit.repository.UserRepository;     // MessageService DI에 필요
+import com.sprint.mission.discodeit.repository.file.FileMessageRepository; // 기본 초기화용 import
 import com.sprint.mission.discodeit.service.MessageService;
-import java.io.*;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.sprint.mission.discodeit.util.ValidationUtil;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.UUID;
 
 public class FileMessageService implements MessageService {
 
-    private static FileMessageService INSTANCE;
-    private static final String FILE_PATH = "messages.dat";
+    // 1. Repository 필드 선언 (3가지 Repository 모두 DI 받음)
+    private final MessageRepository messageRepository;
+    private final ChannelRepository channelRepository;
+    private final UserRepository userRepository;
 
-    private FileMessageService() {
-        // 싱글톤 패턴
+    // 2. Repository를 주입받는 생성자 (DI)
+    public FileMessageService(
+            MessageRepository messageRepository,
+            ChannelRepository channelRepository,
+            UserRepository userRepository
+    ) {
+        this.messageRepository = messageRepository;
+        this.channelRepository = channelRepository;
+        this.userRepository = userRepository;
     }
 
-    public static FileMessageService getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new FileMessageService();
-        }
-        return INSTANCE;
+    // 3. (선택적) DI를 사용하지 않을 경우를 위한 기본 생성자
+    public FileMessageService() {
+        // 실제 구현체를 직접 인스턴스화
+        this.messageRepository = FileMessageRepository.getInstance();
+        // Channel/User Repository도 파일 구현체로 초기화 필요
+        this.channelRepository = com.sprint.mission.discodeit.repository.file.FileChannelRepository.getInstance();
+        this.userRepository = com.sprint.mission.discodeit.repository.file.FileUserRepository.getInstance();
     }
 
-    // --- 파일 IO 유틸리티 (역직렬화) ---
-    private Map<UUID, Message> readAll() {
-        File file = new File(FILE_PATH);
-        if (!file.exists() || file.length() == 0) {
-            return new HashMap<>();
-        }
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-            return (Map<UUID, Message>) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Message 데이터 역직렬화 오류: " + e.getMessage());
-            return new HashMap<>();
-        }
-    }
-
-    // --- 파일 IO 유틸리티 (직렬화) ---
-    private void writeAll(Map<UUID, Message> data) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_PATH))) {
-            oos.writeObject(data);
-        } catch (IOException e) {
-            System.err.println("Message 데이터 직렬화 오류: " + e.getMessage());
-        }
-    }
-
-    // --- MessageService 인터페이스 구현 (CRUD) ---
+    // --- Service 인터페이스 구현 (update 메서드 추가) ---
 
     @Override
-    public Message save(Message message) {
-        Map<UUID, Message> data = readAll();
-        // **주의**: 현재 단계에서는 JCFService에 있던 User/Channel 검증 로직을 제외하고 순수 저장 로직만 구현합니다.
-        // 해당 비즈니스 로직은 다음 단계에서 BasicMessageService로 분리될 예정입니다.
-        data.put(message.getId(), message);
-        writeAll(data);
-        return message;
-    }
+    public Message create(UUID senderId, UUID channelId, String content) {
+        // 1. 유효성 검사
+        if (senderId == null || channelId == null) {
+            throw new IllegalArgumentException("발신자 ID와 채널 ID는 필수입니다.");
+        }
+        ValidationUtil.validateNotNullOrEmpty(content, "메시지 내용");
 
-    @Override
-    public Optional<Message> findById(UUID id) {
-        return Optional.ofNullable(readAll().get(id));
+        // 2. 참조 무결성 검사 (Repository를 통해 확인)
+        if (userRepository.findById(senderId).isEmpty()) {
+            throw new NoSuchElementException("발신자 (User) ID " + senderId + "를 찾을 수 없습니다.");
+        }
+        if (channelRepository.findById(channelId).isEmpty()) {
+            throw new NoSuchElementException("채널 (Channel) ID " + channelId + "를 찾을 수 없습니다.");
+        }
+
+        // 3. Entity 객체 생성 및 저장
+        Message newMessage = new Message(senderId, channelId, content);
+        return messageRepository.save(newMessage);
     }
 
     @Override
-    public List<Message> findAll() {
-        return readAll().values().stream().collect(Collectors.toList());
+    public Message update(UUID messageId, String newContent) {
+        //  1. 유효성 검사
+        ValidationUtil.validateNotNullOrEmpty(newContent, "새 메시지 내용");
+
+        // 2. 대상 Entity를 Repository에서 조회
+        Message messageToUpdate = messageRepository.findById(messageId)
+                .orElseThrow(() -> new IllegalArgumentException("수정할 메시지를 찾을 수 없습니다: " + messageId));
+
+        // 3. Entity의 상태 변경 메서드 호출
+        messageToUpdate.update(newContent);
+
+        // 4. Repository에 수정된 Entity 저장
+        return messageRepository.save(messageToUpdate);
     }
 
+    // 나머지 findById, findAll, delete 메서드는 messageRepository를 호출하도록 유지
     @Override
-    public Message update(Message message) {
-        Map<UUID, Message> data = readAll();
-        if (data.containsKey(message.getId())) {
-            data.put(message.getId(), message);
-            writeAll(data);
-            return message;
-        }
-        throw new NoSuchElementException("수정할 Message ID가 존재하지 않습니다: " + message.getId());
-    }
+    public Optional<Message> findById(UUID id) { return messageRepository.findById(id); }
 
     @Override
-    public void delete(UUID id) {
-        Map<UUID, Message> data = readAll();
-        data.remove(id);
-        writeAll(data);
-    }
+    public List<Message> findAll() { return messageRepository.findAll(); }
+
+    @Override
+    public void delete(UUID id) { messageRepository.delete(id); }
 }

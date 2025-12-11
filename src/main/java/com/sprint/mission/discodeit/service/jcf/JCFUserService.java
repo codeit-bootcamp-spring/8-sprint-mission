@@ -1,66 +1,77 @@
-package com.sprint.mission.discodeit.service.jcf;
+package com.sprint.mission.discodeit.service.jcf; // 패키지명은 프로젝트 구조에 따라 다를 수 있습니다.
 
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.service.UserService;
-import java.util.*;
+import com.sprint.mission.discodeit.util.ValidationUtil;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.NoSuchElementException; // 예외 처리용 import
 
+// UserService 인터페이스 구현
 public class JCFUserService implements UserService {
 
-    // 싱글톤 패턴 구현: 정적 인스턴스
-    private static JCFUserService INSTANCE;
-
-    // JCF 필드: 데이터를 저장할 Map (ID -> Entity)
+    // 1. JCF (Map) 필드 선언 (메모리 저장소)
     private final Map<UUID, User> data;
 
-    // private 생성자: 외부에서 직접 인스턴스 생성을 막음
-    private JCFUserService() {
+    // 2. 생성자
+    public JCFUserService() {
         this.data = new HashMap<>();
     }
 
-    // 싱글톤 인스턴스 반환 메서드
-    public static JCFUserService getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new JCFUserService();
-        }
-        return INSTANCE;
-    }
-
-    // --- CRUD 구현 ---
+    // --- Service 인터페이스 구현 (update 메서드 추가) ---
 
     @Override
-    public User save(User user) {
-        // 생성/업데이트 시 데이터를 맵에 저장
-        data.put(user.getId(), user);
-        return user;
+    public User create(String name, String email) {
+        // 1. 유효성 검사
+        ValidationUtil.validateNotNullOrEmpty(name, "이름");
+        ValidationUtil.validateNotNullOrEmpty(email, "이메일");
+
+        // 2. Entity 객체 생성
+        User newUser = new User(name, email);
+
+        // 3. JCF Map에 저장
+        data.put(newUser.getId(), newUser);
+        return newUser;
     }
+
+    @Override
+    public User update(UUID userId, String newName, String newEmail) {
+        //  1. 유효성 검사
+        ValidationUtil.validateNotNullOrEmpty(newName, "새 이름");
+        ValidationUtil.validateNotNullOrEmpty(newEmail, "새 이메일");
+
+        // 2. 대상 Entity를 JCF Map에서 조회
+        User userToUpdate = Optional.ofNullable(data.get(userId))
+                .orElseThrow(() -> new NoSuchElementException("수정할 사용자 ID를 찾을 수 없습니다: " + userId));
+
+        // 3. Entity의 상태 변경 메서드 호출 (User.java에 update(String, String) 메서드가 있어야 함)
+        userToUpdate.update(newName, newEmail);
+
+        // 4. JCF Map에 다시 저장 (참조형이므로 사실상 Map의 객체가 직접 수정됨)
+        return userToUpdate;
+    }
+
+    // 나머지 findById, findAll, delete 메서드
 
     @Override
     public Optional<User> findById(UUID id) {
-        // 단건 조회: Optional로 null 안전성 확보
         return Optional.ofNullable(data.get(id));
     }
 
     @Override
     public List<User> findAll() {
-        // 다건 조회: Stream API를 사용하여 Map의 값들을 List로 변환
         return data.values().stream().collect(Collectors.toList());
     }
 
     @Override
-    public User update(User user) {
-        // 수정: 엔티티의 ID가 존재할 경우 덮어쓰고, 수정된 엔티티 반환
-        if (data.containsKey(user.getId())) {
-            data.put(user.getId(), user);
-            return user;
-        }
-        // ID가 존재하지 않으면 예외 발생
-        throw new NoSuchElementException("수정할 User ID가 존재하지 않습니다: " + user.getId());
-    }
-
-    @Override
     public void delete(UUID id) {
-        // 삭제: ID를 키로 사용하여 맵에서 제거
+        if (!data.containsKey(id)) {
+            throw new NoSuchElementException("삭제할 사용자 ID를 찾을 수 없습니다: " + id);
+        }
         data.remove(id);
     }
 }

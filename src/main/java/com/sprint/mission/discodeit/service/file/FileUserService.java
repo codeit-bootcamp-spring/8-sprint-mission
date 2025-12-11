@@ -1,87 +1,68 @@
-package com.sprint.mission.discodeit.service.file;
+package com.sprint.mission.discodeit.service.file; // 패키지명은 프로젝트 구조에 따라 다를 수 있습니다.
 
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.repository.UserRepository; // Repository import
+import com.sprint.mission.discodeit.repository.file.FileUserRepository; // 기본 초기화용 import
 import com.sprint.mission.discodeit.service.UserService;
-import java.io.*;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.sprint.mission.discodeit.util.ValidationUtil;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public class FileUserService implements UserService {
 
-    private static FileUserService INSTANCE;
+    // 1. Repository 필드 선언 (의존성 주입 대상)
+    private final UserRepository userRepository;
 
-    private static final String FILE_PATH = "users.dat";
-
-    private FileUserService() {
-        // 싱글톤 패턴
+    // 2. Repository를 주입받는 생성자 (DI)
+    public FileUserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
-    public static FileUserService getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new FileUserService();
-        }
-        return INSTANCE;
+    // 3. (선택적) DI를 사용하지 않을 경우를 위한 기본 생성자
+    public FileUserService() {
+        this.userRepository = FileUserRepository.getInstance();
     }
 
-    // --- 파일 IO 유틸리티 (역직렬화) ---
-    private Map<UUID, User> readAll() {
-        File file = new File(FILE_PATH);
-        if (!file.exists() || file.length() == 0) {
-            return new HashMap<>();
-        }
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-            // 파일에서 Map<UUID, User> 객체를 읽어옵니다.
-            return (Map<UUID, User>) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            System.err.println("User 데이터 역직렬화 오류: " + e.getMessage());
-            return new HashMap<>();
-        }
-    }
-
-    // --- 파일 IO 유틸리티 (직렬화) ---
-    private void writeAll(Map<UUID, User> data) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_PATH))) {
-            oos.writeObject(data); // Map 객체를 통째로 파일에 씁니다.
-        } catch (IOException e) {
-            System.err.println("User 데이터 직렬화 오류: " + e.getMessage());
-        }
-    }
-
-    // --- UserService 인터페이스 구현 (CRUD) ---
+    // --- Service 인터페이스 구현 (update 메서드 추가) ---
 
     @Override
-    public User save(User user) {
-        Map<UUID, User> data = readAll();
-        data.put(user.getId(), user);
-        writeAll(data);
-        return user;
+    public User create(String name, String email) {
+        // 1. 유효성 검사
+        ValidationUtil.validateNotNullOrEmpty(name, "이름");
+        ValidationUtil.validateNotNullOrEmpty(email, "이메일");
+
+        // 2. Entity 객체 생성
+        User newUser = new User(name, email);
+
+        // 3. Repository에 저장 요청
+        return userRepository.save(newUser);
     }
 
     @Override
-    public Optional<User> findById(UUID id) {
-        return Optional.ofNullable(readAll().get(id));
+    public User update(UUID userId, String newName, String newEmail) {
+        //  1. 유효성 검사 (Service 책임)
+        ValidationUtil.validateNotNullOrEmpty(newName, "새 이름");
+        ValidationUtil.validateNotNullOrEmpty(newEmail, "새 이메일");
+
+        // 2. 대상 Entity를 Repository에서 조회
+        User userToUpdate = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("수정할 사용자 ID를 찾을 수 없습니다: " + userId));
+
+        // 3. Entity의 상태 변경 메서드 호출 (User.java에 update(String, String) 메서드가 있어야 함)
+        userToUpdate.update(newName, newEmail);
+
+        // 4. Repository에 수정된 Entity 저장
+        return userRepository.save(userToUpdate);
     }
 
+    // 나머지 findById, findAll, delete 메서드는 userRepository를 호출하도록 유지
     @Override
-    public List<User> findAll() {
-        return readAll().values().stream().collect(Collectors.toList());
-    }
+    public Optional<User> findById(UUID id) { return userRepository.findById(id); }
 
     @Override
-    public User update(User user) {
-        Map<UUID, User> data = readAll();
-        if (data.containsKey(user.getId())) {
-            data.put(user.getId(), user);
-            writeAll(data);
-            return user;
-        }
-        throw new NoSuchElementException("수정할 User ID가 존재하지 않습니다: " + user.getId());
-    }
+    public List<User> findAll() { return userRepository.findAll(); }
 
     @Override
-    public void delete(UUID id) {
-        Map<UUID, User> data = readAll();
-        data.remove(id);
-        writeAll(data);
-    }
+    public void delete(UUID id) { userRepository.delete(id); }
 }
