@@ -1,42 +1,36 @@
 package com.sprint.mission.discodeit.entity;
 
-import java.io.Serializable; // 직렬화를 위해 추가
+import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-public class Message implements Serializable { // Serializable 구현
-    private static final long serialVersionUID = 1L; // 직렬화 버전 ID 추가
-
-    // 공통 필드
+public class Message implements Serializable {
     private final UUID id;
-    private final Long createdAt;
-    private Long updatedAt;
-
-    // Message 고유 필드 및 관계 필드
-    private String content;
-    private final UUID userId;
+    private final UUID senderId;
     private final UUID channelId;
+    private String content; // 메시지 내용
+    private final LocalDateTime timestamp; // 메시지 전송 시간
 
-    public Message(String content, UUID userId, UUID channelId) {
+    public Message(UUID senderId, UUID channelId, String content) {
         this.id = UUID.randomUUID();
-        this.createdAt = System.currentTimeMillis();
-        this.updatedAt = this.createdAt;
-
-        this.content = content;
-        this.userId = userId;
+        this.senderId = senderId;
         this.channelId = channelId;
-    }
-
-    // --- Getter 함수 정의 ---
-    public UUID getId() { return id; }
-    public Long getCreatedAt() { return createdAt; }
-    public Long getUpdatedAt() { return updatedAt; }
-    public String getContent() { return content; }
-    public UUID getUserId() { return userId; }
-    public UUID getChannelId() { return channelId; }
-
-    // --- 필드를 수정하는 update 함수 정의 ---
-    public void update(String content) {
         this.content = content;
-        this.updatedAt = System.currentTimeMillis();
+        this.timestamp = LocalDateTime.now();
     }
+
+    // --- Getter 메서드 유지 ---
+    public UUID getId() { return id; }
+    public UUID getSenderId() { return senderId; }
+    public UUID getChannelId() { return channelId; }
+    public String getContent() { return content; }
+    public LocalDateTime getTimestamp() { return timestamp; }
+
+    //  Service가 호출하는 상태 변경 메서드 추가
+    public void update(String newContent) {
+        this.content = newContent;
+        // 메시지 내용만 수정 가능하도록 가정
+    }
+
+    // toString(), hashCode(), equals() 등 필요한 메서드는 유지
 }
