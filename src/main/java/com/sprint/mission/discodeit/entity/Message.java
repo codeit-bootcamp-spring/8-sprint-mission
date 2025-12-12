@@ -1,6 +1,8 @@
 package com.sprint.mission.discodeit.entity;
 
 
+import lombok.Getter;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.UUID;
@@ -18,6 +20,7 @@ import java.util.UUID;
     • update(String contents)    : 메시지 내용을 갱신하고, updateCall()로 updatedAt 수정.
  */
 
+@Getter
 public class Message extends BaseEntity implements Serializable {
 
     @Serial
@@ -33,22 +36,10 @@ public class Message extends BaseEntity implements Serializable {
     private String contents;
 
     public Message(UUID userId, UUID channelId, String contents) {
-       super();
-       this.userId = userId;
-       this.channelId = channelId;
-       this.contents = contents;
-    }
-
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public UUID getChannelId() {
-        return channelId;
-    }
-
-    public String getContents() {
-        return contents;
+        super();
+        this.userId = userId;
+        this.channelId = channelId;
+        this.contents = contents;
     }
 
     public void update(String contents) {

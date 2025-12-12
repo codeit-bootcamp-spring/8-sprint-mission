@@ -12,9 +12,12 @@ package com.sprint.mission.discodeit.entity;
     • update(String name, String description)    : 채널 이름과 채널 설명 갱신하고, updateCall()로 updatedAt 수정.
  */
 
+import lombok.Getter;
+
 import java.io.Serial;
 import java.io.Serializable;
 
+@Getter
 public class Channel extends BaseEntity implements Serializable {
 
     @Serial
@@ -30,14 +33,6 @@ public class Channel extends BaseEntity implements Serializable {
         super();
         this.name = name;
         this.description = description;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
     }
 
     public void update(String name, String description) {

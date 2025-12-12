@@ -7,12 +7,14 @@ import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class BasicMessageService implements MessageService {
 
     // 유저 Service
@@ -23,13 +25,6 @@ public class BasicMessageService implements MessageService {
 
     // 메시지 Repository
     private final MessageRepository messageRepository;
-
-    // AppConfig에서 주입 (DI)
-    public BasicMessageService(UserService userService, ChannelService channelService, MessageRepository messageRepository) {
-        this.userService = userService;
-        this.channelService = channelService;
-        this.messageRepository = messageRepository;
-    }
 
     @Override
     public Message createMessage(UUID userId, UUID channelId, String contents) {

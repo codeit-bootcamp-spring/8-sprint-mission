@@ -1,5 +1,7 @@
 package com.sprint.mission.discodeit.entity;
 
+import lombok.Getter;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.UUID;
@@ -17,6 +19,8 @@ import java.util.UUID;
     [메서드]
     • updateCall()    : 수정 시 호출하여 updatedAt 값을 현재 시각으로 갱신.
  */
+
+@Getter
 public class BaseEntity implements Serializable {
 
     @Serial
@@ -32,18 +36,6 @@ public class BaseEntity implements Serializable {
         Long nowTime = System.currentTimeMillis() / 1000L;
         this.createdAt = nowTime;
         this.updatedAt = nowTime;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public long getCreatedAt() {
-        return createdAt;
-    }
-
-    public long getUpdatedAt() {
-        return updatedAt;
     }
 
 

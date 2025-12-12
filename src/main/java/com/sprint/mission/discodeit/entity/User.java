@@ -13,10 +13,13 @@ package com.sprint.mission.discodeit.entity;
     • update(User user)    : User 객체의 값을 현재 객체에 반영 및 updateCall()로 updatedAt 수정.
  */
 
+import lombok.Getter;
+
 import java.io.Serial;
 import java.io.Serializable;
 
-public class User extends BaseEntity implements Serializable{
+@Getter
+public class User extends BaseEntity implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -35,19 +38,6 @@ public class User extends BaseEntity implements Serializable{
         this.name = name;
         this.gender = gender;
         this.age = age;
-    }
-
-
-    public String getName() {
-        return name;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public Integer getAge() {
-        return age;
     }
 
     public void update(User user) {

@@ -3,20 +3,17 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class BasicUserService implements UserService {
 
     private final UserRepository userRepository;
-
-    public BasicUserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
 
     @Override
     public User create(String name, String gender, Integer age) {
@@ -50,7 +47,7 @@ public class BasicUserService implements UserService {
         // 기존 유저 조회
         User user = userRepository.findById(id);
 
-        if(user == null) throw new IllegalArgumentException("해당 유저가 존재하지 않습니다.");
+        if (user == null) throw new IllegalArgumentException("해당 유저가 존재하지 않습니다.");
 
         user.update(updateUser);
 
