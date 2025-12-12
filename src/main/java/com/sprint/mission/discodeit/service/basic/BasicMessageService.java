@@ -7,10 +7,12 @@ import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.service.UserService;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
+@Service
 public class BasicMessageService implements MessageService {
 
     // 유저 Service
@@ -67,7 +69,7 @@ public class BasicMessageService implements MessageService {
         // 기존 메시지 조회
         Message message = findMessage(id);
 
-        if (message == null) throw new IllegalArgumentException("해당 메시지가 존재하지 않습니다.");
+        if (message == null) throw new IllegalArgumentException("해당 메시지가 존재하지 않습니다." + id);
 
         message.update(contents);
 
