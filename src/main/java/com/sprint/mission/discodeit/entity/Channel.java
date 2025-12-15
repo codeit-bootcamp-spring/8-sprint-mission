@@ -30,7 +30,6 @@ public class Channel extends BaseEntity implements Serializable {
     private String description;
 
     public Channel(String name, String description) {
-        super();
         this.name = name;
         this.description = description;
     }
