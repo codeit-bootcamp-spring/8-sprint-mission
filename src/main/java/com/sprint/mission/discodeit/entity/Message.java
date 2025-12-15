@@ -45,13 +45,4 @@ public class Message extends BaseEntity implements Serializable {
         this.contents = contents;
         updateCall();
     }
-
-    @Override
-    public String toString() {
-        return "{" +
-                "userId=" + userId +
-                ", channelId=" + channelId +
-                ", contents='" + contents + '\'' +
-                '}';
-    }
 }

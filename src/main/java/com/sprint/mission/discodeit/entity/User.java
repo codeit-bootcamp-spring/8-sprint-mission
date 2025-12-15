@@ -89,16 +89,4 @@ public class User extends BaseEntity implements Serializable {
             updateCall();
         }
     }
-
-    @Override
-    public String toString() {
-        return "{" +
-                "name='" + name + '\'' +
-                ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                ", profileId=" + profileId +
-                ", gender='" + gender + '\'' +
-                ", age=" + age +
-                '}';
-    }
 }
