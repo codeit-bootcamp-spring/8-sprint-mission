@@ -18,8 +18,8 @@ public class JCFMessageRepository implements MessageRepository {
     }
 
     @Override
-    public Message findById(UUID id) {
-        return data.get(id);
+    public Optional<Message> findById(UUID id) {
+        return Optional.ofNullable(data.get(id));
     }
 
     @Override
@@ -28,13 +28,24 @@ public class JCFMessageRepository implements MessageRepository {
     }
 
     @Override
-    public Message update(UUID id, Message updateMessage) {
-        data.put(id, updateMessage);
-        return updateMessage;
+    public boolean existsById(UUID id) {
+        return data.containsKey(id);
     }
 
     @Override
     public void delete(UUID id) {
         data.remove(id);
+    }
+
+    @Override
+    public List<Message> findAllByChannelId(UUID channelId) {
+        List<Message> result = new ArrayList<>();
+        for (Message message : data.values()) {
+            if (Objects.equals(message.getChannelId(), channelId)) {
+                result.add(message);
+            }
+        }
+
+        return result;
     }
 }

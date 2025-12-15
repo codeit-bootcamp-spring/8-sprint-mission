@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.repository.ChannelRepository;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class FileChannelRepository implements ChannelRepository {
@@ -32,12 +33,12 @@ public class FileChannelRepository implements ChannelRepository {
     }
 
     @Override
-    public Channel findById(UUID id) {
-        return loadChannelsFromFile()
+    public Optional<Channel> findById(UUID id) {
+        return Optional.ofNullable(loadChannelsFromFile()
                 .stream()
                 .filter(c -> c.getId().equals(id))
                 .findFirst()
-                .orElse(null);
+                .orElse(null));
     }
 
     @Override
@@ -46,19 +47,8 @@ public class FileChannelRepository implements ChannelRepository {
     }
 
     @Override
-    public Channel update(UUID id, Channel updateChannel) {
-        List<Channel> channels = loadChannelsFromFile();
-
-        if (!id.equals(updateChannel.getId())) {
-            throw new IllegalArgumentException("요청한 id와 채널 id가 일치하지 않습니다. id=" + id);
-        }
-
-        // 기존 데이터 제거 후 새 객체로 교체
-        channels.removeIf(c -> c.getId().equals(id));
-        channels.add(updateChannel);
-
-        saveChannelsToFile(channels);
-        return updateChannel;
+    public boolean existsById(UUID id) {
+        return false;
     }
 
     @Override

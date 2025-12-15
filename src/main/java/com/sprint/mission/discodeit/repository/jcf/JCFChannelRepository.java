@@ -18,8 +18,8 @@ public class JCFChannelRepository implements ChannelRepository {
     }
 
     @Override
-    public Channel findById(UUID id) {
-        return data.get(id);
+    public Optional<Channel> findById(UUID id) {
+        return Optional.ofNullable(data.get(id));
     }
 
     @Override
@@ -28,9 +28,8 @@ public class JCFChannelRepository implements ChannelRepository {
     }
 
     @Override
-    public Channel update(UUID id, Channel updateChannel) {
-        data.put(id, updateChannel);
-        return updateChannel;
+    public boolean existsById(UUID id) {
+        return data.containsKey(id);
     }
 
     @Override

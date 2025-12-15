@@ -4,10 +4,7 @@ import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.UserRepository;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class FileUserRepository implements UserRepository {
 
@@ -32,16 +29,21 @@ public class FileUserRepository implements UserRepository {
     }
 
     @Override
-    public User findById(UUID id) {
-        return loadUsersFromFile().stream()
+    public Optional<User> findById(UUID id) {
+        return Optional.ofNullable(loadUsersFromFile().stream()
                 .filter(u -> u.getId().equals(id))
                 .findFirst()
-                .orElse(null);
+                .orElse(null));
     }
 
     @Override
     public List<User> findAll() {
         return new ArrayList<>(loadUsersFromFile());
+    }
+
+    @Override
+    public boolean existsById(UUID id) {
+        return false;
     }
 
     @Override
@@ -59,23 +61,25 @@ public class FileUserRepository implements UserRepository {
     }
 
     @Override
-    public User update(UUID id, User updateUser) {
-        // updateUser는 이미 Service에서 수정된 객체라고 가정
-        List<User> users = loadUsersFromFile();
-
-        // 기존 데이터 제거 후 새 객체로 교체
-        users.removeIf(u -> u.getId().equals(id));
-        users.add(updateUser);
-
-        saveUsersToFile(users);
-        return updateUser;
-    }
-
-    @Override
     public void delete(UUID id) {
         List<User> users = loadUsersFromFile();
         users.removeIf(u -> u.getId().equals(id));
         saveUsersToFile(users);
+    }
+
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return Optional.empty();
+    }
+
+    @Override
+    public boolean existsByUsernameOrEmail(String username, String email) {
+        return false;
     }
 
     private File getDataFile() {

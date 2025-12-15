@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.repository.MessageRepository;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class FileMessageRepository implements MessageRepository {
@@ -32,11 +33,11 @@ public class FileMessageRepository implements MessageRepository {
     }
 
     @Override
-    public Message findById(UUID id) {
-        return loadMessagesFromFile().stream()
+    public Optional<Message> findById(UUID id) {
+        return Optional.ofNullable(loadMessagesFromFile().stream()
                 .filter(m -> m.getId().equals(id))
                 .findFirst()
-                .orElse(null);
+                .orElse(null));
     }
 
     @Override
@@ -45,16 +46,8 @@ public class FileMessageRepository implements MessageRepository {
     }
 
     @Override
-    public Message update(UUID id, Message updateMessage) {
-        // updateMessage 이미 Service에서 수정된 객체라고 가정
-        List<Message> messages = loadMessagesFromFile();
-
-        // 기존 데이터 제거 후 새 객체로 교체
-        messages.removeIf(m -> m.getId().equals(id));
-        messages.add(updateMessage);
-
-        saveMessagesToFile(messages);
-        return updateMessage;
+    public boolean existsById(UUID id) {
+        return false;
     }
 
     @Override
@@ -62,6 +55,11 @@ public class FileMessageRepository implements MessageRepository {
         List<Message> messages = loadMessagesFromFile();
         messages.removeIf(m -> m.getId().equals(id));
         saveMessagesToFile(messages);
+    }
+
+    @Override
+    public List<Message> findAllByChannelId(UUID channelId) {
+        return List.of();
     }
 
     private File getDataFile() {
