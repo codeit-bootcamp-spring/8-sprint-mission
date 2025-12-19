@@ -18,12 +18,12 @@ public class DiscodeitApplication {
 
     static UserDto setupUser(UserService userService) {
         // 프로필 이미지 X
-        UserCreateRequest request = new UserCreateRequest("최준영1", "Junyoung1@gmail.com", "jun1234", null, null);
+        UserCreateRequest request = new UserCreateRequest("준영", "Junyoung@naver.com", "jun12345", null, null);
         return userService.create(request);
     }
 
     static ChannelDto setupChannel(ChannelService channelService) {
-        ChannelCreatePublicRequest request = new ChannelCreatePublicRequest("새로 등록 된 채널", "새로 생성 된 채널입니다.");
+        ChannelCreatePublicRequest request = new ChannelCreatePublicRequest("공지채널", "새로 생성 된 공지 채널입니다.");
         ChannelDto channel = channelService.createPublicChannel(request);
         return channel;
     }
@@ -32,7 +32,7 @@ public class DiscodeitApplication {
         MessageCreateRequest request = new MessageCreateRequest(
                 channel.id(),
                 author.id(),
-                "반가워유",
+                "반갑습니다!",
                 null
         );
         MessageDto message = messageService.createMessage(request);
