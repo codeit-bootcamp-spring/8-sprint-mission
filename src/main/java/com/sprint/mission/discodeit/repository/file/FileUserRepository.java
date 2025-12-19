@@ -88,20 +88,6 @@ public class FileUserRepository implements UserRepository {
     }
 
     @Override
-    public List<User> findAllGender(String gender) {
-        return findAll().stream()
-                .filter(u -> Objects.equals(u.getGender(), gender))
-                .toList();
-    }
-
-    @Override
-    public List<User> findAllAge() {
-        return findAll().stream()
-                .sorted(Comparator.comparing(User::getAge))
-                .toList();
-    }
-
-    @Override
     public void delete(UUID id) {
         try {
             Files.deleteIfExists(resolvePath(id));

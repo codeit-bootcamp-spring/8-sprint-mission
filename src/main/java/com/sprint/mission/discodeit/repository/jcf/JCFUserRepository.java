@@ -36,20 +36,6 @@ public class JCFUserRepository implements UserRepository {
     }
 
     @Override
-    public List<User> findAllGender(String gender) {
-        return data.values().stream()
-                .filter(user -> Objects.equals(user.getGender(), gender))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<User> findAllAge() {
-        return data.values().stream()
-                .sorted(Comparator.comparing(User::getAge))
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public void delete(UUID id) {
         data.remove(id);
     }

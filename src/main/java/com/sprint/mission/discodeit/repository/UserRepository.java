@@ -20,12 +20,6 @@ public interface UserRepository {
     // 존재 여부 확인
     boolean existsById(UUID id);
 
-    // 유저 조회 (특정 성별 조회)
-    List<User> findAllGender(String gender);
-
-    // 유저 조회 (나이대별 조회)
-    List<User> findAllAge();
-
     // 유저 삭제
     void delete(UUID id);
 

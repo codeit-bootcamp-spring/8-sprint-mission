@@ -44,7 +44,7 @@ public class DiscodeitApplication {
     }
 
     static User setupUser(UserService userService) {
-        User user = userService.create("최준영", "남", 30);
+        User user = userService.create("최준영");
         return user;
     }
 

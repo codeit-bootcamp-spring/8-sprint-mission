@@ -5,6 +5,8 @@ import lombok.Getter;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /*
@@ -26,8 +28,8 @@ public class Message extends BaseEntity implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    // user 아이디 -> 유저가 있어야 메시지를 작성할 수 있다.
-    private final UUID userId;
+    // 작성자 Id
+    private final UUID authorId;
 
     // 어느 채널인지 확인 여부
     private final UUID channelId;
@@ -35,10 +37,18 @@ public class Message extends BaseEntity implements Serializable {
     // 메시지 내용
     private String contents;
 
-    public Message(UUID userId, UUID channelId, String contents) {
-        this.userId = userId;
-        this.channelId = channelId;
+    // 메시지에 첨부된 BinaryContent 의 id 들.
+    private List<UUID> attachmentIds;
+
+    public Message(String contents, UUID channelId, UUID authorId, List<UUID> attachmentIds) {
         this.contents = contents;
+        this.channelId = channelId;
+        this.authorId = authorId;
+        this.attachmentIds = attachmentIds == null ? new ArrayList<>() : new ArrayList<>(attachmentIds);
+    }
+
+    public Message(String content, UUID channelId, UUID authorId) {
+        this(content, channelId, authorId, List.of());
     }
 
     public void update(String contents) {
