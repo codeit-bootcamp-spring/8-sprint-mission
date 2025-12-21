@@ -1,9 +1,15 @@
 package com.sprint.mission.discodeit.entity;
 
+import lombok.Getter;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.UUID;
 
+@Getter // Lombok이 모든 필드의 Getter를 자동으로 생성합니다.
 public class User implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
     private final UUID id;
     private String name;
     private String email;
@@ -14,17 +20,8 @@ public class User implements Serializable {
         this.email = email;
     }
 
-    // --- Getter 메서드 유지 ---
-    public UUID getId() { return id; }
-    public String getName() { return name; }
-    public String getEmail() { return email; }
-
-    //  Service가 호출하는 상태 변경 메서드 추가
-    public void update(String newName, String newEmail) {
-        this.name = newName;
-        this.email = newEmail;
-        // 일반적으로 Entity의 상태 변경은 Entity 내부에서만 일어나야 합니다.
+    public void update(String name, String email) {
+        this.name = name;
+        this.email = email;
     }
-
-    // toString(), hashCode(), equals() 등 필요한 메서드는 유지
 }

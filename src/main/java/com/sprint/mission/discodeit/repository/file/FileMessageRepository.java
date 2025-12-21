@@ -2,22 +2,25 @@ package com.sprint.mission.discodeit.repository.file;
 
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.repository.MessageRepository;
+import org.springframework.stereotype.Repository; // 추가됨
+
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Repository // 1. Spring이 이 클래스를 Repository Bean으로 관리하도록 등록합니다.
 public class FileMessageRepository implements MessageRepository {
 
-    private static FileMessageRepository INSTANCE;
+    // 2. Spring이 싱글톤 객체 생성을 보장하므로 static INSTANCE 필드와 getInstance()를 제거합니다.
     private static final String FILE_PATH = "data/message.json";
 
-    private FileMessageRepository() {}
-
-    public static FileMessageRepository getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new FileMessageRepository();
+    // 3. 생성자를 public으로 변경하여 Spring이 객체를 생성할 수 있게 합니다. (혹은 생략 가능)
+    public FileMessageRepository() {
+        // 데이터 저장용 디렉토리가 없다면 생성하는 로직을 추가하면 더 안전합니다.
+        File directory = new File("data");
+        if (!directory.exists()) {
+            directory.mkdirs();
         }
-        return INSTANCE;
     }
 
     // --- 파일 IO 유틸리티 ---

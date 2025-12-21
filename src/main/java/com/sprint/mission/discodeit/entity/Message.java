@@ -1,36 +1,31 @@
 package com.sprint.mission.discodeit.entity;
 
+import lombok.Getter;
+
+import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
+@Getter // Lombok이 모든 필드의 Getter를 자동으로 생성합니다.
 public class Message implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
     private final UUID id;
-    private final UUID senderId;
+    private final UUID authorId;
     private final UUID channelId;
-    private String content; // 메시지 내용
-    private final LocalDateTime timestamp; // 메시지 전송 시간
+    private String content;
+    private final Instant createdAt;
 
-    public Message(UUID senderId, UUID channelId, String content) {
+    public Message(UUID authorId, UUID channelId, String content) {
         this.id = UUID.randomUUID();
-        this.senderId = senderId;
+        this.authorId = authorId;
         this.channelId = channelId;
         this.content = content;
-        this.timestamp = LocalDateTime.now();
+        this.createdAt = Instant.now();
     }
 
-    // --- Getter 메서드 유지 ---
-    public UUID getId() { return id; }
-    public UUID getSenderId() { return senderId; }
-    public UUID getChannelId() { return channelId; }
-    public String getContent() { return content; }
-    public LocalDateTime getTimestamp() { return timestamp; }
-
-    //  Service가 호출하는 상태 변경 메서드 추가
-    public void update(String newContent) {
-        this.content = newContent;
-        // 메시지 내용만 수정 가능하도록 가정
+    public void update(String content) {
+        this.content = content;
     }
-
-    // toString(), hashCode(), equals() 등 필요한 메서드는 유지
 }
