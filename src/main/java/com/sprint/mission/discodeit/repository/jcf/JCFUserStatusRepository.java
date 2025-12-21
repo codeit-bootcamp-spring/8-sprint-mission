@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.repository.jcf;
 
-import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
@@ -16,23 +16,23 @@ import java.util.UUID;
         havingValue = "jcf",
         matchIfMissing = true
 )
-public class JCFUserRepository implements UserRepository {
-    private final List<User> list = new ArrayList<>();
+public class JCFUserStatusRepository implements UserStatusRepository {
+    private final List<UserStatus> list = new ArrayList<>();
 
     @Override
-    public User save(User user) {
-        list.removeIf(e -> e.getId().equals(user.getId()));
-        list.add(user);
-        return user;
+    public UserStatus save(UserStatus userStatus) {
+        list.removeIf(e -> e.getId().equals(userStatus.getId()));
+        list.add(userStatus);
+        return userStatus;
     }
 
     @Override
-    public Optional<User> findById(UUID id) {
+    public Optional<UserStatus> findById(UUID id) {
         return list.stream().filter(e -> e.getId().equals(id)).findFirst();
     }
 
     @Override
-    public List<User> findAll() {
+    public List<UserStatus> findAll() {
         return new ArrayList<>(list);
     }
 
@@ -42,12 +42,9 @@ public class JCFUserRepository implements UserRepository {
     }
 
     @Override
-    public boolean existsByName(String name) {
-        return list.stream().anyMatch(u -> u.getName().equals(name));
-    }
-
-    @Override
-    public boolean existsByEmail(String email) {
-        return list.stream().anyMatch(u -> u.getEmail().equals(email));
+    public Optional<UserStatus> findByUserId(UUID userId) {
+        return list.stream()
+                .filter(s -> s.getUserId().equals(userId))
+                .findFirst();
     }
 }

@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.repository.jcf;
 
-import com.sprint.mission.discodeit.entity.Message;
-import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
@@ -17,23 +17,23 @@ import java.util.stream.Collectors;
         havingValue = "jcf",
         matchIfMissing = true
 )
-public class JCFMessageRepository implements MessageRepository {
-    private final List<Message> list = new ArrayList<>();
+public class JCFReadStatusRepository implements ReadStatusRepository {
+    private final List<ReadStatus> list = new ArrayList<>();
 
     @Override
-    public Message save(Message message) {
-        list.removeIf(e -> e.getId().equals(message.getId()));
-        list.add(message);
-        return message;
+    public ReadStatus save(ReadStatus readStatus) {
+        list.removeIf(e -> e.getId().equals(readStatus.getId()));
+        list.add(readStatus);
+        return readStatus;
     }
 
     @Override
-    public Optional<Message> findById(UUID id) {
+    public Optional<ReadStatus> findById(UUID id) {
         return list.stream().filter(e -> e.getId().equals(id)).findFirst();
     }
 
     @Override
-    public List<Message> findAll() {
+    public List<ReadStatus> findAll() {
         return new ArrayList<>(list);
     }
 
@@ -43,17 +43,16 @@ public class JCFMessageRepository implements MessageRepository {
     }
 
     @Override
-    public List<Message> findAllByChannelId(UUID channelId) {
+    public List<ReadStatus> findAllByUserId(UUID userId) {
         return list.stream()
-                .filter(m -> m.getChannelId().equals(channelId))
+                .filter(rs -> rs.getUserId().equals(userId))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Optional<Message> findTopByChannelIdOrderByCreatedAtDesc(UUID channelId) {
+    public List<ReadStatus> findAllByChannelId(UUID channelId) {
         return list.stream()
-                .filter(m -> m.getChannelId().equals(channelId))
-                .sorted((m1, m2) -> m2.getCreatedAt().compareTo(m1.getCreatedAt()))
-                .findFirst();
+                .filter(rs -> rs.getChannelId().equals(channelId))
+                .collect(Collectors.toList());
     }
 }

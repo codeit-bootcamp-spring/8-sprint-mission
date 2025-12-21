@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.repository.jcf;
 
-import com.sprint.mission.discodeit.entity.Channel;
-import com.sprint.mission.discodeit.repository.ChannelRepository;
+import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
@@ -16,23 +16,23 @@ import java.util.UUID;
         havingValue = "jcf",
         matchIfMissing = true
 )
-public class JCFChannelRepository implements ChannelRepository {
-    private final List<Channel> list = new ArrayList<>();
+public class JCFBinaryContentRepository implements BinaryContentRepository {
+    private final List<BinaryContent> list = new ArrayList<>();
 
     @Override
-    public Channel save(Channel channel) {
-        list.removeIf(e -> e.getId().equals(channel.getId()));
-        list.add(channel);
-        return channel;
+    public BinaryContent save(BinaryContent binaryContent) {
+        list.removeIf(e -> e.getId().equals(binaryContent.getId()));
+        list.add(binaryContent);
+        return binaryContent;
     }
 
     @Override
-    public Optional<Channel> findById(UUID id) {
+    public Optional<BinaryContent> findById(UUID id) {
         return list.stream().filter(e -> e.getId().equals(id)).findFirst();
     }
 
     @Override
-    public List<Channel> findAll() {
+    public List<BinaryContent> findAll() {
         return new ArrayList<>(list);
     }
 
