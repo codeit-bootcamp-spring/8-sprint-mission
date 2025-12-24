@@ -1,100 +1,65 @@
 package com.sprint.mission.discodeit.entity;
 
+import lombok.Getter;
+
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+@Getter
 public class Channel implements Serializable {
-    private UUID id;
-    private UUID uid;
     private static final long serialVersionUID = 1L;
-    private Long createdAt;
-    private Long modifiedAt;
+    private final UUID id;
+    private UUID uid;
+    private final Instant createdAt;
+    private Instant modifiedAt;
+    private ChannelStatus status;
     private String name;
     private String host;
+    private String description;
     private int participant;
     private List<String> participants;
 
-    public Channel() {
+    public Channel(UUID uid, ChannelStatus status, String name, String host, String description, int participant, List<String> participants) {
         id = UUID.randomUUID();
-        createdAt = System.currentTimeMillis();
-    }
+        createdAt = Instant.now();
+        modifiedAt = createdAt;
 
-    public Channel(UUID uid, String name, String host, int participant, List<String> participants) {
-        this();
         this.uid = uid;
+        this.status = status;
         this.name = name;
         this.host = host;
+        this.description = description;
         this.participant = participant;
-        this.participants = participants;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public UUID getUid() {
-        return uid;
-    }
-
-    public void setUid(UUID uid) {
-        this.uid = uid;
-    }
-
-    public Long getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Long createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Long getModifiedAt() {
-        return modifiedAt;
-    }
-
-    public void setModifiedAt(Long modifiedAt) {
-        this.modifiedAt = modifiedAt;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public int getParticipant() {
-        return participant;
-    }
-
-    public void setParticipant(int participant) {
-        this.participant = participant;
-    }
-
-    public List<String> getParticipants() {
-        return participants;
-    }
-
-    public void setParticipants(List<String> participants) {
         this.participants = participants;
     }
 
     public String getFileName() {
         return id.toString().concat(".ser");
+    }
+
+    public void update(String name, String description, int participant, List<String> participants) {
+        boolean anyValueUpdated = false;
+        if(name != null && !name.equals(this.name)) {
+            this.name = name;
+            anyValueUpdated = true;
+        }
+        if(description != null && !description.equals(this.description)) {
+            this.description = description;
+            anyValueUpdated = true;
+        }
+        if(participant != 0 && participant != this.participant) {
+            this.participant = participant;
+            anyValueUpdated = true;
+        }
+        if(participants != null && !participants.equals(this.participants)) {
+            this.participants = participants;
+            anyValueUpdated = true;
+        }
+        if (anyValueUpdated) {
+            this.modifiedAt = Instant.now();
+        }
     }
 
     @Override
@@ -104,10 +69,13 @@ public class Channel implements Serializable {
                 ", uid=" + uid +
                 ", createdAt=" + createdAt +
                 ", modifiedAt=" + modifiedAt +
+                ", status=" + status +
                 ", name='" + name + '\'' +
                 ", host='" + host + '\'' +
+                ", description='" + description + '\'' +
                 ", participant=" + participant +
                 ", participants=" + participants +
                 '}';
     }
+
 }

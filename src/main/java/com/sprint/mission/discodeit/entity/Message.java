@@ -1,100 +1,54 @@
 package com.sprint.mission.discodeit.entity;
 
+import lombok.Getter;
+
 import java.io.Serializable;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
+@Getter
 public class Message implements Serializable {
-    private UUID id;
-    private UUID uid;
-    private UUID cid;
     private static final long serialVersionUID = 1L;
-    private Long createdAt;
-    private Long modifiedAt;
-    private String channelName;
-    private String from;
+
+    private final UUID id;
+    private final UUID uid;
+    private final UUID cid;
+
+    private final Instant createdAt;
+    private Instant modifiedAt;
+    private final String channelName;
+    private final String from;
     private String content;
+    private List<UUID> attachmentIds;
 
-
-    public Message() {
+    public Message(UUID uid, UUID cid, String channelName, String from, String content, List<UUID> attachmentIds) {
         id = UUID.randomUUID();
-        createdAt = System.currentTimeMillis();
-    }
+        createdAt = Instant.now();
+        modifiedAt = createdAt;
 
-    public Message(UUID uid, UUID cid, String channelName, String from, String content) {
-        this();
         this.uid = uid;
         this.cid = cid;
         this.channelName = channelName;
         this.from = from;
         this.content = content;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public UUID getUid() {
-        return uid;
-    }
-
-    public void setUid(UUID uid) {
-        this.uid = uid;
-    }
-
-    public UUID getCid() {
-        return cid;
-    }
-
-    public void setCid(UUID cid) {
-        this.cid = cid;
-    }
-
-    public Long getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Long createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Long getModifiedAt() {
-        return modifiedAt;
-    }
-
-    public void setModifiedAt(Long modifiedAt) {
-        this.modifiedAt = modifiedAt;
-    }
-
-    public String getChannelName() {
-        return channelName;
-    }
-
-    public void setChannelName(String channelName) {
-        this.channelName = channelName;
-    }
-
-    public String getFrom() {
-        return from;
-    }
-
-    public void setFrom(String from) {
-        this.from = from;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
+        this.attachmentIds = attachmentIds;
     }
 
     public String getFileName() {
         return id.toString().concat(".ser");
+    }
+
+    public void update(String content) {
+        boolean anyValueUpdated = false;
+        if(this.content != null && !this.content.equals(content)) {
+            this.content = content;
+            anyValueUpdated = true;
+        }
+        if(anyValueUpdated) {
+            this.modifiedAt = Instant.now();
+        }
     }
 
     @Override
@@ -108,6 +62,7 @@ public class Message implements Serializable {
                 ", channelName='" + channelName + '\'' +
                 ", from='" + from + '\'' +
                 ", content='" + content + '\'' +
+                ", attachmentIds=" + attachmentIds +
                 '}';
     }
 }

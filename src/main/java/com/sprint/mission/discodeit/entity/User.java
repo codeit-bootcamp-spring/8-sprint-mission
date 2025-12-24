@@ -1,100 +1,74 @@
 package com.sprint.mission.discodeit.entity;
 
+import lombok.Getter;
+
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.UUID;
 
+@Getter
 public class User implements Serializable {
-    private UUID id;
     private static final long serialVersionUID = 1L;
-    private Long createdAt;
-    private Long modifiedAt;
+    private final UUID id;
+    private final Instant createdAt;
+    private Instant modifiedAt;
     private String userId;
     private String name;
+    private String password;
     private String email;
     private char gender;
     private int grade;
+    private UUID profileId;
 
-    public User() {
+    public User(String userId, String name, String password, String email, char gender, int grade, UUID profileId) {
         id = UUID.randomUUID();
-        createdAt = System.currentTimeMillis();
-    }
+        createdAt = Instant.now();
+        modifiedAt = createdAt;
 
-    public User(String userId, String name, String email, char gender, int grade) {
-        this();
         this.userId = userId;
         this.name = name;
+        this.password = password;
         this.email = email;
         this.gender = gender;
         this.grade = grade;
+        this.profileId = profileId;
     }
 
-    public UUID getId() {
-        return id;
+    public void update(String userId, String name, String password,  String email, char gender, int grade, UUID profileId) {
+        boolean anyValueUpdated = false;
+
+        if(userId != null && !userId.equals(this.userId)) {
+            this.userId = userId;
+            anyValueUpdated = true;
+        }
+        if(name != null && !name.equals(this.name)) {
+            this.name = name;
+            anyValueUpdated = true;
+        }
+        if(password != null && !password.equals(this.password)) {
+            this.password = password;
+            anyValueUpdated = true;
+        }
+        if(email != null && !email.equals(this.email)) {
+            this.email = email;
+            anyValueUpdated = true;
+        }
+        if(gender != this.gender) {
+            this.gender = gender;
+            anyValueUpdated = true;
+        }
+        if(grade != this.grade) {
+            this.grade = grade;
+            anyValueUpdated = true;
+        }
+        if(profileId != null && !profileId.equals(this.profileId)) {
+            this.profileId = profileId;
+        }
+        if(anyValueUpdated) {
+            this.modifiedAt = Instant.now();
+        }
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public Long getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Long createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Long getModifiedAt() {
-        return modifiedAt;
-    }
-
-    public void setModifiedAt(Long modifiedAt) {
-        this.modifiedAt = modifiedAt;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public char getGender() {
-        return gender;
-    }
-
-    public void setGender(char gender) {
-        this.gender = gender;
-    }
-
-    public int getGrade() {
-        return grade;
-    }
-
-    public void setGrade(int grade) {
-        this.grade = grade;
-    }
-
-    public String getFileName() {
-        return id.toString().concat(".ser");
-    }
 
     @Override
     public String toString() {
@@ -107,6 +81,7 @@ public class User implements Serializable {
                 ", email='" + email + '\'' +
                 ", gender=" + gender +
                 ", grade=" + grade +
+                ", profileId=" + profileId +
                 '}';
     }
 }
