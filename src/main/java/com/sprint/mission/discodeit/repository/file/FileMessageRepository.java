@@ -2,103 +2,107 @@ package com.sprint.mission.discodeit.repository.file;
 
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.repository.MessageRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Repository;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
+@Repository
+@ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "file")
 public class FileMessageRepository implements MessageRepository {
 
-    private static final String DATA_DIR = "data";
-    private static final String MESSAGE_DIR = "message";
-    private static final String DATA_FILE = DATA_DIR + File.separator + MESSAGE_DIR + File.separator + "messages.ser";
+    private final Path directory;
+    private final String EXTENSION = ".ser";
 
+    public FileMessageRepository(
+            @Value("${discodeit.repository.file-directory:.discodeit}") String rootDir
+    ) {
+        this.directory = Paths.get(rootDir, "Message");
+        try {
+            Files.createDirectories(this.directory);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Path resolvePath(UUID id) {
+        return directory.resolve(id.toString() + EXTENSION);
+    }
 
     @Override
     public Message save(Message message) {
-
-        // 파일에서 기존 Message 목록 읽기 (역직렬화)
-        List<Message> messages = loadMessagesFromFile();
-
-        // 기존에 같은 ID 있으면 제거 후 새로 넣기
-        messages.removeIf(m -> m.getId().equals(message.getId()));
-        messages.add(message);
-
-        // 전체 목록을 다시 파일에 저장 (직렬화)
-        saveMessagesToFile(messages);
-
+        Path path = resolvePath(message.getId());
+        try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(path))) {
+            oos.writeObject(message);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return message;
     }
 
     @Override
-    public Message findById(UUID id) {
-        return loadMessagesFromFile().stream()
-                .filter(m -> m.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+    public Optional<Message> findById(UUID id) {
+        Path path = resolvePath(id);
+        if (!Files.exists(path)) {
+            return Optional.empty();
+        }
+        try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(path))) {
+            return Optional.of((Message) ois.readObject());
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override
     public List<Message> findAll() {
-        return new ArrayList<>(loadMessagesFromFile());
+        List<Message> result = new ArrayList<>();
+        try {
+            if (!Files.exists(directory)) {
+                return result;
+            }
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory, "*" + EXTENSION)) {
+                for (Path path : stream) {
+                    try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(path))) {
+                        result.add((Message) ois.readObject());
+                    }
+                }
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return result;
     }
 
     @Override
-    public Message update(UUID id, Message updateMessage) {
-        // updateMessage 이미 Service에서 수정된 객체라고 가정
-        List<Message> messages = loadMessagesFromFile();
-
-        // 기존 데이터 제거 후 새 객체로 교체
-        messages.removeIf(m -> m.getId().equals(id));
-        messages.add(updateMessage);
-
-        saveMessagesToFile(messages);
-        return updateMessage;
+    public boolean existsById(UUID id) {
+        return Files.exists(resolvePath(id));
     }
 
     @Override
     public void delete(UUID id) {
-        List<Message> messages = loadMessagesFromFile();
-        messages.removeIf(m -> m.getId().equals(id));
-        saveMessagesToFile(messages);
-    }
-
-    private File getDataFile() {
-
-        File dir = new File(DATA_DIR + File.separator + MESSAGE_DIR);
-
-        if (!dir.exists()) {
-            dir.mkdirs(); // data/message 디렉터리 없으면 생성
-        }
-
-        return new File(DATA_FILE);
-    }
-
-    private List<Message> loadMessagesFromFile() {
-
-        File file = getDataFile();
-
-        // 파일이 없으면 빈 리스트 반환
-        if (!file.exists()) {
-            return new ArrayList<>();
-        }
-
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-            return (List<Message>) ois.readObject();
-        } catch (Exception e) {
-            // 역직렬화 실패 시 빈 리스트
-            return new ArrayList<>();
+        try {
+            Files.deleteIfExists(resolvePath(id));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private void saveMessagesToFile(List<Message> messages) {
-        File file = getDataFile();
-
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
-            oos.writeObject(messages);
-        } catch (Exception e) {
-            throw new RuntimeException("파일 저장 실패", e);
+    @Override
+    public List<Message> findAllByChannelId(UUID channelId) {
+        List<Message> result = new ArrayList<>();
+        for (Message m : findAll()) {
+            if (Objects.equals(m.getChannelId(), channelId)) {
+                result.add(m);
+            }
         }
+        return result;
     }
+
 }

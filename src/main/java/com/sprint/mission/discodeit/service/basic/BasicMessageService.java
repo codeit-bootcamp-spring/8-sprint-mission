@@ -1,81 +1,118 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateRequest;
+import com.sprint.mission.discodeit.dto.message.MessageCreateRequest;
+import com.sprint.mission.discodeit.dto.message.MessageDto;
+import com.sprint.mission.discodeit.dto.message.MessageUpdateRequest;
+import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.repository.BinaryContentRepository;
+import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+@Service
+@RequiredArgsConstructor
 public class BasicMessageService implements MessageService {
 
-    // 유저 Service
-    private final UserService userService;
-
-    // 채널 Service
-    private final ChannelService channelService;
-
-    // 메시지 Repository
     private final MessageRepository messageRepository;
-
-    // AppConfig에서 주입 (DI)
-    public BasicMessageService(UserService userService, ChannelService channelService, MessageRepository messageRepository) {
-        this.userService = userService;
-        this.channelService = channelService;
-        this.messageRepository = messageRepository;
-    }
+    private final ChannelRepository channelRepository;
+    private final UserRepository userRepository;
+    private final BinaryContentRepository binaryContentRepository;
 
     @Override
-    public Message createMessage(UUID userId, UUID channelId, String contents) {
+    public MessageDto createMessage(MessageCreateRequest request) {
+        // 채널, 유저 존재 검사
+        channelRepository.findById(request.channelId())
+                .orElseThrow(() -> new NoSuchElementException("Channel을 찾을 수 없습니다. " + request.channelId()));
 
-        // 유저가 존재하나?
-        User user = userService.findUser(userId);
+        userRepository.findById(request.userId())
+                .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + request.userId()));
 
-        if (user == null) {
-            throw new IllegalArgumentException("존재하지 않는 유저입니다. userId = " + userId);
+        // 파일을 저장
+        List<UUID> attachmentIds = new ArrayList<>();
+        if (request.attachments() != null) {
+            for (BinaryContentCreateRequest dto : request.attachments()) {
+                BinaryContent bc = new BinaryContent(
+                        dto.fileName(),
+                        dto.data(),
+                        request.userId(),
+                        null
+                );
+                binaryContentRepository.save(bc);
+                attachmentIds.add(bc.getId());
+            }
         }
 
-        // 채널이 존재하나?
-        Channel channel = channelService.findChannel(channelId);
+        Message message = new Message(
+                request.contents(),
+                request.channelId(),
+                request.userId(),
+                attachmentIds
+        );
+        messageRepository.save(message);
 
-        if (channel == null) {
-            throw new IllegalArgumentException("존재하지 않는 채널입니다. channelId = " + channelId);
-        }
-
-        // 검증 완료
-        Message message = new Message(userId, channelId, contents);
-
-        return messageRepository.save(message);
+        return convertDto(message);
     }
 
     @Override
-    public Message findMessage(UUID id) {
-        return messageRepository.findById(id);
+    public MessageDto findMessage(UUID id) {
+        Message message = messageRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + id));
+        return convertDto(message);
     }
 
     @Override
-    public List<Message> findAllMessages() {
-        return messageRepository.findAll();
+    public List<MessageDto> findAllByChannelId(UUID channelId) {
+        return messageRepository.findAllByChannelId(channelId).stream()
+                .map(this::convertDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Message updateMessage(UUID id, String contents) {
-        // 기존 메시지 조회
-        Message message = findMessage(id);
+    public MessageDto updateMessage(MessageUpdateRequest request) {
+        Message message = messageRepository.findById(request.id())
+                .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + request.id()));
 
-        if (message == null) throw new IllegalArgumentException("해당 메시지가 존재하지 않습니다.");
+        message.update(request.contents());
+        messageRepository.save(message);
 
-        message.update(contents);
-
-        return messageRepository.update(id, message);
+        return convertDto(message);
     }
 
     @Override
     public void deleteMessage(UUID id) {
+        Message message = messageRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + id));
+
+        if (message.getAttachmentIds() != null && !message.getAttachmentIds().isEmpty()) {
+            binaryContentRepository.deleteAllByIdIn(message.getAttachmentIds());
+        }
+
         messageRepository.delete(id);
+    }
+
+    private MessageDto convertDto(Message message) {
+        return new MessageDto(
+                message.getId(),
+                message.getChannelId(),
+                message.getAuthorId(),
+                message.getContents(),
+                message.getCreatedAt(),
+                message.getAttachmentIds()
+        );
     }
 }

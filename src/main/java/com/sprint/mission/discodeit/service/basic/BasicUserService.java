@@ -1,62 +1,173 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
+import com.sprint.mission.discodeit.dto.user.UserDto;
+import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
+import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+@Service
+@RequiredArgsConstructor
 public class BasicUserService implements UserService {
 
     private final UserRepository userRepository;
-
-    public BasicUserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
+    private final UserStatusRepository userStatusRepository;
+    private final BinaryContentRepository binaryContentRepository;
 
     @Override
-    public User create(String name, String gender, Integer age) {
-        User user = new User(name, gender, age);
+    public UserDto create(UserCreateRequest request) {
 
-        return userRepository.save(user);
+        // Username / Email 중복 검증
+        if (userRepository.existsByUsernameOrEmail(request.username(),  request.email())) {
+            throw new IllegalArgumentException("이미 사용 중인 username 또는 email 입니다. 다시 입력 부탁드립니다.");
+        }
+
+        // User 생성
+        User user = new User(request.username(), request.email(), request.password());
+        userRepository.save(user);
+
+        // UserStatus 생성 (마지막 접속 시간 = 지금)
+        UserStatus status = new UserStatus(user.getId(), Instant.now());
+        userStatusRepository.save(status);
+
+        // 프로필 이미지 있으면 BinaryContent 생성 -> User.profileId 설정
+        if (request.profileImageData() != null) {
+            BinaryContent content = new BinaryContent(
+                    request.profileImageFilename(),
+                    request.profileImageData(),
+                    user.getId(),
+                    null
+            );
+            binaryContentRepository.save(content);
+
+            user.update(null, null, null, content.getId());
+            userRepository.save(user);
+        }
+
+        return convertDto(user, status);
     }
 
     @Override
-    public User findUser(UUID id) {
-        return userRepository.findById(id);
+    public UserDto findUser(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + id));
+
+        UserStatus status = userStatusRepository.findByUserId(id)
+                .orElse(null);
+
+        return convertDto(user, status);
     }
 
     @Override
-    public List<User> findAll() {
-        return userRepository.findAll();
+    public List<UserDto> findAll() {
+        return userRepository.findAll().stream()
+                .map(user -> {
+                    UserStatus status = userStatusRepository.findByUserId(user.getId())
+                            .orElse(null);
+                    return convertDto(user, status);
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<User> findAllGender(String gender) {
-        return userRepository.findAllGender(gender);
-    }
+    public UserDto update(UserUpdateRequest request) {
 
-    @Override
-    public List<User> findAllAge() {
-        return userRepository.findAllAge();
-    }
+        User user = userRepository.findById(request.id())
+                .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + request.id()));
 
-    @Override
-    public User update(UUID id, User updateUser) {
-        // 기존 유저 조회
-        User user = userRepository.findById(id);
+        // username 변경 시에 중복 체크
+        if (request.username() != null && !request.username().equals(user.getName())) {
+            userRepository.findByUsername(request.username())
+                    .filter(other -> !other.getId().equals(user.getId()))
+                    .ifPresent(other -> {
+                        throw new IllegalArgumentException("이미 사용 중인 Username 입니다." + request.username());
+                    });
+        }
 
-        if(user == null) throw new IllegalArgumentException("해당 유저가 존재하지 않습니다.");
+        // email 변경 시에 중복 체크
+        if (request.email() != null && !request.email().equals(user.getEmail())) {
+            userRepository.findByEmail(request.email())
+                    .filter(other -> !other.getId().equals(user.getId()))
+                    .ifPresent(other -> {
+                        throw new IllegalArgumentException("이미 사용 중인 Email 입니다." + request.email());
+                    });
+                    }
 
-        user.update(updateUser);
+        // 프로필 이미지 교체
+        UUID newProfileId = null;
+        if (request.profileImageData() != null) {
+            // 기존 프로필 이미지 삭제
+            if (user.getProfileId() != null) {
+                binaryContentRepository.deleteById(user.getProfileId());
+            }
+            BinaryContent content = new BinaryContent(
+                    request.profileImageFilename(),
+                    request.profileImageData(),
+                    user.getId(),
+                    null
+            );
+            binaryContentRepository.save(content);
+            newProfileId = content.getId();
+        }
 
-        return userRepository.update(id, user);
+        user.update(request.username(), request.email(), request.password(), newProfileId);
+
+        // 덮어쓰기
+        userRepository.save(user);
+
+        UserStatus status = userStatusRepository.findByUserId(user.getId())
+                .orElse(null);
+
+        return convertDto(user, status);
     }
 
     @Override
     public void delete(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다: " + id));
+
+        // 프로필 이미지 삭제
+        if (user.getProfileId() != null) {
+            binaryContentRepository.deleteById(user.getProfileId());
+        }
+
+        // UserStatus 삭제
+        userStatusRepository.findByUserId(id)
+                .ifPresent(status -> userStatusRepository.deleteById(status.getId()));
+
+        // User 삭제
         userRepository.delete(id);
+    }
+
+    private UserDto convertDto(User user, UserStatus status) {
+        boolean online = false;
+        Instant lastConn = null;
+
+        if (status != null) {
+            online = status.isOnline();
+            lastConn = status.getLastConnAt();
+        }
+
+        return new UserDto(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                online,
+                lastConn,
+                user.getProfileId()
+        );
     }
 }
