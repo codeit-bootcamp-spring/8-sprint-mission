@@ -4,44 +4,49 @@ import com.sprint.mission.discodeit.dto.LoginRequest;
 import com.sprint.mission.discodeit.dto.UserResponse;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
-import com.sprint.mission.discodeit.repository.UserRepository; // 인터페이스 참조
-import com.sprint.mission.discodeit.repository.UserStatusRepository; // 인터페이스 참조
+import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class BasicAuthService implements AuthService {
 
-    // 특정 구현체(JCF...)가 아닌 인터페이스를 주입받습니다.
     private final UserRepository userRepository;
     private final UserStatusRepository userStatusRepository;
 
     @Override
     public UserResponse login(LoginRequest request) {
-        // 현재 레포지토리에 저장된 모든 유저를 가져옵니다.
-        List<User> allUsers = userRepository.findAll();
+        // 1. Repository의 findByEmail을 사용하여 유저 조회 (조회 위임)
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다."));
 
-        // 디버깅을 위해 현재 로드된 유저 수를 출력합니다.
-        System.out.println("[DEBUG] 로그인 시도 - 현재 레포지토리 유저 수: " + allUsers.size());
+        // 2.  비밀번호 검증 로직 추가 (필수 요구사항)
+        if (!user.getPassword().equals(request.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
 
-        User user = allUsers.stream()
-                .filter(u -> u.getEmail().equals(request.getEmail()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("로그인 실패: [" + request.getEmail() + "] 유저를 찾을 수 없습니다."));
+        // 3. 로그인 성공 시 온라인 상태로 변경
+        userStatusRepository.findByUserId(user.getId())
+                .ifPresent(status -> {
+                    // UserStatus 엔티티에 상태 변경 메서드가 있다고 가정 (예: updateStatus)
+                    UserStatus updatedStatus = new UserStatus(user.getId(), true);
+                    userStatusRepository.save(updatedStatus);
+                });
 
-        // 유저 상태 정보 조회
-        UserStatus status = userStatusRepository.findByUserId(user.getId()).orElse(null);
+        return convertToResponse(user);
+    }
 
+    private UserResponse convertToResponse(User user) {
+        // 기존 코드와 동일하게 UserResponse 빌더 호출
         return UserResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .profileId(user.getProfileId())
-                .isOnline(status != null && status.isOnline())
+                .isOnline(true)
                 .build();
     }
 }

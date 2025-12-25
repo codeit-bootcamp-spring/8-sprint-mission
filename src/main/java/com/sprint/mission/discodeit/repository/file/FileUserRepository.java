@@ -28,6 +28,13 @@ public class FileUserRepository implements UserRepository {
         FileUtil.saveToFile(filePath, list);
         return user;
     }
+    // 멘토님 피드백 반영: 이메일로 유저 찾기
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return findAll().stream()
+                .filter(u -> u.getEmail().equals(email))
+                .findFirst();
+    }
 
     @Override
     public Optional<User> findById(UUID id) {

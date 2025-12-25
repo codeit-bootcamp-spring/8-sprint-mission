@@ -24,6 +24,7 @@ public class JCFUserRepository implements UserRepository {
         list.removeIf(e -> e.getId().equals(user.getId()));
         list.add(user);
         return user;
+
     }
 
     @Override
@@ -31,6 +32,12 @@ public class JCFUserRepository implements UserRepository {
         return list.stream().filter(e -> e.getId().equals(id)).findFirst();
     }
 
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return list.stream()
+                .filter(u -> u.getEmail().equals(email))
+                .findFirst();
+    }
     @Override
     public List<User> findAll() {
         return new ArrayList<>(list);

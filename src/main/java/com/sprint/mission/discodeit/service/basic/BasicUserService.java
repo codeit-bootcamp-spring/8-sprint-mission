@@ -38,11 +38,16 @@ public class BasicUserService implements UserService {
             profileId = binaryContentRepository.save(profile).getId();
         }
 
-        // 수정된 User 엔티티 생성자 호출 (String, String, UUID)
-        User user = new User(request.getName(), request.getEmail(), profileId);
+        //  수정 포인트: 중복 선언을 제거하고 password를 포함하여 한 번만 생성합니다.
+        User user = new User(
+                request.getName(),
+                request.getEmail(),
+                request.getPassword(), // DTO에 추가한 필드 사용
+                profileId
+        );
         User savedUser = userRepository.save(user);
 
-        // 수정된 UserStatus 엔티티 생성자 호출 (UUID, boolean)
+        // 유저 상태 생성 (기본값: 오프라인)
         UserStatus status = new UserStatus(savedUser.getId(), false);
         userStatusRepository.save(status);
 
@@ -66,7 +71,6 @@ public class BasicUserService implements UserService {
         User user = userRepository.findById(request.getId())
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
 
-        // 엔티티의 update(String, String) 호출
         user.update(request.getName(), request.getEmail());
         User updated = userRepository.save(user);
         return convertToResponse(updated);
@@ -77,16 +81,13 @@ public class BasicUserService implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
 
-        // 1. 유저 상태 정보 삭제
         userStatusRepository.findByUserId(id)
                 .ifPresent(status -> userStatusRepository.delete(status.getId()));
 
-        // 2. 프로필 이미지 정보 삭제 (있는 경우)
         if (user.getProfileId() != null) {
             binaryContentRepository.delete(user.getProfileId());
         }
 
-        // 3. 유저 본인 삭제
         userRepository.delete(id);
     }
 

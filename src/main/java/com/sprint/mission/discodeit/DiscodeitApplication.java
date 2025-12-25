@@ -27,7 +27,13 @@ public class DiscodeitApplication {
                 System.out.println("\n--- DISCORD CLONE APPLICATION START (High-Level) ---");
 
                 // 1. 유저 생성
-                UserCreateRequest aliceRequest = new UserCreateRequest("Alice_Basic", "alice@basic.com", null, null, null);
+                UserCreateRequest aliceRequest = new UserCreateRequest(
+                        "Alice_Basic",
+                        "alice@basic.com",
+                        "password123!",
+                        null,
+                        null,
+                        null);
                 UserResponse alice = userService.create(aliceRequest);
                 System.out.println("SETUP User 생성 완료: " + alice.getName());
 
@@ -37,7 +43,7 @@ public class DiscodeitApplication {
 
                 // 2. 로그인 테스트 전 이메일 로그 출력
                 System.out.println("로그인 시도 이메일: " + alice.getEmail());
-                LoginRequest loginRequest = new LoginRequest(alice.getEmail(), "password123");
+                LoginRequest loginRequest = new LoginRequest(alice.getEmail(), "password123!");
                 UserResponse loggedInUser = authService.login(loginRequest);
                 System.out.println("LOGIN 성공: " + loggedInUser.getName() + " (" + loggedInUser.getEmail() + ")");
 
