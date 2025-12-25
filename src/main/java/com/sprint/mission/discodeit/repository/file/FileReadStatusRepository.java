@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,7 +38,7 @@ public class FileReadStatusRepository implements ReadStatusRepository {
 
     @Override
     public List<ReadStatus> findAll() {
-        return FileUtil.readFromFile(filePath, ReadStatus.class);
+        return (List<ReadStatus>) Collections.singletonList(FileUtil.readFromFile(filePath, ReadStatus.class));
     }
 
     @Override

@@ -4,14 +4,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.util.UUID;
 
-@Getter
+@Getter //  필수: Repository와 Service에서 필드에 접근할 수 있게 합니다.
 @NoArgsConstructor
 public class User {
     private UUID id;
     private String name;
     private String email;
     private String password;
-    private String profileImage; // 추가: 프로필 이미지 파일명 또는 경로
+    private String profileImage; //  멘토 피드백 반영: 프로필 이미지 필드
 
     public User(String name, String email, String password) {
         this.id = UUID.randomUUID();
@@ -20,7 +20,7 @@ public class User {
         this.password = password;
     }
 
-    // 멘토 피드백 반영: 프로필 이미지를 포함한 업데이트 메서드
+    //  멘토 피드백 반영: 프로필 이미지를 포함한 업데이트 메서드
     public void update(String name, String password, String profileImage) {
         this.name = name;
         this.password = password;

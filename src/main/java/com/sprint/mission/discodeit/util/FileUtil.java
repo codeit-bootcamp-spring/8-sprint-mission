@@ -1,9 +1,10 @@
 package com.sprint.mission.discodeit.util;
 
+import com.fasterxml.jackson.core.type.TypeReference; // 추가
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,36 +12,38 @@ public class FileUtil {
     private static final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule());
 
-    public static <T> void saveToFile(String filePath, List<T> data) {
+    // 경로(String) 지원을 위한 오버로딩
+    public static <T> void saveToFile(String filePath, T data) {
+        saveToFile(new File(filePath), data);
+    }
+
+    public static <T> void saveToFile(File file, T data) {
         try {
-            File file = new File(filePath);
-            // 디렉토리가 없으면 생성
-            File parentDir = file.getParentFile();
-            if (parentDir != null && !parentDir.exists()) {
-                parentDir.mkdirs();
-            }
-
-            // 데이터 저장
+            // [멘토 피드백 반영] Thread.sleep(100) 제거
             objectMapper.writeValue(file, data);
-
-            // [중요] 저장 직후 읽기가 시도되는 환경을 위해 물리적 쓰기 안정화 대기
-            Thread.sleep(100);
-        } catch (Exception e) {
-            System.err.println("파일 저장 중 오류 발생: " + e.getMessage());
-            e.printStackTrace();
+        } catch (IOException e) {
+            throw new RuntimeException("파일 저장 실패", e);
         }
     }
 
-    public static <T> List<T> readFromFile(String filePath, Class<T> clazz) {
+    //  리스트 형태의 데이터를 읽기 위한 전용 메서드 추가
+    public static <T> List<T> readListFromFile(String filePath, TypeReference<List<T>> typeReference) {
         try {
             File file = new File(filePath);
-            if (!file.exists()) {
-                return new ArrayList<>();
-            }
-            return objectMapper.readValue(file, objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
-        } catch (Exception e) {
-            // 파일이 비어있거나 형식이 맞지 않는 경우 빈 리스트 반환
-            return new ArrayList<>();
+            if (!file.exists()) return new ArrayList<>();
+            return objectMapper.readValue(file, typeReference);
+        } catch (IOException e) {
+            throw new RuntimeException("파일 리스트 읽기 실패", e);
+        }
+    }
+
+    public static <T> T readFromFile(String filePath, Class<T> valueType) {
+        try {
+            File file = new File(filePath);
+            if (!file.exists()) return null;
+            return objectMapper.readValue(file, valueType);
+        } catch (IOException e) {
+            throw new RuntimeException("파일 읽기 실패", e);
         }
     }
 }

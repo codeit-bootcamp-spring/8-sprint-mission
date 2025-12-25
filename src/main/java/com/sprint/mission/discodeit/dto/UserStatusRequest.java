@@ -8,4 +8,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class UserStatusRequest {
     private UUID userId;
+
+    public UserStatusRequest(UUID userId) {
+        this.userId = userId;
+    }
 }

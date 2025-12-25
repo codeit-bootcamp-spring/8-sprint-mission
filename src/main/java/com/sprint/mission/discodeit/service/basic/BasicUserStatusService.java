@@ -1,15 +1,12 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.dto.UserStatusCreateRequest;
 import com.sprint.mission.discodeit.dto.UserStatusRequest;
 import com.sprint.mission.discodeit.dto.UserStatusResponse;
-import com.sprint.mission.discodeit.dto.UserStatusUpdateRequest;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserStatusService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,7 +20,7 @@ public class BasicUserStatusService implements UserStatusService {
     @Override
     public UserStatusResponse update(UserStatusRequest request) {
         UserStatus userStatus = userStatusRepository.findByUserId(request.getUserId())
-                .orElse(new UserStatus(request.getUserId()));
+                .orElseThrow(() -> new IllegalArgumentException("유저 상태를 찾을 수 없습니다."));
 
         userStatus.updateLastAccessAt();
         UserStatus saved = userStatusRepository.save(userStatus);
@@ -33,43 +30,20 @@ public class BasicUserStatusService implements UserStatusService {
 
     @Override
     public UserStatus create(UUID userId) {
-        return null;
+        return userStatusRepository.save(new UserStatus(userId));
     }
 
     @Override
-    public UserStatus create(UserStatusCreateRequest request) {
-        return null;
-    }
+    public Optional<UserStatus> findById(UUID id) { return userStatusRepository.findById(id); }
 
     @Override
-    public Optional<UserStatus> findById(UUID id) {
-        return Optional.empty();
-    }
+    public List<UserStatus> findAll() { return userStatusRepository.findAll(); }
 
     @Override
-    public List<UserStatus> findAll() {
-        return List.of();
-    }
+    public Optional<UserStatus> findByUserId(UUID userId) { return userStatusRepository.findByUserId(userId); }
 
     @Override
-    public Optional<UserStatus> findByUserId(UUID userId) {
-        return Optional.empty();
-    }
-
-    @Override
-    public UserStatus update(UserStatusUpdateRequest request) {
-        return null;
-    }
-
-    @Override
-    public UserStatus updateByUserId(UUID userId, boolean isOnline) {
-        return null;
-    }
-
-    @Override
-    public void delete(UUID id) {
-
-    }
+    public void delete(UUID id) { userStatusRepository.delete(id); }
 
     private UserStatusResponse convertToResponse(UserStatus userStatus) {
         return UserStatusResponse.builder()
