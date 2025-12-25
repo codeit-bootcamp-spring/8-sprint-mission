@@ -1,34 +1,30 @@
 package com.sprint.mission.discodeit.entity;
 
 import lombok.Getter;
-import java.util.HashSet;
-import java.util.Set;
+import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Getter
+@NoArgsConstructor
 public class Channel {
     private UUID id;
     private String name;
-    private String type; // "PUBLIC" 또는 "PRIVATE"
-    private UUID ownerId;
-    private Set<UUID> memberIds = new HashSet<>(); // 멤버 ID 셋 추가
+    private String description;
+    private ChannelType type;
+    private UUID ownerId; //  소유자 정보는 채널의 속성이므로 유지
 
-    // 기본 생성자 (Jackson용)
-    public Channel() {}
+    //  private Set<UUID> memberIds = new HashSet<>(); -> 삭제 (ReadStatus에서 관리)
 
-    public Channel(String name, String type, UUID ownerId) {
+    public Channel(String name, String description, ChannelType type, UUID ownerId) {
         this.id = UUID.randomUUID();
         this.name = name;
+        this.description = description;
         this.type = type;
         this.ownerId = ownerId;
-        this.memberIds.add(ownerId); // 소유자는 자동으로 멤버에 포함
     }
 
-    public void addMember(UUID userId) {
-        this.memberIds.add(userId);
-    }
-
-    public void update(String name) { // 파라미터 개수 서비스와 일치시킴
+    public void update(String name, String description) {
         this.name = name;
+        this.description = description;
     }
 }

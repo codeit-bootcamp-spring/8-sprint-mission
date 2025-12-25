@@ -1,14 +1,17 @@
 package com.sprint.mission.discodeit;
 
 import com.sprint.mission.discodeit.dto.*;
-import com.sprint.mission.discodeit.service.*;
+import com.sprint.mission.discodeit.service.AuthService;
+import com.sprint.mission.discodeit.service.ChannelService;
+import com.sprint.mission.discodeit.service.MessageService;
+import com.sprint.mission.discodeit.service.UserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.UUID;
 
 @SpringBootApplication
 public class DiscodeitApplication {
@@ -18,63 +21,61 @@ public class DiscodeitApplication {
     }
 
     @Bean
-    public CommandLineRunner run(UserService userService,
-                                 ChannelService channelService,
-                                 MessageService messageService,
-                                 AuthService authService) {
+    public CommandLineRunner test(UserService userService,
+                                  AuthService authService,
+                                  ChannelService channelService,
+                                  MessageService messageService) {
         return args -> {
             try {
                 System.out.println("\n--- DISCORD CLONE APPLICATION START (High-Level) ---");
 
-                // 1. 유저 생성
+                // 1. 유저 생성 (인자 6개: 이름, 이메일, 비밀번호, 파일명, 파일타입, 파일크기)
                 UserCreateRequest aliceRequest = new UserCreateRequest(
                         "Alice_Basic",
                         "alice@basic.com",
                         "password123!",
-                        null,
-                        null,
-                        null);
+                        null, null, null
+                );
                 UserResponse alice = userService.create(aliceRequest);
                 System.out.println("SETUP User 생성 완료: " + alice.getName());
 
-                // [핵심] 파일 쓰기 안정화를 위해 3초간 대기합니다.
-                System.out.println("데이터 동기화 대기 중 (3초)...");
-                Thread.sleep(3000);
-
-                // 2. 로그인 테스트 전 이메일 로그 출력
-                System.out.println("로그인 시도 이메일: " + alice.getEmail());
+                // 2. 로그인 테스트
                 LoginRequest loginRequest = new LoginRequest(alice.getEmail(), "password123!");
                 UserResponse loggedInUser = authService.login(loginRequest);
                 System.out.println("LOGIN 성공: " + loggedInUser.getName() + " (" + loggedInUser.getEmail() + ")");
 
-                // 3. PUBLIC 채널 생성
-                ChannelCreateRequest publicDto = new ChannelCreateRequest(
+                // 3. PUBLIC 채널 생성 테스트
+                // 생성자 요구 규격: (String name, String description, UUID ownerId, List<UUID> memberIds)
+                ChannelCreateRequest publicRequest = new ChannelCreateRequest(
                         "Public Notice",
-                        "모두를 위한 공지사항 채널",
-                        alice.getId(),
-                        null
+                        "General Announcements",
+                        alice.getId(), // ownerId
+                        Collections.emptyList() // memberIds (null 대신 빈 리스트)
                 );
-                ChannelResponse publicChannel = channelService.createPublic(publicDto);
-                System.out.println("PUBLIC Channel 생성 완료: " + publicChannel.getName());
+                ChannelResponse publicChannel = channelService.createPublic(publicRequest);
 
-                Thread.sleep(200);
+                if (publicChannel != null) {
+                    System.out.println("PUBLIC Channel 생성 완료: " + publicChannel.getName());
+                }
 
-                // 4. 메시지 생성 (고도화된 DTO 활용)
+                // 4. 메시지 전송 테스트
+                // 생성자 요구 규격: (UUID userId, UUID channelId, String content, List<UUID> mentionIds)
+                //  주의: 에러 로그에 따라 UUID(사용자), UUID(채널), String(내용) 순서로 배치
                 MessageCreateRequest messageRequest = new MessageCreateRequest(
-                        alice.getId(),
-                        publicChannel.getId(),
-                        "인증 및 고도화 서비스 테스트 성공!",
-                        Collections.emptyList()
+                        alice.getId(),         // userId
+                        publicChannel.getId(), // channelId
+                        "인증 및 고도화 서비스 테스트 성공!", // content
+                        Collections.emptyList() // mentionIds
                 );
-                var message = messageService.create(messageRequest);
-                System.out.println("메시지 전송 성공: [" + message.getContent() + "]");
+
+                messageService.create(messageRequest);
+                System.out.println("메시지 전송 성공: [" + messageRequest.getContent() + "]");
 
                 System.out.println("\n--- 모든 고도화 기능 테스트 성공 ---");
 
             } catch (Exception e) {
                 System.err.println("테스트 도중 오류 발생: " + e.getMessage());
-                // 상세 에러 확인이 필요한 경우 아래 주석 해제
-                // e.printStackTrace();
+                e.printStackTrace();
             }
         };
     }

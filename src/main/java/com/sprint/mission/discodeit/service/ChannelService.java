@@ -10,6 +10,9 @@ import java.util.UUID;
 
 public interface ChannelService {
     ChannelResponse createPublic(ChannelCreateRequest request);
+
+    ChannelResponse create(ChannelCreateRequest request);
+
     ChannelResponse createPrivate(ChannelCreateRequest request);
     Optional<ChannelResponse> findById(UUID id);
     List<ChannelResponse> findAll();
