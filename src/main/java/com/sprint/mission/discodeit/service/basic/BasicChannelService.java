@@ -7,7 +7,7 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
-import com.sprint.mission.discodeit.repository.MessageRepository; // ✅ 추가
+import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +23,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BasicChannelService implements ChannelService {
 
-    //  다이어그램에 명시된 3개의 레포지토리 주입
     private final ChannelRepository channelRepository;
     private final ReadStatusRepository readStatusRepository;
-    private final MessageRepository messageRepository;
+    private final MessageRepository messageRepository; // 다이어그램에 따라 추가 주입
 
     @Override
     public ChannelResponse createPublic(ChannelCreateRequest request) {
@@ -98,21 +97,20 @@ public class BasicChannelService implements ChannelService {
         return convertToResponse(channelRepository.save(channel));
     }
 
+    //  [멘토님 피드백 반영] 연관 데이터 연쇄 삭제 로직 구현
     @Override
     public void delete(UUID id) {
-        //  다이어그램 의도 반영: 채널 삭제 시 연관된 모든 데이터 연쇄 삭제
-
-        // 1. 해당 채널의 모든 메시지 삭제
+        // 1. 해당 채널에 속한 모든 Message 삭제
         messageRepository.findAll().stream()
-                .filter(m -> m.getChannelId().equals(id))
-                .forEach(m -> messageRepository.delete(m.getId()));
+                .filter(message -> message.getChannelId().equals(id))
+                .forEach(message -> messageRepository.delete(message.getId()));
 
-        // 2. 해당 채널의 모든 읽기 상태(ReadStatus) 삭제
+        // 2. 해당 채널에 속한 모든 ReadStatus 삭제
         readStatusRepository.findAll().stream()
-                .filter(rs -> rs.getChannelId().equals(id))
-                .forEach(rs -> readStatusRepository.delete(rs.getId()));
+                .filter(readStatus -> readStatus.getChannelId().equals(id))
+                .forEach(readStatus -> readStatusRepository.delete(readStatus.getId()));
 
-        // 3. 채널 삭제
+        // 3. 마지막으로 채널 자체를 삭제
         channelRepository.delete(id);
     }
 

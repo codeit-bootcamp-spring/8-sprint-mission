@@ -1,23 +1,29 @@
 package com.sprint.mission.discodeit.entity;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import java.time.Instant;
 import java.util.UUID;
 
-@Getter
+@Getter //  필수: getId(), getUserId() 등을 생성합니다.
+@NoArgsConstructor
 public class UserStatus {
     private UUID id;
     private UUID userId;
-    private boolean isOnline;
+    private Instant lastAccessAt;
 
-    public UserStatus() {}
-
-    public UserStatus(UUID userId, boolean isOnline) {
+    public UserStatus(UUID userId) {
         this.id = UUID.randomUUID();
         this.userId = userId;
-        this.isOnline = isOnline;
+        this.lastAccessAt = Instant.now();
     }
 
-    public void updateStatus(boolean isOnline) {
-        this.isOnline = isOnline;
+    public boolean isOnline() {
+        return lastAccessAt != null &&
+                lastAccessAt.isAfter(Instant.now().minusSeconds(300));
+    }
+
+    public void updateLastAccessAt() {
+        this.lastAccessAt = Instant.now();
     }
 }
