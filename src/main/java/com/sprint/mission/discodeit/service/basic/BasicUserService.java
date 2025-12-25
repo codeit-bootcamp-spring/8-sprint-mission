@@ -28,8 +28,14 @@ public class BasicUserService implements UserService {
 
     @Override
     public UserResponse create(UserCreateRequest request) {
+        // 1. 가입 시 이메일 중복 검사
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+        }
+
+        // 2. 가입 시 사용자 이름(Unique) 중복 검사
+        if (userRepository.existsByName(request.getName())) {
+            throw new IllegalArgumentException("이미 존재하는 사용자 이름입니다.");
         }
 
         UUID profileId = null;
@@ -38,16 +44,16 @@ public class BasicUserService implements UserService {
             profileId = binaryContentRepository.save(profile).getId();
         }
 
-        //  수정 포인트: 중복 선언을 제거하고 password를 포함하여 한 번만 생성합니다.
+        // User 엔티티 생성 (비밀번호 포함)
         User user = new User(
                 request.getName(),
                 request.getEmail(),
-                request.getPassword(), // DTO에 추가한 필드 사용
+                request.getPassword(),
                 profileId
         );
         User savedUser = userRepository.save(user);
 
-        // 유저 상태 생성 (기본값: 오프라인)
+        // 유저 상태 초기화 (Offline)
         UserStatus status = new UserStatus(savedUser.getId(), false);
         userStatusRepository.save(status);
 
@@ -68,11 +74,28 @@ public class BasicUserService implements UserService {
 
     @Override
     public UserResponse update(UserUpdateRequest request) {
+        // 1. 수정 대상 유저 확인
         User user = userRepository.findById(request.getId())
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
 
+        // 2. 이메일 변경 시 중복 검사 (본인 제외)
+        if (!user.getEmail().equals(request.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail())) {
+                throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+            }
+        }
+
+        // 3. 이름 변경 시 중복 검사 (본인 제외)
+        if (!user.getName().equals(request.getName())) {
+            if (userRepository.existsByName(request.getName())) {
+                throw new IllegalArgumentException("이미 존재하는 사용자 이름입니다.");
+            }
+        }
+
+        // 4. 정보 업데이트
         user.update(request.getName(), request.getEmail());
         User updated = userRepository.save(user);
+
         return convertToResponse(updated);
     }
 
@@ -81,13 +104,16 @@ public class BasicUserService implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
 
+        // 연관 데이터 삭제 (Status)
         userStatusRepository.findByUserId(id)
                 .ifPresent(status -> userStatusRepository.delete(status.getId()));
 
+        // 연관 데이터 삭제 (Profile Binary)
         if (user.getProfileId() != null) {
             binaryContentRepository.delete(user.getProfileId());
         }
 
+        // 유저 삭제
         userRepository.delete(id);
     }
 
