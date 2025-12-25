@@ -14,4 +14,5 @@ public class UserCreateRequest {
     private String fileName;
     private String fileType;
     private Long fileSize;
+    private String profileImage;
 }

@@ -1,17 +1,14 @@
 package com.sprint.mission.discodeit;
 
-import com.sprint.mission.discodeit.dto.*;
-import com.sprint.mission.discodeit.service.AuthService;
+import com.sprint.mission.discodeit.service.UserService;
+import com.sprint.mission.discodeit.service.UserStatusService;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.service.MessageService;
-import com.sprint.mission.discodeit.service.UserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext; // ✅ IoC 컨테이너 객체
 import org.springframework.context.annotation.Bean;
-
-import java.util.Collections;
-import java.util.UUID;
 
 @SpringBootApplication
 public class DiscodeitApplication {
@@ -20,63 +17,25 @@ public class DiscodeitApplication {
         SpringApplication.run(DiscodeitApplication.class, args);
     }
 
+    /**
+     * [멘토 피드백 반영]
+     * 파라미터 주입 방식 대신 ApplicationContext(IoC 컨테이너)를 사용하여 빈을 조회합니다.
+     */
     @Bean
-    public CommandLineRunner test(UserService userService,
-                                  AuthService authService,
-                                  ChannelService channelService,
-                                  MessageService messageService) {
+    public CommandLineRunner run(ApplicationContext context) { // context를 인자로 받음
         return args -> {
-            try {
-                System.out.println("\n--- DISCORD CLONE APPLICATION START (High-Level) ---");
+            //  IoC 컨테이너 객체로부터 직접 Bean을 조회하도록 수정
+            UserService userService = context.getBean(UserService.class);
+            UserStatusService userStatusService = context.getBean(UserStatusService.class);
+            ChannelService channelService = context.getBean(ChannelService.class);
+            MessageService messageService = context.getBean(MessageService.class);
 
-                // 1. 유저 생성 (인자 6개: 이름, 이메일, 비밀번호, 파일명, 파일타입, 파일크기)
-                UserCreateRequest aliceRequest = new UserCreateRequest(
-                        "Alice_Basic",
-                        "alice@basic.com",
-                        "password123!",
-                        null, null, null
-                );
-                UserResponse alice = userService.create(aliceRequest);
-                System.out.println("SETUP User 생성 완료: " + alice.getName());
+            System.out.println("========================================");
+            System.out.println("Discodeit Application Started Successfully!");
+            System.out.println("IoC Container로부터 모든 서비스를 정상적으로 로드했습니다.");
+            System.out.println("========================================");
 
-                // 2. 로그인 테스트
-                LoginRequest loginRequest = new LoginRequest(alice.getEmail(), "password123!");
-                UserResponse loggedInUser = authService.login(loginRequest);
-                System.out.println("LOGIN 성공: " + loggedInUser.getName() + " (" + loggedInUser.getEmail() + ")");
-
-                // 3. PUBLIC 채널 생성 테스트
-                // 생성자 요구 규격: (String name, String description, UUID ownerId, List<UUID> memberIds)
-                ChannelCreateRequest publicRequest = new ChannelCreateRequest(
-                        "Public Notice",
-                        "General Announcements",
-                        alice.getId(), // ownerId
-                        Collections.emptyList() // memberIds (null 대신 빈 리스트)
-                );
-                ChannelResponse publicChannel = channelService.createPublic(publicRequest);
-
-                if (publicChannel != null) {
-                    System.out.println("PUBLIC Channel 생성 완료: " + publicChannel.getName());
-                }
-
-                // 4. 메시지 전송 테스트
-                // 생성자 요구 규격: (UUID userId, UUID channelId, String content, List<UUID> mentionIds)
-                //  주의: 에러 로그에 따라 UUID(사용자), UUID(채널), String(내용) 순서로 배치
-                MessageCreateRequest messageRequest = new MessageCreateRequest(
-                        alice.getId(),         // userId
-                        publicChannel.getId(), // channelId
-                        "인증 및 고도화 서비스 테스트 성공!", // content
-                        Collections.emptyList() // mentionIds
-                );
-
-                messageService.create(messageRequest);
-                System.out.println("메시지 전송 성공: [" + messageRequest.getContent() + "]");
-
-                System.out.println("\n--- 모든 고도화 기능 테스트 성공 ---");
-
-            } catch (Exception e) {
-                System.err.println("테스트 도중 오류 발생: " + e.getMessage());
-                e.printStackTrace();
-            }
+            // 초기 더미 데이터 생성이나 테스트 로직이 필요하다면 여기서 수행합니다.
         };
     }
 }
