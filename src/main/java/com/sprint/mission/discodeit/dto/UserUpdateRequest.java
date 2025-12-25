@@ -7,5 +7,6 @@ import java.util.UUID;
 public class UserUpdateRequest {
     private UUID id;
     private String name;
-    private String password; //  필드가 있는지 확인하세요.
+    private String password;
+    private String profileImage; //  추가
 }

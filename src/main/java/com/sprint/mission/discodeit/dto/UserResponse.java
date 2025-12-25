@@ -12,4 +12,5 @@ public class UserResponse {
     private String email;
     private UUID profileId;
     private boolean isOnline;
+    private String profileImage;
 }

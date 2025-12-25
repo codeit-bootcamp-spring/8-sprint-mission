@@ -25,15 +25,28 @@ public class BasicUserService implements UserService {
 
     @Override
     public UserResponse create(UserCreateRequest request) {
-        // 중복 검증 로직 등은 기존과 동일하게 유지
         User user = new User(request.getName(), request.getEmail(), request.getPassword());
         User savedUser = userRepository.save(user);
 
-        //  멘토님 피드백 반영: 생성자에서 boolean 인자 제거
         UserStatus status = new UserStatus(savedUser.getId());
         userStatusRepository.save(status);
 
         return convertToResponse(savedUser, status);
+    }
+
+    @Override
+    public UserResponse update(UserUpdateRequest request) {
+        User user = userRepository.findById(request.getId())
+                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
+
+        // 멘토님 피드백 반영: 프로필 이미지를 포함한 업데이트 로직
+        // 실제 파일 시스템 연동 시 여기서 기존 파일 삭제 로직이 들어갈 수 있습니다.
+        user.update(request.getName(), request.getPassword(), request.getProfileImage());
+
+        userRepository.save(user);
+
+        UserStatus status = userStatusRepository.findByUserId(user.getId()).orElse(null);
+        return convertToResponse(user, status);
     }
 
     @Override
@@ -55,17 +68,6 @@ public class BasicUserService implements UserService {
     }
 
     @Override
-    public UserResponse update(UserUpdateRequest request) {
-        User user = userRepository.findById(request.getId())
-                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
-        user.update(request.getName(), request.getPassword());
-        userRepository.save(user);
-
-        UserStatus status = userStatusRepository.findByUserId(user.getId()).orElse(null);
-        return convertToResponse(user, status);
-    }
-
-    @Override
     public void delete(UUID id) {
         userStatusRepository.findByUserId(id).ifPresent(s -> userStatusRepository.delete(s.getId()));
         userRepository.delete(id);
@@ -77,6 +79,7 @@ public class BasicUserService implements UserService {
                 .name(user.getName())
                 .email(user.getEmail())
                 .isOnline(status != null && status.isOnline())
+                .profileImage(user.getProfileImage()) //  Response에도 추가 확인
                 .build();
     }
 }
