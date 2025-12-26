@@ -50,6 +50,6 @@ public class UserStatus extends BaseEntity implements Serializable {
         }
 
         Instant now = Instant.now();
-        return lastConnAt.isBefore(now.minus(Duration.ofMinutes(ONLINE_VERIFICATION_MINUTES)));
+        return lastConnAt.isAfter(now.minus(Duration.ofMinutes(ONLINE_VERIFICATION_MINUTES)));
     }
 }

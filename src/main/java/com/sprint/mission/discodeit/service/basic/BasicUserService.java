@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserResponse;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
@@ -28,7 +29,7 @@ public class BasicUserService implements UserService {
     private final BinaryContentRepository binaryContentRepository;
 
     @Override
-    public UserResponse create(UserCreateRequest request) {
+    public UserResponse create(UserCreateRequest request, BinaryContentCreateRequest profileRequest) {
 
         // Username / Email 중복 검증
         if (userRepository.existsByUsernameOrEmail(request.username(),  request.email())) {
@@ -44,10 +45,10 @@ public class BasicUserService implements UserService {
         userStatusRepository.save(status);
 
         // 프로필 이미지 있으면 BinaryContent 생성 -> User.profileId 설정
-        if (request.profileImageData() != null) {
+        if (profileRequest != null && profileRequest.data() != null) {
             BinaryContent content = new BinaryContent(
-                    request.profileImageFilename(),
-                    request.profileImageData(),
+                    profileRequest.fileName(),
+                    profileRequest.data(),
                     user.getId(),
                     null
             );
@@ -83,7 +84,7 @@ public class BasicUserService implements UserService {
     }
 
     @Override
-    public UserResponse update(UserUpdateRequest request) {
+    public UserResponse update(UserUpdateRequest request, BinaryContentCreateRequest profileRequest) {
 
         User user = userRepository.findById(request.id())
                 .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + request.id()));
@@ -107,15 +108,18 @@ public class BasicUserService implements UserService {
                     }
 
         // 프로필 이미지 교체
-        UUID newProfileId = null;
-        if (request.profileImageData() != null) {
-            // 기존 프로필 이미지 삭제
+        UUID newProfileId = user.getProfileId();
+
+        if (profileRequest != null && profileRequest.data() != null) {
+            // 기존 이미지 삭제 (존재 한다면)
             if (user.getProfileId() != null) {
                 binaryContentRepository.deleteById(user.getProfileId());
             }
+
+            // 새 이미지 저장
             BinaryContent content = new BinaryContent(
-                    request.profileImageFilename(),
-                    request.profileImageData(),
+                    profileRequest.fileName(),
+                    profileRequest.data(),
                     user.getId(),
                     null
             );
@@ -123,6 +127,7 @@ public class BasicUserService implements UserService {
             newProfileId = content.getId();
         }
 
+        // 유저 정보 업데이트
         user.update(request.username(), request.email(), request.password(), newProfileId);
 
         // 덮어쓰기

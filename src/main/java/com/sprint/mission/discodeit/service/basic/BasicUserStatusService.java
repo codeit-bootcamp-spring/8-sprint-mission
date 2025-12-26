@@ -76,6 +76,7 @@ public class BasicUserStatusService implements UserStatusService {
 
     @Override
     public UserStatusResponse updateByUserId(UUID userId, Instant lastConnAt) {
+        System.out.println("userId는 = " + userId);
         UserStatus status = userStatusRepository.findByUserId(userId)
                 .orElseThrow(() -> new NoSuchElementException("UserStatus를 찾을 수 없습니다: " + userId));
 

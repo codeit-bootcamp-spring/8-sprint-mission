@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
+import javax.swing.plaf.synth.SynthOptionPaneUI;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -64,7 +65,7 @@ public class FileUserStatusRepository implements UserStatusRepository {
     @Override
     public Optional<UserStatus> findByUserId(UUID userId) {
         return findAll().stream()
-                .filter(us -> Objects.equals(us.getId(), userId))
+                .filter(us -> Objects.equals(us.getUserId(), userId))
                 .findFirst();
     }
 

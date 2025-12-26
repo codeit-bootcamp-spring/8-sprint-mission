@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.service;
 
+import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserResponse;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
@@ -19,7 +20,7 @@ import java.util.UUID;
 public interface UserService {
 
     // 유저 생성
-    UserResponse create(UserCreateRequest request);
+    UserResponse create(UserCreateRequest request, BinaryContentCreateRequest profileRequest);
     
     // 유저 조회 (단건)
     UserResponse findUser(UUID id);
@@ -28,7 +29,7 @@ public interface UserService {
     List<UserResponse> findAll();
 
     // 수정
-    UserResponse update(UserUpdateRequest request);
+    UserResponse update(UserUpdateRequest request, BinaryContentCreateRequest profileRequest);
     
     // 삭제
     void delete(UUID id);
