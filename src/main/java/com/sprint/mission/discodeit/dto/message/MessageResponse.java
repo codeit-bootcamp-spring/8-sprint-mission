@@ -18,7 +18,7 @@ import java.util.UUID;
     • createdAt         : 메시지 작성 시간
     • attachmentIds     : 첨부 파일(BinaryContent) id 목록
  */
-public record MessageDto(
+public record MessageResponse(
         UUID id,
         UUID channelId,
         UUID userId,

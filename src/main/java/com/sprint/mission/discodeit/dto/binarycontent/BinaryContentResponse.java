@@ -15,7 +15,7 @@ import java.util.UUID;
     • userId            : 프로필 이미지와 관련된 유저 id
     • messageId         : 메시지 첨부파일과 관련된 메시지 id
  */
-public record BinaryContentDto(
+public record BinaryContentResponse(
         UUID id,
         String fileName,
         Instant createdAt,

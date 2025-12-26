@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.readstatus.ReadStatusCreateRequest;
-import com.sprint.mission.discodeit.dto.readstatus.ReadStatusDto;
+import com.sprint.mission.discodeit.dto.readstatus.ReadStatusResponse;
 import com.sprint.mission.discodeit.dto.readstatus.ReadStatusUpdateRequest;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
@@ -26,7 +26,7 @@ public class BasicReadStatusService implements ReadStatusService {
     private final ChannelRepository channelRepository;
 
     @Override
-    public ReadStatusDto create(ReadStatusCreateRequest request) {
+    public ReadStatusResponse create(ReadStatusCreateRequest request) {
         // 1) User 존재 여부 확인
         if (!userRepository.existsById(request.userId())) {
             throw new NoSuchElementException("User 를 찾을 수 없습니다: " + request.userId());
@@ -59,7 +59,7 @@ public class BasicReadStatusService implements ReadStatusService {
     }
 
     @Override
-    public ReadStatusDto findById(UUID id) {
+    public ReadStatusResponse findById(UUID id) {
         ReadStatus readStatus = readStatusRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("ReadStatus를 찾을 수 없습니다. " + id));
 
@@ -67,14 +67,14 @@ public class BasicReadStatusService implements ReadStatusService {
     }
 
     @Override
-    public List<ReadStatusDto> findAllByUserId(UUID userId) {
+    public List<ReadStatusResponse> findAllByUserId(UUID userId) {
         return readStatusRepository.findAllByUserId(userId).stream()
                 .map(this::convertDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public ReadStatusDto update(ReadStatusUpdateRequest request) {
+    public ReadStatusResponse update(ReadStatusUpdateRequest request) {
         ReadStatus readStatus = readStatusRepository.findById(request.id())
                 .orElseThrow(() -> new NoSuchElementException("ReadStatus를 찾을 수 없습니다: " + request.id()));
 
@@ -89,8 +89,8 @@ public class BasicReadStatusService implements ReadStatusService {
         readStatusRepository.deleteById(id);
     }
 
-    private ReadStatusDto convertDto(ReadStatus entity) {
-        return new ReadStatusDto(
+    private ReadStatusResponse convertDto(ReadStatus entity) {
+        return new ReadStatusResponse(
                 entity.getId(),
                 entity.getUserId(),
                 entity.getChannelId(),

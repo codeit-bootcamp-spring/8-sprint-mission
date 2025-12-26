@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateRequest;
-import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentDto;
+import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
@@ -20,26 +20,24 @@ public class BasicBinaryContentService implements BinaryContentService {
     private final BinaryContentRepository binaryContentRepository;
 
     @Override
-    public BinaryContentDto create(BinaryContentCreateRequest request) {
+    public BinaryContentResponse create(BinaryContentCreateRequest request) {
         BinaryContent binaryContent = new BinaryContent(
                 request.fileName(),
-                request.data(),
-                null,   // hostUserId
-                null                 // hostMessageId
+                request.data()
         );
         binaryContentRepository.save(binaryContent);
         return convertDto(binaryContent);
     }
 
     @Override
-    public BinaryContentDto findById(UUID id) {
+    public BinaryContentResponse findById(UUID id) {
         BinaryContent binaryContent = binaryContentRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("BinaryContent를 찾을 수 없습니다." + id));
         return convertDto(binaryContent);
     }
 
     @Override
-    public List<BinaryContentDto> findAllByIdIn(List<UUID> ids) {
+    public List<BinaryContentResponse> findAllByIdIn(List<UUID> ids) {
         return binaryContentRepository.findAllByIdIn(ids).stream()
                 .map(binaryContent -> this.convertDto(binaryContent))
                 .collect(Collectors.toList());
@@ -50,13 +48,13 @@ public class BasicBinaryContentService implements BinaryContentService {
         binaryContentRepository.deleteById(id);
     }
 
-    private BinaryContentDto convertDto(BinaryContent binaryContent) {
-        return new BinaryContentDto(
+    private BinaryContentResponse convertDto(BinaryContent binaryContent) {
+        return new BinaryContentResponse(
                 binaryContent.getId(),
                 binaryContent.getFileName(),
                 binaryContent.getCreatedAt(),
-                binaryContent.getHostUserId(),
-                binaryContent.getHostMessageId()
+                binaryContent.getOptionalHostUserId().orElse(null),
+                binaryContent.getOptionalHostMessageId().orElse(null)
         );
     }
 }

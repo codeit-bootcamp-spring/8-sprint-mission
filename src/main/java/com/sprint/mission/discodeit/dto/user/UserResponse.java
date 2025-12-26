@@ -16,7 +16,7 @@ import java.util.UUID;
     • lastConnAt          : 유저의 마지막 접속 시간
     • profileImageId      : 프로필 이미지 id
  */
-public record UserDto(
+public record UserResponse(
         UUID id,
         String username,
         String email,

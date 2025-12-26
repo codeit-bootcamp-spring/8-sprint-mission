@@ -1,9 +1,8 @@
 package com.sprint.mission.discodeit.service;
 
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
-import com.sprint.mission.discodeit.dto.user.UserDto;
+import com.sprint.mission.discodeit.dto.user.UserResponse;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
-import com.sprint.mission.discodeit.entity.User;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,16 +19,16 @@ import java.util.UUID;
 public interface UserService {
 
     // 유저 생성
-    UserDto create(UserCreateRequest request);
+    UserResponse create(UserCreateRequest request);
     
     // 유저 조회 (단건)
-    UserDto findUser(UUID id);
+    UserResponse findUser(UUID id);
 
     // 유저 조회 (다건)
-    List<UserDto> findAll();
+    List<UserResponse> findAll();
 
     // 수정
-    UserDto update(UserUpdateRequest request);
+    UserResponse update(UserUpdateRequest request);
     
     // 삭제
     void delete(UUID id);

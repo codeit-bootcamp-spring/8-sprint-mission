@@ -18,7 +18,7 @@ import java.util.*;
 public class FileUserRepository implements UserRepository {
 
     private final Path directory;
-    private final String EXTENSION = ".ser";
+    private static final String EXTENSION = ".ser";
 
     public FileUserRepository(
             @Value("${discodeit.repository.file-directory:.discodeit}") String rootDir
@@ -44,7 +44,7 @@ public class FileUserRepository implements UserRepository {
         try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(path))) {
             oos.writeObject(user);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("생성에 실패 했습니다. " + this.directory, e);
         }
         return user;
     }

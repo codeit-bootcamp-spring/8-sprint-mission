@@ -18,7 +18,7 @@ import java.util.*;
 public class FileMessageRepository implements MessageRepository {
 
     private final Path directory;
-    private final String EXTENSION = ".ser";
+    private static final String EXTENSION = ".ser";
 
     public FileMessageRepository(
             @Value("${discodeit.repository.file-directory:.discodeit}") String rootDir
@@ -41,7 +41,7 @@ public class FileMessageRepository implements MessageRepository {
         try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(path))) {
             oos.writeObject(message);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("생성에 실패 했습니다. " + this.directory, e);
         }
         return message;
     }

@@ -20,7 +20,7 @@ import java.util.*;
 public class FileUserStatusRepository implements UserStatusRepository {
 
     private final Path directory;
-    private final String EXTENSION = ".ser";
+    private static final String EXTENSION = ".ser";
 
     public FileUserStatusRepository(
             @Value("${discodeit.repository.file-directory:.discodeit}") String rootDir
@@ -43,7 +43,7 @@ public class FileUserStatusRepository implements UserStatusRepository {
         try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(path))) {
             oos.writeObject(userStatus);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("생성에 실패 했습니다. " + this.directory, e);
         }
         return null;
     }

@@ -6,12 +6,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
 @ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "jcf", matchIfMissing = true)
 public class JCFMessageRepository implements MessageRepository {
 
-    private final Map<UUID, Message> data = new HashMap<>();
+    private final Map<UUID, Message> data = new ConcurrentHashMap<>();
 
     @Override
     public Message save(Message message) {

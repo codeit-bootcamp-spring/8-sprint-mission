@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
-import com.sprint.mission.discodeit.dto.user.UserDto;
+import com.sprint.mission.discodeit.dto.user.UserResponse;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
@@ -28,7 +28,7 @@ public class BasicUserService implements UserService {
     private final BinaryContentRepository binaryContentRepository;
 
     @Override
-    public UserDto create(UserCreateRequest request) {
+    public UserResponse create(UserCreateRequest request) {
 
         // Username / Email 중복 검증
         if (userRepository.existsByUsernameOrEmail(request.username(),  request.email())) {
@@ -61,7 +61,7 @@ public class BasicUserService implements UserService {
     }
 
     @Override
-    public UserDto findUser(UUID id) {
+    public UserResponse findUser(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + id));
 
@@ -72,7 +72,7 @@ public class BasicUserService implements UserService {
     }
 
     @Override
-    public List<UserDto> findAll() {
+    public List<UserResponse> findAll() {
         return userRepository.findAll().stream()
                 .map(user -> {
                     UserStatus status = userStatusRepository.findByUserId(user.getId())
@@ -83,7 +83,7 @@ public class BasicUserService implements UserService {
     }
 
     @Override
-    public UserDto update(UserUpdateRequest request) {
+    public UserResponse update(UserUpdateRequest request) {
 
         User user = userRepository.findById(request.id())
                 .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + request.id()));
@@ -152,7 +152,7 @@ public class BasicUserService implements UserService {
         userRepository.delete(id);
     }
 
-    private UserDto convertDto(User user, UserStatus status) {
+    private UserResponse convertDto(User user, UserStatus status) {
         boolean online = false;
         Instant lastConn = null;
 
@@ -161,7 +161,7 @@ public class BasicUserService implements UserService {
             lastConn = status.getLastConnAt();
         }
 
-        return new UserDto(
+        return new UserResponse(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
