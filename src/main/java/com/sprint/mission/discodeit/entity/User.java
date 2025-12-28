@@ -1,29 +1,30 @@
 package com.sprint.mission.discodeit.entity;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import java.io.Serializable;
 import java.util.UUID;
 
-@Getter //  외부(Service)에서 데이터를 읽기 위해 필수
-@NoArgsConstructor
-public class User {
-    private UUID id;
+public class User implements Serializable {
+    private final UUID id;
     private String name;
     private String email;
-    private String password;
-    private UUID profileId;
 
-    public User(String name, String email, String password, UUID profileId) {
-        this.id = UUID.randomUUID(); //  ID가 null이 되지 않도록 생성 시 할당
+    public User(String name, String email) {
+        this.id = UUID.randomUUID();
         this.name = name;
         this.email = email;
-        this.password = password;
-        this.profileId = profileId;
     }
 
-    public void update(String name, String email, String password) {
-        if (name != null) this.name = name;
-        if (email != null) this.email = email;
-        if (password != null) this.password = password;
+    // --- Getter 메서드 유지 ---
+    public UUID getId() { return id; }
+    public String getName() { return name; }
+    public String getEmail() { return email; }
+
+    //  Service가 호출하는 상태 변경 메서드 추가
+    public void update(String newName, String newEmail) {
+        this.name = newName;
+        this.email = newEmail;
+        // 일반적으로 Entity의 상태 변경은 Entity 내부에서만 일어나야 합니다.
     }
+
+    // toString(), hashCode(), equals() 등 필요한 메서드는 유지
 }

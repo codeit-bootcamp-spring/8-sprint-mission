@@ -1,36 +1,29 @@
 package com.sprint.mission.discodeit.entity;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-import java.util.Set;
+import java.io.Serializable;
 import java.util.UUID;
 
-@Getter
-@NoArgsConstructor
-public class Channel {
-    private UUID id;
+public class Channel implements Serializable {
+    private final UUID id;
     private String name;
-    private String description;
-    private ChannelType type;
-    private UUID ownerId; //  소유자 정보는 채널의 속성이므로 유지
+    private UUID ownerId; // 채널 소유자 ID
 
-    //  private Set<UUID> memberIds = new HashSet<>(); -> 삭제 (ReadStatus에서 관리)
-
-    public Channel(String name, String description, ChannelType type, UUID ownerId) {
+    public Channel(String name, UUID ownerId) {
         this.id = UUID.randomUUID();
         this.name = name;
-        this.description = description;
-        this.type = type;
         this.ownerId = ownerId;
     }
 
-    public void update(String name, String description) {
-        this.name = name;
-        this.description = description;
+    // --- Getter 메서드 유지 ---
+    public UUID getId() { return id; }
+    public String getName() { return name; }
+    public UUID getOwnerId() { return ownerId; }
+
+    //  Service가 호출하는 상태 변경 메서드 추가
+    public void update(String newName, UUID newOwnerId) {
+        this.name = newName;
+        this.ownerId = newOwnerId;
     }
 
-    public Set<UUID> getMemberIds() {
-        return Set.of();
-    }
+    // toString(), hashCode(), equals() 등 필요한 메서드는 유지
 }

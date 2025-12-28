@@ -1,46 +1,77 @@
-package com.sprint.mission.discodeit.service.basic;
+package com.sprint.mission.discodeit.service.basic; // 패키지명은 프로젝트 구조에 따라 다를 수 있습니다.
 
-import com.sprint.mission.discodeit.dto.MessageCreateRequest;
-import com.sprint.mission.discodeit.dto.MessageResponse;
-import com.sprint.mission.discodeit.dto.MessageUpdateRequest;
 import com.sprint.mission.discodeit.entity.Message;
-import com.sprint.mission.discodeit.repository.BinaryContentRepository;
-import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
-import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.repository.ChannelRepository; //  Channel/User Repository import
+import com.sprint.mission.discodeit.repository.UserRepository;     //
 import com.sprint.mission.discodeit.service.MessageService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
+import com.sprint.mission.discodeit.util.ValidationUtil;
 import java.util.List;
+import java.util.NoSuchElementException; // 예외 처리 추가
 import java.util.Optional;
 import java.util.UUID;
 
-@Service
-@RequiredArgsConstructor
+// MessageService 인터페이스 구현
 public class BasicMessageService implements MessageService {
 
-    // 인터페이스 타입으로 주입받아 구현체와의 의존성을 분리합니다.
+    // 1. Repository 필드 선언 (3가지 Repository 모두 DI 받음)
     private final MessageRepository messageRepository;
-    private final ChannelRepository channelRepository;
-    private final UserRepository userRepository;
-    private final BinaryContentRepository binaryContentRepository;
+    private final ChannelRepository channelRepository; // Service 간 의존성 제거 후 추가
+    private final UserRepository userRepository;       // Service 간 의존성 제거 후 추가
+
+    // 2. 생성자를 통한 의존성 주입 (DI)
+    public BasicMessageService(
+            MessageRepository messageRepository,
+            ChannelRepository channelRepository,
+            UserRepository userRepository
+    ) {
+        this.messageRepository = messageRepository;
+        this.channelRepository = channelRepository;
+        this.userRepository = userRepository;
+    }
+
+    // --- Service 인터페이스 구현 (책임 분리 및 유효성 검사 반영) ---
 
     @Override
-    public Message create(MessageCreateRequest request) {
-        userRepository.findById(request.getAuthorId())
-                .orElseThrow(() -> new IllegalArgumentException("작성자를 찾을 수 없습니다."));
-        channelRepository.findById(request.getChannelId())
-                .orElseThrow(() -> new IllegalArgumentException("채널을 찾을 수 없습니다."));
+    public Message create(UUID senderId, UUID channelId, String content) {
+        // 1. 유효성 검사 (Service 책임)
+        if (senderId == null || channelId == null) {
+            throw new IllegalArgumentException("발신자 ID와 채널 ID는 필수입니다.");
+        }
+        ValidationUtil.validateNotNullOrEmpty(content, "메시지 내용");
 
-        Message message = new Message(
-                request.getAuthorId(),
-                request.getChannelId(),
-                request.getContent(),
-                request.getAttachmentIds()
-        );
-        return messageRepository.save(message);
+        // ✨ 2. 참조 무결성 검사 (Service 책임) - Service 대신 Repository를 통해 확인
+        // 발신자 (User) 존재 여부 확인
+        if (userRepository.findById(senderId).isEmpty()) {
+            throw new NoSuchElementException("발신자 (User) ID " + senderId + "를 찾을 수 없습니다.");
+        }
+        // 채널 (Channel) 존재 여부 확인
+        if (channelRepository.findById(channelId).isEmpty()) {
+            throw new NoSuchElementException("채널 (Channel) ID " + channelId + "를 찾을 수 없습니다.");
+        }
+
+        // 3. Entity 객체 생성 및 저장
+        Message newMessage = new Message(senderId, channelId, content);
+        return messageRepository.save(newMessage);
     }
+
+    @Override
+    public Message update(UUID messageId, String newContent) {
+        // 1. 유효성 검사
+        ValidationUtil.validateNotNullOrEmpty(newContent, "새 메시지 내용");
+
+        // 2. 대상 Entity를 Repository에서 조회
+        Message messageToUpdate = messageRepository.findById(messageId)
+                .orElseThrow(() -> new IllegalArgumentException("수정할 메시지를 찾을 수 없습니다: " + messageId));
+
+        // 3. Entity의 상태 변경 메서드 호출 (Message.java에 update(String) 메서드가 있어야 함)
+        messageToUpdate.update(newContent);
+
+        // 4. Repository에 수정된 Entity 저장
+        return messageRepository.save(messageToUpdate);
+    }
+
+    // 나머지 findById, findAll, delete 메서드
 
     @Override
     public Optional<Message> findById(UUID id) {
@@ -48,40 +79,12 @@ public class BasicMessageService implements MessageService {
     }
 
     @Override
-    public List<Message> findAllByChannelId(UUID channelId) {
-        return messageRepository.findAllByChannelId(channelId);
-    }
-
-    @Override
-    public Message update(MessageUpdateRequest request) {
-        Message message = messageRepository.findById(request.getId())
-                .orElseThrow(() -> new IllegalArgumentException("메시지를 찾을 수 없습니다."));
-
-        message.update(request.getContent(), request.getAttachmentIds());
-        return messageRepository.save(message);
+    public List<Message> findAll() {
+        return messageRepository.findAll();
     }
 
     @Override
     public void delete(UUID id) {
-        Message message = messageRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("메시지를 찾을 수 없습니다."));
-
-        // 고도화: 관련된 첨부파일(BinaryContent)도 함께 삭제
-        List<UUID> attachmentIds = message.getAttachmentIds();
-        if (attachmentIds != null && !attachmentIds.isEmpty()) {
-            attachmentIds.forEach(binaryContentRepository::delete);
-        }
-
         messageRepository.delete(id);
-    }
-
-    @Override
-    public MessageResponse create(String content, UUID authorId, UUID channelId) {
-        return null;
-    }
-
-    @Override
-    public List<MessageResponse> findByChannelId(UUID channelId) {
-        return List.of();
     }
 }

@@ -9,8 +9,4 @@ public class UserUpdateRequest {
     private String name;
     private String password;
     private String profileImage; //  추가
-
-    public String getEmail() {
-        return "";
-    }
 }
