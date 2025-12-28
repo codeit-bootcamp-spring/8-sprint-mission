@@ -4,7 +4,7 @@ import lombok.Getter;
 import java.util.UUID;
 
 @Getter
-// @NoArgsConstructor //  에러의 원인: 아래 직접 만든 생성자와 중복되므로 삭제합니다.
+// @NoArgsConstructor // ✅ 에러의 원인: 아래 직접 만든 생성자와 중복되므로 삭제합니다.
 public class BinaryContent {
     private UUID id;
 

@@ -17,36 +17,28 @@ public class UserController {
 
     private final UserService userService;
 
-    //  유저 생성 (포스트맨 POST /users 테스트용)
-    @PostMapping
+    @RequestMapping(method = RequestMethod.POST)
     public UserResponse create(@RequestBody UserCreateRequest request) {
-        return userService.create(
-                request.getName(),
-                request.getEmail(),
-                request.getPassword(),
-                request.getProfileImage() // 멘토 피드백: 프로필 이미지 포함
-        );
+        return userService.create(request);
     }
 
-    //  모든 유저 조회
-    @GetMapping
+    @RequestMapping(method = RequestMethod.GET)
     public List<UserResponse> findAll() {
         return userService.findAll();
     }
 
-    //  유저 정보 수정 (멘토 피드백: 선택적 프로필 이미지 교체 기능)
-    @PutMapping("/{id}")
-    public UserResponse update(@PathVariable UUID id, @RequestBody UserUpdateRequest request) {
-        return userService.update(
-                id,
-                request.getName(),
-                request.getPassword(),
-                request.getProfileImage() // 멘토 피드백 반영
-        );
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    public UserResponse findById(@PathVariable UUID id) {
+        return userService.findById(id);
     }
 
-    //  유저 삭제
-    @DeleteMapping("/{id}")
+    @RequestMapping(value = "/{id}", method = RequestMethod.PATCH)
+    public UserResponse update(@PathVariable UUID id, @RequestBody UserUpdateRequest request) {
+        // 경로의 id와 DTO의 id가 다를 경우를 대비해 DTO를 보정하거나 서비스 로직에서 처리합니다.
+        return userService.update(request);
+    }
+
+    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void delete(@PathVariable UUID id) {
         userService.delete(id);
     }
