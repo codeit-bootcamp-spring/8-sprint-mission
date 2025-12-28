@@ -31,7 +31,8 @@ public class UserController {
     private final UserService userService;
     private final UserStatusService userStatusService;
 
-    @RequestMapping(value = "create", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    // 유저 생성 (GET-only 미션 대응)
+    @RequestMapping("create")
     public ResponseEntity<UserResponse> create(
             @ModelAttribute("userCreateRequest") UserCreateRequest userCreateRequest,
             @RequestPart(value = "profileImg", required = false) MultipartFile profileImg
@@ -46,7 +47,7 @@ public class UserController {
                 .body(response);
     }
 
-    // 유저 수정
+    // 유저 수정 (GET-only 미션 대응)
     @RequestMapping("update")
     public ResponseEntity<UserResponse> update(@ModelAttribute("userUpdateRequest") UserUpdateRequest userUpdateRequest,
                                                @RequestPart(value = "profileImg", required = false) MultipartFile profileImg
@@ -60,7 +61,7 @@ public class UserController {
                 .body(response);
     }
 
-    // 유저 삭제
+    // 유저 삭제 (GET-only 미션 대응)
     @RequestMapping("delete")
     public ResponseEntity<Void> delete(@RequestParam("userId") UUID userId) {
         userService.delete(userId);
@@ -69,7 +70,7 @@ public class UserController {
                 .build();
     }
 
-    // 유저 다건 조회 (GET)
+    // 유저 다건 조회 (GET-only 미션 대응)
     @RequestMapping("find-all")
     public ResponseEntity<List<UserResponse>> findAll() {
         List<UserResponse> findList = userService.findAll();
@@ -78,7 +79,7 @@ public class UserController {
                 .body(findList);
     }
 
-    // 사용자 온라인 상태 업데이트 (GET)
+    // 사용자 온라인 상태 업데이트 (GET-only 미션 대응)
     @RequestMapping("update-online")
     public ResponseEntity<UserStatusResponse> updateOnline(
             @ModelAttribute UserStatusUpdateRequest request
