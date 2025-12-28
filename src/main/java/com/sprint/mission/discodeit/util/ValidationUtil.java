@@ -1,24 +1,22 @@
 package com.sprint.mission.discodeit.util;
 
-// 유효성 검사 로직을 위한 유틸리티 클래스입니다.
+import java.util.regex.Pattern;
+
 public class ValidationUtil {
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$";
+    //  멘토 피드백 반영: 상수로 미리 컴파일하여 재사용 (성능 최적화)
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
 
-    /**
-     * 문자열 값이 null이거나 공백 문자열(empty string)인지 확인하고,
-     * 유효하지 않으면 IllegalArgumentException을 발생시킵니다.
-     * * @param value 검사할 문자열 값
-     * @param fieldName 오류 메시지에 사용할 필드 이름 (예: "이름", "이메일")
-     */
     public static void validateNotNullOrEmpty(String value, String fieldName) {
-        if (value == null) {
-            throw new IllegalArgumentException(fieldName + "은(는) null일 수 없습니다.");
-        }
-
-        // trim()을 사용하여 앞뒤 공백을 제거한 후 길이가 0인지 확인
-        if (value.trim().isEmpty()) {
-            throw new IllegalArgumentException(fieldName + "은(는) 빈 값일 수 없습니다.");
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(fieldName + "은(는) 필수 입력 값입니다.");
         }
     }
 
-    // 향후 다른 유효성 검사 메서드를 추가할 수 있습니다. (예: validateEmailFormat 등)
+    //  이메일 형식 검증 메서드 추가
+    public static void validateEmailFormat(String email) {
+        if (email == null || !EMAIL_PATTERN.matcher(email).matches()) {
+            throw new IllegalArgumentException("유효하지 않은 이메일 형식입니다.");
+        }
+    }
 }
