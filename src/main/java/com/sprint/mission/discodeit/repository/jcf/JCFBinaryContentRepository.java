@@ -2,42 +2,36 @@ package com.sprint.mission.discodeit.repository.jcf;
 
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-@ConditionalOnProperty(
-        name = "discodeit.repository.type",
-        havingValue = "jcf",
-        matchIfMissing = true
-)
 public class JCFBinaryContentRepository implements BinaryContentRepository {
-    private final List<BinaryContent> list = new ArrayList<>();
+    // 메모리에 BinaryContent를 저장할 Map
+    private final Map<UUID, BinaryContent> database = new HashMap<>();
 
     @Override
     public BinaryContent save(BinaryContent binaryContent) {
-        list.removeIf(e -> e.getId().equals(binaryContent.getId()));
-        list.add(binaryContent);
+        database.put(binaryContent.getId(), binaryContent); //
         return binaryContent;
     }
 
     @Override
     public Optional<BinaryContent> findById(UUID id) {
-        return list.stream().filter(e -> e.getId().equals(id)).findFirst();
+        return Optional.ofNullable(database.get(id)); //
     }
 
     @Override
-    public List<BinaryContent> findAll() {
-        return new ArrayList<>(list);
+    public Object findAll() {
+        return null;
     }
 
     @Override
     public void delete(UUID id) {
-        list.removeIf(e -> e.getId().equals(id));
+
     }
 }

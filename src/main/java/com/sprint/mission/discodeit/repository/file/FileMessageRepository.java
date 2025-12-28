@@ -62,4 +62,9 @@ public class FileMessageRepository implements MessageRepository {
                 .sorted((m1, m2) -> m2.getCreatedAt().compareTo(m1.getCreatedAt()))
                 .findFirst();
     }
+
+    @Override
+    public void deleteByChannelId(UUID channelId) {
+
+    }
 }

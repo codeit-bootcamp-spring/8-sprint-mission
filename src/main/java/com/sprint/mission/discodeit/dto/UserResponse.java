@@ -13,5 +13,5 @@ public class UserResponse {
     private UUID statusId;      // 4. 상태 객체 ID
     private UUID userId;        // 5. 유저 참조 ID
     private boolean isOnline;   // 6. 온라인 여부 (멘토 피드백 반영)
-    private String profileImage;// 7. 프로필 이미지 (멘토 피드백 반영)
+    private UUID profileImage;// 7. 프로필 이미지 (멘토 피드백 반영)
 }

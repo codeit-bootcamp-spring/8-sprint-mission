@@ -2,6 +2,8 @@ package com.sprint.mission.discodeit.entity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -15,7 +17,7 @@ public class Channel {
 
     //  private Set<UUID> memberIds = new HashSet<>(); -> 삭제 (ReadStatus에서 관리)
 
-    public Channel(String name, String description, ChannelType type, UUID ownerId) {
+    public Channel(String name, String description) {
         this.id = UUID.randomUUID();
         this.name = name;
         this.description = description;
@@ -26,5 +28,9 @@ public class Channel {
     public void update(String name, String description) {
         this.name = name;
         this.description = description;
+    }
+
+    public Set<UUID> getMemberIds() {
+        return Set.of();
     }
 }

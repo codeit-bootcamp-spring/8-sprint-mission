@@ -1,28 +1,15 @@
 package com.sprint.mission.discodeit.entity;
 
 import lombok.Getter;
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.Instant;
 import java.util.UUID;
 
 @Getter
-public class BinaryContent implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 1L;
+// @NoArgsConstructor //  에러의 원인: 아래 직접 만든 생성자와 중복되므로 삭제합니다.
+public class BinaryContent {
+    private UUID id;
 
-    private final UUID id;
-    private final String fileName;
-    private final String fileType;
-    private final Long size;
-    private final Instant createdAt;
-    // 수정 불가능하므로 updatedAt은 정의하지 않음
-
-    public BinaryContent(String fileName, String fileType, Long size) {
-        this.id = UUID.randomUUID();
-        this.fileName = fileName;
-        this.fileType = fileType;
-        this.size = size;
-        this.createdAt = Instant.now();
+    // 직접 작성한 기본 생성자: 객체가 생성될 때 고유 ID를 부여합니다.
+    public BinaryContent() {
+        this.id = UUID.randomUUID(); //
     }
 }
