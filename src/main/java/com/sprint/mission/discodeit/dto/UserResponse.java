@@ -2,16 +2,18 @@ package com.sprint.mission.discodeit.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import java.util.UUID;
 
-@Getter //  필수: 이게 없으면 JSON 결과가 { } 로 비어 보입니다.
+@Getter //  JSON으로 변환될 때 이 어노테이션이 있어야 값이 담깁니다.
+@NoArgsConstructor
 @AllArgsConstructor
 public class UserResponse {
-    private UUID id;            // 1. 유저 ID
-    private String name;        // 2. 이름
-    private String email;       // 3. 이메일
-    private UUID statusId;      // 4. 상태 객체 ID
-    private UUID userId;        // 5. 유저 참조 ID
-    private boolean isOnline;   // 6. 온라인 여부 (멘토 피드백 반영)
-    private UUID profileImage;// 7. 프로필 이미지 (멘토 피드백 반영)
+    private UUID id;
+    private String name;
+    private String email;
+    private UUID statusId;
+    private UUID userId;
+    private boolean online;
+    private UUID profileId;
 }
