@@ -65,7 +65,7 @@ public class MessageController {
     }
 
     // 특정 채널의 메시지 목록을 조회 (GET-only 미션 대응)
-    @RequestMapping("find-all-by-channel")
+    @RequestMapping("findAllByChannel")
     public ResponseEntity<List<MessageResponse>> findAllByChannel(@RequestParam("channelId") UUID channelId) {
         List<MessageResponse> messageList = messageService.findAllByChannelId(channelId);
 

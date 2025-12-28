@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/read-status")
+@RequestMapping("/api/readStatus")
 @RequiredArgsConstructor
 public class ReadStatusController {
 
@@ -52,7 +52,7 @@ public class ReadStatusController {
         특정 사용자의 메시지 수신 정보 조회
         - userId로 해당 유저의 ReadStatus 목록을 전부 조회한다.
      */
-    @RequestMapping("find-all-by-user")
+    @RequestMapping("findAllByUser")
     public ResponseEntity<List<ReadStatusResponse>> findAllByUser(@RequestParam("userId") UUID userId) {
         List<ReadStatusResponse> list = readStatusService.findAllByUserId(userId);
 

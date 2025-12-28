@@ -55,6 +55,8 @@ public class BasicAuthService implements AuthService {
 
         return new UserResponse(
                 user.getId(),
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
                 user.getName(),
                 user.getEmail(),
                 online,

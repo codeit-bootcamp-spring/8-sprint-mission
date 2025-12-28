@@ -71,7 +71,7 @@ public class UserController {
     }
 
     // 유저 다건 조회 (GET-only 미션 대응)
-    @RequestMapping("find-all")
+    @RequestMapping("findAll")
     public ResponseEntity<List<UserResponse>> findAll() {
         List<UserResponse> findList = userService.findAll();
         return ResponseEntity

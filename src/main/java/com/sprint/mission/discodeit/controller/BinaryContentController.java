@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/binary-content")
+@RequestMapping("/api/binaryContent")
 @RequiredArgsConstructor
 public class BinaryContentController {
 
@@ -21,8 +21,8 @@ public class BinaryContentController {
 
     // 바이너리 파일 단건 조회 (GET-only 미션 대응)
     @RequestMapping("find")
-    public ResponseEntity<BinaryContentResponse> findOne(@RequestParam("id") UUID id) {
-        BinaryContentResponse response = binaryContentService.findById(id);
+    public ResponseEntity<BinaryContentResponse> findOne(@RequestParam("binaryContentId") UUID binaryContentId) {
+        BinaryContentResponse response = binaryContentService.findById(binaryContentId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -30,9 +30,9 @@ public class BinaryContentController {
     }
 
     // 바이너리 파일 다건 조회 (GET-only 미션 대응)
-    @RequestMapping("find-all")
-    public ResponseEntity<List<BinaryContentResponse>> findAll(@RequestParam("ids") List<UUID> ids) {
-        List<BinaryContentResponse> response = binaryContentService.findAllByIdIn(ids);
+    @RequestMapping("findAll")
+    public ResponseEntity<List<BinaryContentResponse>> findAll(@RequestParam("binaryContentIds") List<UUID> binaryContentIds) {
+        List<BinaryContentResponse> response = binaryContentService.findAllByIdIn(binaryContentIds);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

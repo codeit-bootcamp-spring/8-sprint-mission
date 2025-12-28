@@ -68,7 +68,7 @@ public class ChannelController {
     }
 
     // 특정 사용자가 볼 수 있는 모든 채널 목록 조회
-    @RequestMapping("find-all-by-user")
+    @RequestMapping("findAllByUser")
     public ResponseEntity<List<ChannelResponse>> findAllByUserId(@RequestParam("userId") UUID userId) {
         List<ChannelResponse> response = channelService.findAllByUserId(userId);
 

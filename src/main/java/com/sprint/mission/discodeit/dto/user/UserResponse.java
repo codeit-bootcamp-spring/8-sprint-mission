@@ -10,6 +10,8 @@ import java.util.UUID;
 
     [필드 설명]
     • id                  : 유저 id
+    • createdAt           : 생성 시간
+    • updatedAt           : 수정 시간
     • username            : 유저 이름
     • email               : 유저 이메일 주소
     • online              : 유저 온라인 여부 (5분 지나지 않아야 온라인)
@@ -18,6 +20,8 @@ import java.util.UUID;
  */
 public record UserResponse(
         UUID id,
+        Instant createdAt,
+        Instant updatedAt,
         String username,
         String email,
         boolean online,

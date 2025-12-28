@@ -15,7 +15,6 @@ import java.util.UUID;
  */
 public interface ChannelService {
 
-    // 채널 생성
     ChannelResponse createPublicChannel(ChannelCreatePublicRequest request);
 
     ChannelResponse createPrivateChannel(ChannelCreatePrivateRequest request);

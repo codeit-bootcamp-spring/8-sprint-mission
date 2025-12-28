@@ -168,6 +168,8 @@ public class BasicUserService implements UserService {
 
         return new UserResponse(
                 user.getId(),
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
                 user.getName(),
                 user.getEmail(),
                 online,
