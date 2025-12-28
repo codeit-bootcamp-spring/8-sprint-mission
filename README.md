@@ -1,53 +1,54 @@
-## Java 기반 채팅 서비스 (Sprint Mission)
+# Discodeit
 
-- 기존의 자바로만 이루어진 프로젝트를 스프링 부트 프로젝트로 마이그레이션 하고, 시간 필드를 전체적으로 Instant로 변경하고, <br/>
-  DTO와 기존의 Service와 Repository를 고도화 한 스프링 부트 프로젝트입니다.
+> Spring Boot 기반의 **채팅 서비스 백엔드 학습 프로젝트**  
+> 파일 기반 저장소(JCF / File Repository 전환), 멀티파트 파일 업로드, 도메인 중심 설계를 학습하기 위한 미션 프로젝트
 
+---
 
-- 해당 프로젝트는 Codeit 백엔드 스프링 트랙의 Sprint Mission 3번째 과제로 진행되었습니다.
+## 1. 프로젝트 개요
 
+**Discodeit**은 Discord와 유사한 개념의 채팅 서비스를 모델링한 **백엔드 중심 학습 프로젝트**입니다.
 
-## 주요 도메인
+이 프로젝트의 핵심 목적은 다음과 같습니다.
 
-- **User** : 사용자
-- **Channel** : 채팅 채널
-- **Message** : 메시지
-- **BinaryContent** : 첨부 파일
-- **ReadStatus** : 메시지 읽음 상태
-- **UserStatus** : 사용자 상태
+- Spring Boot 기반 REST API 설계 이해
+- 도메인(Entity) 중심 설계 연습
+- Repository 구현 방식(JCF ↔ File) 전환 경험
+- Multipart 파일 업로드 처리 흐름 이해
+- DTO / Service / Repository 계층 분리
+- 실제 요청 → 저장 → 조회까지의 **전체 흐름 추적 가능**
 
-각 도메인은 Entity / Repository / Service / DTO 구조로 분리되어 있습니다.
+---
 
-## 저장소 구현 방식
+## 2. 기술 스택
 
-이 프로젝트는 **설정 값에 따라 저장소 구현체가 변경**됩니다.
+| 구분 | 기술 |
+|---|---|
+| Language | Java 17 |
+| Framework | Spring Boot 3.5.8 |
+| Build Tool | Gradle (Groovy DSL) |
+| Web | Spring Web (REST API) |
+| Config | application.yml |
+| File Upload | MultipartFile |
+| Persistence | In-memory(JCF) / File 기반 저장소 |
+| Time API | `java.time.Instant` |
 
-### JCF 기반 (메모리)
-- `Map`, `List` 등을 사용
-- 빠른 테스트 및 구조 이해 목적
+---
 
-### File 기반
-- 객체 직렬화(`Serializable`)
-- 파일 시스템에 `.ser` 형태로 저장
-- 영속성 개념 학습 목적
+## 3. 프로젝트 구조
 
-`@ConditionalOnProperty`를 사용해 구현체를 선택합니다.
-
-기존의 File을 NIO(New I/O) 기반의 Files로 변경하여
-예외처리와 실패원인의 정확한 파악, 성능이 안정되고, Path를 함께 사용함으로
-경로구분자를 직접 신경쓰지 않고, 잘못된 경로를 조기에 잡아주는 전체적으로 File 보다
-뛰어난 성능을 가져가게 되었습니다.
-
-
-### JavaApplication과 DiscodeitApplication에서 Service를 초기화하는 방식의 차이에 대해 키워드를 중심으로 정리
-- IoC Container
-  - 기존에는 IoC 개념을 흉내 낸 일반클래스 AppConfig를 사용했고, 객체를 생성하고, 조합하고, 객체에 대한 생명주기를 코드가 직접 제어했다.
-  - 새로 만든 코드에선 빈을 생성하고, 의존성 주입하고, 생명주기에 대한 일련의 과정들이 오로지 컨테이너가 제어하는 스프링의 온전한 제어의 역전이 적용 되었다.
-- Dependency Injection
-  - 기존 코드에서는 DI는 존재했지만 개발자가 직접 작성해서 넣어주는 것이었다. 잘못 작성되었는지 자동으로 검증해주는 주체가 없었다.
-  - 생성자의 파라미터 타입을 보고, 주입 가능한 Bean을 탐색하고, 연결하는 일련의 과정들을 스프링이 자동으로 해주었다. (검증에 대한 구조가 좀 단단해졌다고 볼 수 있다.)
-- Bean
-  - 기존에는 빈이라는 개념 자체가 존재하지 않았다. 그냥 new로 만든 일반 객체였다. 누가 만들었고, 몇 개가 존재하고, 언제사라지는 지를 개발자가 책임졌다.
-  - 바뀐 코드에선 기본 싱글톤이 보장되었고, 만들어진 객체들이 모두 IoC 컨테이너 영역 안에서 관리 되었다. (재사용성이나 코드의 일관성이 보장 된다.)
-
-
+```text
+com.sprint.mission.discodeit
+├─ controller        # HTTP 요청/응답 처리
+├─ service           # 비즈니스 로직
+├─ repository
+│  ├─ jcf             # 메모리 기반 저장소
+│  └─ file            # 파일 기반 저장소
+├─ entity             # 도메인 엔티티
+├─ dto
+│  ├─ user
+│  ├─ channel
+│  ├─ message
+│  └─ binarycontent
+├─ config             # 설정 클래스
+└─ DiscodeitApplication

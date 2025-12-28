@@ -8,6 +8,7 @@ import com.sprint.mission.discodeit.service.BinaryContentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -23,6 +24,7 @@ public class BasicBinaryContentService implements BinaryContentService {
     public BinaryContentResponse create(BinaryContentCreateRequest request) {
         BinaryContent binaryContent = new BinaryContent(
                 request.fileName(),
+                request.contentType(),
                 request.data()
         );
         binaryContentRepository.save(binaryContent);
@@ -49,12 +51,33 @@ public class BasicBinaryContentService implements BinaryContentService {
     }
 
     private BinaryContentResponse convertDto(BinaryContent binaryContent) {
+        String base64 = (binaryContent.getData() == null)
+                ? null
+                : Base64.getEncoder().encodeToString(binaryContent.getData());
+
+        // 파일 저장소에서 옛날 데이터 읽어온 경우 contentType이 null일 수 있음 → 안전 처리
+        String contentType = binaryContent.getContentType();
+        if (contentType == null || contentType.isBlank()) {
+            contentType = guessContentType(binaryContent.getFileName());
+        }
         return new BinaryContentResponse(
                 binaryContent.getId(),
                 binaryContent.getFileName(),
+                contentType,
+                base64,
                 binaryContent.getCreatedAt(),
                 binaryContent.getOptionalHostUserId().orElse(null),
                 binaryContent.getOptionalHostMessageId().orElse(null)
         );
+    }
+
+    private String guessContentType(String fileName) {
+        if (fileName == null) return "application/octet-stream";
+        String lower = fileName.toLowerCase();
+        if (lower.endsWith(".png")) return "image/png";
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+        if (lower.endsWith(".gif")) return "image/gif";
+        if (lower.endsWith(".webp")) return "image/webp";
+        return "application/octet-stream";
     }
 }

@@ -8,7 +8,7 @@ package com.sprint.mission.discodeit.entity;
     • name             : 유저의 이름
     • email            : 유저의 이메일 주소
     • password         : 유저의 패스워드 (실제는 Hashing 해줘야 하지만, 학습용이라 평문 문자열로 설정하였다.)
-    • profileId        : 프로필 이미지(BinaryContent)의 id
+    • profileImageId   : 프로필 이미지(BinaryContent)의 id
 
     [메서드]
     • update(User user)    : User 객체의 값을 현재 객체에 반영 및 updateCall()로 updatedAt 수정.
@@ -16,6 +16,7 @@ package com.sprint.mission.discodeit.entity;
  */
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -30,14 +31,14 @@ public class User extends BaseEntity implements Serializable {
     private String name;
     private String email;
     private String password;
-    private UUID profileId;
+    private UUID profileImageId;
 
     // 프로필 이미지 들어왔을 때
-    public User(String name, String email, String password, UUID profileId) {
+    public User(String name, String email, String password, UUID profileImageId) {
         this.name = name;
         this.email = email;
         this.password = password;
-        this.profileId = profileId;
+        this.profileImageId = profileImageId;
     }
 
     // 프로필 이미지 안 들어왔을 때
@@ -64,8 +65,8 @@ public class User extends BaseEntity implements Serializable {
             changeCheck = true;
         }
 
-        if (newProfileId != null && !newProfileId.equals(this.profileId)) {
-            this.profileId = newProfileId;
+        if (newProfileId != null && !newProfileId.equals(this.profileImageId)) {
+            this.profileImageId = newProfileId;
             changeCheck = true;
         }
 

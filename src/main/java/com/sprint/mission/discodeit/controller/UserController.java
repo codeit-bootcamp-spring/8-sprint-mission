@@ -98,6 +98,7 @@ public class UserController {
         try {
             return new BinaryContentCreateRequest(
                     file.getOriginalFilename(),
+                    file.getContentType(),
                     file.getBytes()
             );
         } catch (IOException e) {

@@ -90,6 +90,7 @@ public class MessageController {
         try {
             return new BinaryContentCreateRequest(
                     file.getOriginalFilename(),
+                    file.getContentType(),
                     file.getBytes()
             );
         } catch (IOException e) {

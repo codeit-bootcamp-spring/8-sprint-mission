@@ -48,11 +48,12 @@ public class BasicUserService implements UserService {
         if (profileRequest != null && profileRequest.data() != null) {
             BinaryContent content = new BinaryContent(
                     profileRequest.fileName(),
+                    profileRequest.contentType(),
                     profileRequest.data(),
                     user.getId(),
                     null
             );
-            binaryContentRepository.save(content);
+           binaryContentRepository.save(content);
 
             user.update(null, null, null, content.getId());
             userRepository.save(user);
@@ -108,17 +109,18 @@ public class BasicUserService implements UserService {
                     }
 
         // 프로필 이미지 교체
-        UUID newProfileId = user.getProfileId();
+        UUID newProfileId = user.getProfileImageId();
 
         if (profileRequest != null && profileRequest.data() != null) {
             // 기존 이미지 삭제 (존재 한다면)
-            if (user.getProfileId() != null) {
-                binaryContentRepository.deleteById(user.getProfileId());
+            if (user.getProfileImageId() != null) {
+                binaryContentRepository.deleteById(user.getProfileImageId());
             }
 
             // 새 이미지 저장
             BinaryContent content = new BinaryContent(
                     profileRequest.fileName(),
+                    profileRequest.contentType(),
                     profileRequest.data(),
                     user.getId(),
                     null
@@ -145,8 +147,8 @@ public class BasicUserService implements UserService {
                 .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다: " + id));
 
         // 프로필 이미지 삭제
-        if (user.getProfileId() != null) {
-            binaryContentRepository.deleteById(user.getProfileId());
+        if (user.getProfileImageId() != null) {
+            binaryContentRepository.deleteById(user.getProfileImageId());
         }
 
         // UserStatus 삭제
@@ -174,7 +176,7 @@ public class BasicUserService implements UserService {
                 user.getEmail(),
                 online,
                 lastConn,
-                user.getProfileId()
+                user.getProfileImageId()
         );
     }
 }

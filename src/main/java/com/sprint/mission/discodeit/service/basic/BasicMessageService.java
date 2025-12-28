@@ -44,6 +44,7 @@ public class BasicMessageService implements MessageService {
             for (BinaryContentCreateRequest dto : request.attachments()) {
                 BinaryContent bc = new BinaryContent(
                         dto.fileName(),
+                        dto.contentType(),
                         dto.data(),
                         request.userId(),
                         null

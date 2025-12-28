@@ -34,21 +34,23 @@ public class BinaryContent implements Serializable {
     private Instant createdAt;
 
     private String fileName;
+    private String contentType;
     private byte[] data;
 
     private UUID hostUserId;
     private UUID hostMessageId;
 
     // [옵션 1] 호스트 정보가 없는 경우를 위한 부가 생성자
-    public BinaryContent(String fileName, byte[] data) {
-        this(fileName, data, null, null); // 아래 메인 생성자를 호출하며 null을 내부에서 처리
+    public BinaryContent(String fileName, String contentType, byte[] data) {
+        this(fileName, contentType, data, null, null); // 아래 메인 생성자를 호출하며 null을 내부에서 처리
     }
 
     // [기본] 모든 필드를 받는 메인 생성자
-    public BinaryContent(String fileName, byte[] data, UUID hostUserId, UUID hostMessageId) {
+    public BinaryContent(String fileName, String contentType, byte[] data, UUID hostUserId, UUID hostMessageId) {
         this.id = UUID.randomUUID();
         this.createdAt = Instant.now();
         this.fileName = fileName;
+        this.contentType = contentType;
         this.data = data != null ? data.clone() : null;
         this.hostUserId = hostUserId;
         this.hostMessageId = hostMessageId;

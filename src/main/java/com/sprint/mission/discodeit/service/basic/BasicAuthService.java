@@ -61,7 +61,7 @@ public class BasicAuthService implements AuthService {
                 user.getEmail(),
                 online,
                 lastConn,
-                user.getProfileId()
+                user.getProfileImageId()
         );
     }
 }

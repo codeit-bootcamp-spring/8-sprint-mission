@@ -18,6 +18,8 @@ import java.util.UUID;
 public record BinaryContentResponse(
         UUID id,
         String fileName,
+        String contentType,
+        String base64Data,
         Instant createdAt,
         UUID userId,
         UUID messageId
