@@ -69,7 +69,10 @@ public class BasicUserService implements UserService {
 
     @Override
     public List<UserResponse> findAll() {
-        return List.of();
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
