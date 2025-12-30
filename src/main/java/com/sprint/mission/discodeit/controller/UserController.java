@@ -48,17 +48,16 @@ public class UserController {
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "User가 성공적으로 생성됨"),
       @ApiResponse(responseCode = "400",
-          description = "같은 email 또는 username를 사용하는 User가 이미 존재함",
+          description = "같은 newEmail 또는 username를 사용하는 User가 이미 존재함",
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "User with email {email} already exists"
+                  value = "User with newEmail {newEmail} already exists"
               )
           )
       )
   })
   @PostMapping(
-      path = "create",
       consumes = MediaType.MULTIPART_FORM_DATA_VALUE
   )
   public ResponseEntity<UserResponse> create(
@@ -90,15 +89,15 @@ public class UserController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "User with id {userId} not found"
+                  value = "User with userId {authorId} not found"
               )
           )),
       @ApiResponse(responseCode = "400",
-          description = "같은 email 또는 username를 사용하는 User가 이미 존재함",
+          description = "같은 newEmail 또는 username를 사용하는 User가 이미 존재함",
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "user with email {newEmail} already exists"
+                  value = "user with newEmail {newEmail} already exists"
               )
           )
       ),
@@ -135,7 +134,7 @@ public class UserController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "User with id {id} not found"
+                  value = "User with userId {userId} not found"
               )
           ))
   })
@@ -173,7 +172,7 @@ public class UserController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "UserStatus with userId {userId} not found"
+                  value = "UserStatus with authorId {authorId} not found"
               )
           )),
       @ApiResponse(responseCode = "200", description = "User 온라인 상태가 성공적으로 업데이트됨")
@@ -189,7 +188,7 @@ public class UserController {
       @RequestBody UserStatusUpdateRequest request
   ) {
     UserStatusResponse updateUserStatus = userStatusService.updateByUserId(userId,
-        request.lastConnAt());
+        request.newLastActiveAt());
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(updateUserStatus);

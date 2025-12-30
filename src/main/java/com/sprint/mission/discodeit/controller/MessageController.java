@@ -27,7 +27,7 @@ import java.util.UUID;
 
 @Tag(name = "Message", description = "Message API")
 @RestController
-@RequestMapping("/api/message")
+@RequestMapping("/api/messages")
 @RequiredArgsConstructor
 public class MessageController {
 
@@ -40,7 +40,7 @@ public class MessageController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "Channel | Author with id {channelId | authorId} not found"
+                  value = "Channel | Author with userId {channelId | authorId} not found"
               )
           )),
       @ApiResponse(responseCode = "201",
@@ -56,8 +56,8 @@ public class MessageController {
 
     MessageCreateRequest msgRequest = new MessageCreateRequest(
         messageCreateRequest.channelId(),
-        messageCreateRequest.userId(),
-        messageCreateRequest.contents(),
+        messageCreateRequest.authorId(),
+        messageCreateRequest.content(),
         attachmentList
     );
 
@@ -76,7 +76,7 @@ public class MessageController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "Message with id {messageId} not found"
+                  value = "Message with userId {messageId} not found"
               )
           ))
   })
@@ -103,7 +103,7 @@ public class MessageController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "Message with id {messageId} not found"
+                  value = "Message with userId {messageId} not found"
               )
           ))
   })

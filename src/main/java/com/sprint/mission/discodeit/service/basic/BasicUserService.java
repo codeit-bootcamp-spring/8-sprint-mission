@@ -33,7 +33,7 @@ public class BasicUserService implements UserService {
 
     // Username / Email 중복 검증
     if (userRepository.existsByUsernameOrEmail(request.username(), request.email())) {
-      throw new IllegalArgumentException("이미 사용 중인 username 또는 email 입니다. 다시 입력 부탁드립니다.");
+      throw new IllegalArgumentException("이미 사용 중인 newUsername 또는 newEmail 입니다. 다시 입력 부탁드립니다.");
     }
 
     // User 생성
@@ -45,11 +45,11 @@ public class BasicUserService implements UserService {
     userStatusRepository.save(status);
 
     // 프로필 이미지 있으면 BinaryContent 생성 -> User.profileId 설정
-    if (profileRequest != null && profileRequest.data() != null) {
+    if (profileRequest != null && profileRequest.bytes() != null) {
       BinaryContent content = new BinaryContent(
           profileRequest.fileName(),
           profileRequest.contentType(),
-          profileRequest.data(),
+          profileRequest.bytes(),
           user.getId(),
           null
       );
@@ -91,38 +91,38 @@ public class BasicUserService implements UserService {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + userId));
 
-    // username 변경 시에 중복 체크
-    if (request.username() != null && !request.username().equals(user.getName())) {
-      userRepository.findByUsername(request.username())
+    // newUsername 변경 시에 중복 체크
+    if (request.newUsername() != null && !request.newUsername().equals(user.getName())) {
+      userRepository.findByUsername(request.newUsername())
           .filter(other -> !other.getId().equals(user.getId()))
           .ifPresent(other -> {
-            throw new IllegalArgumentException("이미 사용 중인 Username 입니다." + request.username());
+            throw new IllegalArgumentException("이미 사용 중인 Username 입니다." + request.newUsername());
           });
     }
 
-    // email 변경 시에 중복 체크
-    if (request.email() != null && !request.email().equals(user.getEmail())) {
-      userRepository.findByEmail(request.email())
+    // newEmail 변경 시에 중복 체크
+    if (request.newEmail() != null && !request.newEmail().equals(user.getEmail())) {
+      userRepository.findByEmail(request.newEmail())
           .filter(other -> !other.getId().equals(user.getId()))
           .ifPresent(other -> {
-            throw new IllegalArgumentException("이미 사용 중인 Email 입니다." + request.email());
+            throw new IllegalArgumentException("이미 사용 중인 Email 입니다." + request.newEmail());
           });
     }
 
     // 프로필 이미지 교체
-    UUID newProfileId = user.getProfileImageId();
+    UUID newProfileId = user.getProfileId();
 
-    if (profileRequest != null && profileRequest.data() != null) {
+    if (profileRequest != null && profileRequest.bytes() != null) {
       // 기존 이미지 삭제 (존재 한다면)
-      if (user.getProfileImageId() != null) {
-        binaryContentRepository.deleteById(user.getProfileImageId());
+      if (user.getProfileId() != null) {
+        binaryContentRepository.deleteById(user.getProfileId());
       }
 
       // 새 이미지 저장
       BinaryContent content = new BinaryContent(
           profileRequest.fileName(),
           profileRequest.contentType(),
-          profileRequest.data(),
+          profileRequest.bytes(),
           user.getId(),
           null
       );
@@ -131,7 +131,7 @@ public class BasicUserService implements UserService {
     }
 
     // 유저 정보 업데이트
-    user.update(request.username(), request.email(), request.password(), newProfileId);
+    user.update(request.newUsername(), request.newEmail(), request.newPassword(), newProfileId);
 
     // 덮어쓰기
     userRepository.save(user);
@@ -148,8 +148,8 @@ public class BasicUserService implements UserService {
         .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다: " + id));
 
     // 프로필 이미지 삭제
-    if (user.getProfileImageId() != null) {
-      binaryContentRepository.deleteById(user.getProfileImageId());
+    if (user.getProfileId() != null) {
+      binaryContentRepository.deleteById(user.getProfileId());
     }
 
     // UserStatus 삭제
@@ -166,7 +166,7 @@ public class BasicUserService implements UserService {
 
     if (status != null) {
       online = status.isOnline();
-      lastConn = status.getLastConnAt();
+      lastConn = status.getLastActiveAt();
     }
 
     return new UserResponse(
@@ -177,7 +177,7 @@ public class BasicUserService implements UserService {
         user.getEmail(),
         online,
         lastConn,
-        user.getProfileImageId()
+        user.getProfileId()
     );
   }
 }

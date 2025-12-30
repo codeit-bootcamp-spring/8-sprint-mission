@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Channel", description = "Channel API")
 @RestController
-@RequestMapping("/api/channel")
+@RequestMapping("/api/channels")
 @RequiredArgsConstructor
 public class ChannelController {
 
@@ -55,7 +55,7 @@ public class ChannelController {
   @ApiResponse(responseCode = "201", description = "Private Channel이 성공적으로 생성됨")
   @PostMapping("private")
   public ResponseEntity<ChannelResponse> create(
-      @ModelAttribute ChannelCreatePrivateRequest request) {
+      @RequestBody ChannelCreatePrivateRequest request) {
     ChannelResponse response = channelService.createPrivateChannel(request);
 
     return ResponseEntity
@@ -70,7 +70,7 @@ public class ChannelController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "Channel with id {channelId} not found"
+                  value = "Channel with userId {channelId} not found"
               )
           )),
       @ApiResponse(responseCode = "400", description = "Private Channel은 수정할 수 없음",
@@ -104,7 +104,7 @@ public class ChannelController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "Channel with id {channelId} not found"
+                  value = "Channel with userId {channelId} not found"
               )
           )),
       @ApiResponse(responseCode = "204",

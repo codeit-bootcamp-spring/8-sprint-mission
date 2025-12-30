@@ -43,8 +43,8 @@ public class BasicChannelService implements ChannelService {
     Channel channel = new Channel(ChannelType.PRIVATE, null, null);
     channelRepository.save(channel);
 
-    if (request.memberUserIds() != null) {
-      for (UUID userId : request.memberUserIds()) {
+    if (request.participantIds() != null) {
+      for (UUID userId : request.participantIds()) {
         ReadStatus rs = new ReadStatus(userId, channel.getId(), Instant.EPOCH);
         readStatusRepository.save(rs);
       }
@@ -81,7 +81,7 @@ public class BasicChannelService implements ChannelService {
       throw new IllegalStateException("PRIVATE 채널은 수정할 수 없습니다.");
     }
 
-    channel.update(request.name(), request.description());
+    channel.update(request.newName(), request.newDescription());
     channelRepository.save(channel);
 
     return convertDto(channel);

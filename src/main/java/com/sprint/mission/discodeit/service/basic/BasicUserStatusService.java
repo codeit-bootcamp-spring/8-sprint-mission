@@ -20,83 +20,84 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BasicUserStatusService implements UserStatusService {
 
-    private final UserStatusRepository userStatusRepository;
-    private final UserRepository userRepository;
+  private final UserStatusRepository userStatusRepository;
+  private final UserRepository userRepository;
 
 
-    @Override
-    public UserStatusResponse create(UserStatusCreateRequest request) {
+  @Override
+  public UserStatusResponse create(UserStatusCreateRequest request) {
 
-        // User 검증
-        if (!userRepository.existsById(request.userId())) {
-            throw new NoSuchElementException("User를 찾을 수 없습니다. " + request.userId());
-        }
-
-        // 동일 User에 대한 UserStatus 중복 체크
-        userStatusRepository.findByUserId(request.userId())
-                .ifPresent(us -> {
-                    throw new IllegalStateException("해당 User에 대한 UserStatus가 이미 존재합니다.");
-                });
-
-        Instant lastConn = (request.lastConnAt() != null)
-                ? request.lastConnAt()
-                : Instant.now();
-
-        UserStatus status = new UserStatus(request.userId(), lastConn);
-        userStatusRepository.save(status);
-
-        return convertDto(status);
+    // User 검증
+    if (!userRepository.existsById(request.userId())) {
+      throw new NoSuchElementException("User를 찾을 수 없습니다. " + request.userId());
     }
 
-    @Override
-    public UserStatusResponse find(UUID id) {
-        UserStatus status = userStatusRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("UserStatus를 찾을 수 없습니다. " + id));
+    // 동일 User에 대한 UserStatus 중복 체크
+    userStatusRepository.findByUserId(request.userId())
+        .ifPresent(us -> {
+          throw new IllegalStateException("해당 User에 대한 UserStatus가 이미 존재합니다.");
+        });
 
-        return convertDto(status);
-    }
+    Instant lastConn = (request.lastActiveAt() != null)
+        ? request.lastActiveAt()
+        : Instant.now();
 
-    @Override
-    public List<UserStatusResponse> findAll() {
-        return userStatusRepository.findAll().stream()
-                .map(this::convertDto)
-                .collect(Collectors.toList());
-    }
+    UserStatus status = new UserStatus(request.userId(), lastConn);
+    userStatusRepository.save(status);
 
-    @Override
-    public UserStatusResponse update(UserStatusUpdateRequest request) {
-        UserStatus status = userStatusRepository.findById(request.id())
-                .orElseThrow(() -> new NoSuchElementException("UserStatus를 찾을 수 없습니다. " + request.id()));
+    return convertDto(status);
+  }
 
-        status.update(request.lastConnAt());
-        userStatusRepository.save(status);
+  @Override
+  public UserStatusResponse find(UUID id) {
+    UserStatus status = userStatusRepository.findById(id)
+        .orElseThrow(() -> new NoSuchElementException("UserStatus를 찾을 수 없습니다. " + id));
 
-        return convertDto(status);
-    }
+    return convertDto(status);
+  }
 
-    @Override
-    public UserStatusResponse updateByUserId(UUID userId, Instant lastConnAt) {
-        System.out.println("userId는 = " + userId);
-        UserStatus status = userStatusRepository.findByUserId(userId)
-                .orElseThrow(() -> new NoSuchElementException("UserStatus를 찾을 수 없습니다: " + userId));
+  @Override
+  public List<UserStatusResponse> findAll() {
+    return userStatusRepository.findAll().stream()
+        .map(this::convertDto)
+        .collect(Collectors.toList());
+  }
 
-        status.update(lastConnAt != null ? lastConnAt : Instant.now());
-        userStatusRepository.save(status);
+  @Override
+  public UserStatusResponse update(UserStatusUpdateRequest request) {
+    UserStatus status = userStatusRepository.findById(request.userId())
+        .orElseThrow(
+            () -> new NoSuchElementException("UserStatus를 찾을 수 없습니다. " + request.userId()));
 
-        return convertDto(status);
-    }
+    status.update(request.newLastActiveAt());
+    userStatusRepository.save(status);
 
-    @Override
-    public void delete(UUID id) {
-        userStatusRepository.deleteById(id);
-    }
+    return convertDto(status);
+  }
 
-    private UserStatusResponse convertDto(UserStatus status) {
-        return new UserStatusResponse(
-                status.getId(),
-                status.getUserId(),
-                status.getLastConnAt(),
-                status.isOnline()
-        );
-    }
+  @Override
+  public UserStatusResponse updateByUserId(UUID userId, Instant lastConnAt) {
+    System.out.println("userId는 = " + userId);
+    UserStatus status = userStatusRepository.findByUserId(userId)
+        .orElseThrow(() -> new NoSuchElementException("UserStatus를 찾을 수 없습니다: " + userId));
+
+    status.update(lastConnAt != null ? lastConnAt : Instant.now());
+    userStatusRepository.save(status);
+
+    return convertDto(status);
+  }
+
+  @Override
+  public void delete(UUID id) {
+    userStatusRepository.deleteById(id);
+  }
+
+  private UserStatusResponse convertDto(UserStatus status) {
+    return new UserStatusResponse(
+        status.getId(),
+        status.getUserId(),
+        status.getLastActiveAt(),
+        status.isOnline()
+    );
+  }
 }

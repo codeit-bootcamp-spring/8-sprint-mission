@@ -11,7 +11,8 @@ package com.sprint.mission.discodeit.dto.channel;
     • description       : 채널 설명
  */
 public record ChannelCreatePublicRequest(
-        String name,
-        String description
+    String name,
+    String description
 ) {
+
 }

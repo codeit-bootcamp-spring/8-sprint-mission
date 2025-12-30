@@ -13,7 +13,7 @@ import java.util.UUID;
    - 공통 엔티티 속성을 관리하는 추상적 기반 클래스.
 
     [필드 설명]
-    • id(UUID)        : 각 엔티티의 고유 식별자. UUID.randomUUID()로 유니크한 값 생성.
+    • userId(UUID)        : 각 엔티티의 고유 식별자. UUID.randomUUID()로 유니크한 값 생성.
     • createdAt       : 객체 생성 시점 시간 (Instant)
     • updatedAt       : 마지막 수정 시점의 시간 (Instant)
 
@@ -24,22 +24,22 @@ import java.util.UUID;
 @Getter
 public class BaseEntity implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial
+  private static final long serialVersionUID = 1L;
 
-    private final UUID id;
-    private final Instant createdAt;
-    private Instant updatedAt;
+  private final UUID id;
+  private final Instant createdAt;
+  private Instant updatedAt;
 
-    public BaseEntity() {
-        Instant now = Instant.now();
-        this.id = UUID.randomUUID();
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
+  public BaseEntity() {
+    Instant now = Instant.now();
+    this.id = UUID.randomUUID();
+    this.createdAt = now;
+    this.updatedAt = now;
+  }
 
-    // 수정 시에 호출 한다.
-    public void updateCall() {
-        this.updatedAt = Instant.now();
-    }
+  // 수정 시에 호출 한다.
+  public void updateCall() {
+    this.updatedAt = Instant.now();
+  }
 }

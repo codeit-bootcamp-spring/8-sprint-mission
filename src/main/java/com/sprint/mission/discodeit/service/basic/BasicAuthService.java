@@ -51,7 +51,7 @@ public class BasicAuthService implements AuthService {
 
     if (userStatus != null) {
       online = userStatus.isOnline();
-      lastConn = userStatus.getLastConnAt();
+      lastConn = userStatus.getLastActiveAt();
     }
 
     return new UserResponse(
@@ -62,7 +62,7 @@ public class BasicAuthService implements AuthService {
         user.getEmail(),
         online,
         lastConn,
-        user.getProfileImageId()
+        user.getProfileId()
     );
   }
 }

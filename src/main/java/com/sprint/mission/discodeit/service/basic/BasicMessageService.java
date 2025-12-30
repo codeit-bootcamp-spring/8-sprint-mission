@@ -36,8 +36,8 @@ public class BasicMessageService implements MessageService {
         .orElseThrow(
             () -> new NoSuchElementException("Channel을 찾을 수 없습니다. " + request.channelId()));
 
-    userRepository.findById(request.userId())
-        .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + request.userId()));
+    userRepository.findById(request.authorId())
+        .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + request.authorId()));
 
     // 파일을 저장
     List<UUID> attachmentIds = new ArrayList<>();
@@ -46,8 +46,8 @@ public class BasicMessageService implements MessageService {
         BinaryContent bc = new BinaryContent(
             dto.fileName(),
             dto.contentType(),
-            dto.data(),
-            request.userId(),
+            dto.bytes(),
+            request.authorId(),
             null
         );
         binaryContentRepository.save(bc);
@@ -56,9 +56,9 @@ public class BasicMessageService implements MessageService {
     }
 
     Message message = new Message(
-        request.contents(),
+        request.content(),
         request.channelId(),
-        request.userId(),
+        request.authorId(),
         attachmentIds
     );
     messageRepository.save(message);
@@ -85,7 +85,7 @@ public class BasicMessageService implements MessageService {
     Message message = messageRepository.findById(messageId)
         .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + messageId));
 
-    message.update(request.contents());
+    message.update(request.newContent());
     messageRepository.save(message);
 
     return convertDto(message);
@@ -108,7 +108,7 @@ public class BasicMessageService implements MessageService {
         message.getId(),
         message.getChannelId(),
         message.getAuthorId(),
-        message.getContents(),
+        message.getContent(),
         message.getCreatedAt(),
         message.getAttachmentIds()
     );

@@ -34,7 +34,7 @@ public class AuthController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "User with username {username} not found"
+                  value = "User with newUsername {newUsername} not found"
               )
           )
       ),
@@ -43,7 +43,7 @@ public class AuthController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "Wrong password"
+                  value = "Wrong newPassword"
               )
           )
       )

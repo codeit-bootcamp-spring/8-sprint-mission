@@ -17,50 +17,52 @@ import java.util.UUID;
     수정이 되면 안되기에 BaseEntity를 상속 받지 않았다.
 
     [필드 설명]
-    • id               : 유저 id
+    • userId           : 유저 userId
     • createdAt        : 바이너리 데이터 (파일, 이미지 등) 생성 시간
     • fileName         : 파일 이름
-    • data             : 파일 데이터를 byte 배열로 표현
+    • bytes            : 파일 데이터를 byte 배열로 표현
     • hostUserId       : 유저의 아이디   (도메인 연결)
     • hostMessageId    : 메시지의 아이디 (도메인 연결)
  */
 @Getter
 public class BinaryContent implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial
+  private static final long serialVersionUID = 1L;
 
-    private UUID id;
-    private Instant createdAt;
+  private UUID id;
+  private Instant createdAt;
 
-    private String fileName;
-    private String contentType;
-    private byte[] data;
+  private String fileName;
+  private String contentType;
+  private byte[] bytes;
 
-    private UUID hostUserId;
-    private UUID hostMessageId;
+  private UUID hostUserId;
+  private UUID hostMessageId;
 
-    // [옵션 1] 호스트 정보가 없는 경우를 위한 부가 생성자
-    public BinaryContent(String fileName, String contentType, byte[] data) {
-        this(fileName, contentType, data, null, null); // 아래 메인 생성자를 호출하며 null을 내부에서 처리
-    }
+  // [옵션 1] 호스트 정보가 없는 경우를 위한 부가 생성자
+  public BinaryContent(String fileName, String contentType, byte[] bytes) {
+    this(fileName, contentType, bytes, null, null); // 아래 메인 생성자를 호출하며 null을 내부에서 처리
+  }
 
-    // [기본] 모든 필드를 받는 메인 생성자
-    public BinaryContent(String fileName, String contentType, byte[] data, UUID hostUserId, UUID hostMessageId) {
-        this.id = UUID.randomUUID();
-        this.createdAt = Instant.now();
-        this.fileName = fileName;
-        this.contentType = contentType;
-        this.data = data != null ? data.clone() : null;
-        this.hostUserId = hostUserId;
-        this.hostMessageId = hostMessageId;
-    }
+  // [기본] 모든 필드를 받는 메인 생성자
+  public BinaryContent(String fileName, String contentType, byte[] bytes,
+      UUID hostUserId,
+      UUID hostMessageId) {
+    this.id = UUID.randomUUID();
+    this.createdAt = Instant.now();
+    this.fileName = fileName;
+    this.contentType = contentType;
+    this.bytes = bytes != null ? bytes.clone() : null;
+    this.hostUserId = hostUserId;
+    this.hostMessageId = hostMessageId;
+  }
 
-    public Optional<UUID> getOptionalHostUserId() {
-        return Optional.ofNullable(hostUserId);
-    }
+  public Optional<UUID> getOptionalHostUserId() {
+    return Optional.ofNullable(hostUserId);
+  }
 
-    public Optional<UUID> getOptionalHostMessageId() {
-        return Optional.ofNullable(hostMessageId);
-    }
+  public Optional<UUID> getOptionalHostMessageId() {
+    return Optional.ofNullable(hostMessageId);
+  }
 }
