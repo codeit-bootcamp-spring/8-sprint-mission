@@ -15,17 +15,17 @@ import java.util.UUID;
  */
 public interface MessageService {
 
-    // 메시지 등록
-    MessageResponse createMessage(MessageCreateRequest request);
+  // 메시지 등록
+  MessageResponse createMessage(MessageCreateRequest request);
 
-    // 메시지 조회 (단건)
-    MessageResponse findMessage(UUID id);
+  // 메시지 조회 (단건)
+  MessageResponse findMessage(UUID id);
 
-    List<MessageResponse> findAllByChannelId(UUID channelId);
-    
-    // 수정
-    MessageResponse updateMessage(MessageUpdateRequest request);
-    
-    // 삭제
-    void deleteMessage(UUID id);
+  List<MessageResponse> findAllByChannelId(UUID channelId);
+
+  // 수정
+  MessageResponse updateMessage(UUID messageId, MessageUpdateRequest request);
+
+  // 삭제
+  void deleteMessage(UUID id);
 }
