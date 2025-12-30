@@ -22,6 +22,7 @@ public class ReadStatusController {
 
     private final ReadStatusService readStatusService;
 
+
     /*
         특정 채널의 메시지 수신 정보 생성
      */
