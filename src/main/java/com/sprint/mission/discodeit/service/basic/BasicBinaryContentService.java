@@ -1,29 +1,55 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.dto.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
+import com.sprint.mission.discodeit.service.BinaryContentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class BasicBinaryContentService {
+public class BasicBinaryContentService implements BinaryContentService {
 
-    @Qualifier("JCFBinaryContentRepository")
     private final BinaryContentRepository binaryContentRepository;
 
-    public List<BinaryContent> findAllByIds(List<UUID> ids) {
-        //  1. findAll()이 리턴하는 List<BinaryContent>를 명시적으로 받습니다.
-        List<BinaryContent> allContents = (List<BinaryContent>) binaryContentRepository.findAll();
+    @Override
+    public BinaryContent create(BinaryContentCreateRequest request) {
+        // BinaryContentCreateRequest의 fileType을 contentType으로 사용
+        BinaryContent binaryContent = new BinaryContent(
+                request.getFileName(),
+                request.getFileType(), // MIME 타입
+                request.getFileSize(),
+                request.getBytes() // Base64 인코딩된 바이너리 데이터
+        );
+        return binaryContentRepository.save(binaryContent);
+    }
 
-        //  2. 이제 정상적으로 .stream()과 .filter()를 사용할 수 있습니다.
+    @Override
+    public Optional<BinaryContent> findById(UUID id) {
+        return binaryContentRepository.findById(id);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<BinaryContent> findAllByIdIn(List<UUID> ids) {
+        Object result = binaryContentRepository.findAll();
+        if (result == null) {
+            return List.of();
+        }
+        List<BinaryContent> allContents = (List<BinaryContent>) result;
         return allContents.stream()
                 .filter(content -> ids.contains(content.getId()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void delete(UUID id) {
+        binaryContentRepository.delete(id);
     }
 }
