@@ -17,9 +17,10 @@ import java.util.UUID;
     수정이 되면 안되기에 BaseEntity를 상속 받지 않았다.
 
     [필드 설명]
-    • userId           : 유저 userId
+    • id               : 유저 id
     • createdAt        : 바이너리 데이터 (파일, 이미지 등) 생성 시간
     • fileName         : 파일 이름
+    • contentType      : 컨텐츠의 타입
     • bytes            : 파일 데이터를 byte 배열로 표현
     • hostUserId       : 유저의 아이디   (도메인 연결)
     • hostMessageId    : 메시지의 아이디 (도메인 연결)

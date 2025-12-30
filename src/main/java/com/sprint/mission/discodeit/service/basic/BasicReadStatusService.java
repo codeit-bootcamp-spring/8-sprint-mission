@@ -37,14 +37,14 @@ public class BasicReadStatusService implements ReadStatusService {
       throw new NoSuchElementException("Channel 을 찾을 수 없습니다: " + request.channelId());
     }
 
-    // 3) (authorId, channelId) 조합 중복 체크
+    // 3) (userId, channelId) 조합 중복 체크
     readStatusRepository.findByUserIdAndChannelId(request.userId(), request.channelId())
         .ifPresent(rs -> {
           throw new IllegalStateException("이미 존재하는 ReadStatus 입니다.");
         });
 
-    Instant lastReadAt = (request.lastActiveAt() != null)
-        ? request.lastActiveAt()
+    Instant lastReadAt = (request.lastReadAt() != null)
+        ? request.lastReadAt()
         : Instant.EPOCH; // 기본값: 아주 옛날 시각
 
     ReadStatus readStatus = new ReadStatus(
@@ -78,7 +78,7 @@ public class BasicReadStatusService implements ReadStatusService {
     ReadStatus readStatus = readStatusRepository.findById(readStatusId)
         .orElseThrow(() -> new NoSuchElementException("ReadStatus를 찾을 수 없습니다: " + readStatusId));
 
-    readStatus.update(request.lastActiveAt());
+    readStatus.update(request.newLastReadAt());
     readStatusRepository.save(readStatus);
 
     return convertDto(readStatus);

@@ -11,17 +11,17 @@ import java.util.UUID;
     메시지 조회용 DTO
 
     [필드 설명]
-    • userId            : 메시지 userId
-    • channelId         : 채널 userId -> 어느 채널인지
-    • authorId          : 유저 userId -> 어떤 유저가 작성 했는지
-    • newContent           : 메시지 내용
+    • id                : 메시지 id
+    • channelId         : 어느 채널인지
+    • authorId          : 어떤 유저가 작성 했는지
+    • content           : 메시지 내용
     • createdAt         : 메시지 작성 시간
-    • attachmentIds     : 첨부 파일(BinaryContent) userId 목록
+    • attachmentIds     : 첨부 파일(BinaryContent) id 목록
  */
 public record MessageResponse(
     UUID id,
     UUID channelId,
-    UUID userId,
+    UUID authorId,
     String content,
     Instant createdAt,
     List<UUID> attachmentIds

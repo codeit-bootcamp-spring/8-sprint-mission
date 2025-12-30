@@ -32,7 +32,7 @@ public class FileUserRepository implements UserRepository {
   }
 
   // 저장할 데이터를 담을 '전용 박스'에 고유한 주소 라벨 붙이는 것
-  // 이전에 설정한 User 저장 디렉토리에 이 파일 이름을 합쳐서 (userId + 확장자)
+  // 이전에 설정한 User 저장 디렉토리에 이 파일 이름을 합쳐서 (id + 확장자)
   // 최종 저장 경로(Path 객체)를 완성
   private Path resolvePath(UUID id) {
     return directory.resolve(id.toString() + EXTENSION);

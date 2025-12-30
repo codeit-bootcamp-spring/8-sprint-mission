@@ -8,7 +8,7 @@ package com.sprint.mission.discodeit.entity;
     • name           : 유저의 이름
     • email          : 유저의 이메일 주소
     • password       : 유저의 패스워드 (실제는 Hashing 해줘야 하지만, 학습용이라 평문 문자열로 설정하였다.)
-    • profileId      : 프로필 이미지(BinaryContent)의 userId
+    • profileId      : 프로필 이미지(BinaryContent)의 id
 
     [메서드]
     • update(User user)   : User 객체의 값을 현재 객체에 반영 및 updateCall()로 updatedAt 수정.

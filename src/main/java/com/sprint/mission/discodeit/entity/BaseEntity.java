@@ -13,7 +13,7 @@ import java.util.UUID;
    - 공통 엔티티 속성을 관리하는 추상적 기반 클래스.
 
     [필드 설명]
-    • userId(UUID)        : 각 엔티티의 고유 식별자. UUID.randomUUID()로 유니크한 값 생성.
+    • id              : 각 엔티티의 고유 식별자. UUID.randomUUID()로 유니크한 값 생성.
     • createdAt       : 객체 생성 시점 시간 (Instant)
     • updatedAt       : 마지막 수정 시점의 시간 (Instant)
 

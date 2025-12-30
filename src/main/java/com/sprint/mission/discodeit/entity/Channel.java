@@ -6,11 +6,11 @@ package com.sprint.mission.discodeit.entity;
 
     [필드 설명]
     • type                : 채널 타입
-    • newName             : 채널 이름
-    • newDescription      : 채널 설명
+    • name                : 채널 이름
+    • description         : 채널 설명
 
     [메서드]
-    • update(String newName, String newDescription)    : 채널 이름과 채널 설명 갱신하고, updateCall()로 updatedAt 수정.
+    • update(String name, String description)    : 채널 이름과 채널 설명 갱신하고, updateCall()로 updatedAt 수정.
  */
 
 import lombok.Getter;

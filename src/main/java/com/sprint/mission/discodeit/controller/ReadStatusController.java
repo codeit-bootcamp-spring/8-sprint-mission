@@ -45,14 +45,14 @@ public class ReadStatusController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "Channel | User with userId {channelId | authorId} not found"
+                  value = "Channel | User with id {channelId | userId} not found"
               )
           )),
       @ApiResponse(responseCode = "400", description = "이미 읽음 상태가 존재함",
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "ReadStatus with authorId {authorId} and channelId {channelId} already exists"
+                  value = "ReadStatus with userId {userId} and channelId {channelId} already exists"
               )
           )),
       @ApiResponse(responseCode = "201", description = "Message 읽음 상태가 성공적으로 생성됨")
@@ -69,7 +69,6 @@ public class ReadStatusController {
 
   /*
       특정 채널의 메시지 수신 정보 수정
-      - ReadStatusUpdateRequest: (userId, lastActiveAt)
       - 서비스에서 해당 ReadStatus를 찾아 lastReadAt을 갱신한다.
    */
   @Operation(summary = "Message 읽음 상태 수정")
@@ -79,7 +78,7 @@ public class ReadStatusController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "ReadStatus with userId {readStatusId} not found"
+                  value = "ReadStatus with id {readStatusId} not found"
               )
           )
       )

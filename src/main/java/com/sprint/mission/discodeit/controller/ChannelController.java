@@ -70,7 +70,7 @@ public class ChannelController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "Channel with userId {channelId} not found"
+                  value = "Channel with id {channelId} not found"
               )
           )),
       @ApiResponse(responseCode = "400", description = "Private Channel은 수정할 수 없음",
@@ -104,7 +104,7 @@ public class ChannelController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "Channel with userId {channelId} not found"
+                  value = "Channel with id {channelId} not found"
               )
           )),
       @ApiResponse(responseCode = "204",

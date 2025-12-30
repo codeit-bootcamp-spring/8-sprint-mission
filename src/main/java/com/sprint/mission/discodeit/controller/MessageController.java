@@ -40,7 +40,7 @@ public class MessageController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "Channel | Author with userId {channelId | authorId} not found"
+                  value = "Channel | Author with id {channelId | authorId} not found"
               )
           )),
       @ApiResponse(responseCode = "201",
@@ -76,7 +76,7 @@ public class MessageController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "Message with userId {messageId} not found"
+                  value = "Message with id {messageId} not found"
               )
           ))
   })
@@ -103,7 +103,7 @@ public class MessageController {
           content = @Content(
               mediaType = "*/*",
               examples = @ExampleObject(
-                  value = "Message with userId {messageId} not found"
+                  value = "Message with id {messageId} not found"
               )
           ))
   })

@@ -10,14 +10,14 @@ import java.util.UUID;
     ReadStatus 생성용 DTO
 
     [필드 설명]
-    • authorId          : 유저 userId
-    • channelId         : 채널 userId
-    • lastActiveAt      : 마지막 읽은 시각
+    • userId            : 유저 id
+    • channelId         : 채널 id
+    • lastReadAt        : 마지막 읽은 시각
  */
 public record ReadStatusCreateRequest(
     UUID userId,
     UUID channelId,
-    Instant lastActiveAt
+    Instant lastReadAt
 ) {
 
 }

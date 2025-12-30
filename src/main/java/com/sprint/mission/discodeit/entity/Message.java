@@ -16,10 +16,10 @@ import java.util.UUID;
     [필드 설명]
     • authorId           : 유저의 Id (채널 && 유저가 있어야 Message가 작성 가능하기에 유저의 Id 값 존재 해야함)
     • channelId          : 채널 Id (채널 && 유저가 있어야 Message가 작성 가능하기에 채널의 Id 값 존재 해야함)
-    • newContent            : 메시지 내용
+    • content            : 메시지 내용
 
     [메서드]
-    • update(String newContent)    : 메시지 내용을 갱신하고, updateCall()로 updatedAt 수정.
+    • update(String content)    : 메시지 내용을 갱신하고, updateCall()로 updatedAt 수정.
  */
 
 @Getter
@@ -37,7 +37,7 @@ public class Message extends BaseEntity implements Serializable {
   // 메시지 내용
   private String content;
 
-  // 메시지에 첨부된 BinaryContent 의 userId 들.
+  // 메시지에 첨부된 BinaryContent 의 authorId 들.
   private List<UUID> attachmentIds;
 
   public Message(String content, UUID channelId, UUID authorId, List<UUID> attachmentIds) {
@@ -51,8 +51,8 @@ public class Message extends BaseEntity implements Serializable {
     this(content, channelId, authorId, List.of());
   }
 
-  public void update(String contents) {
-    this.content = contents;
+  public void update(String content) {
+    this.content = content;
     updateCall();
   }
 }

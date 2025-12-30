@@ -37,7 +37,7 @@ public class BinaryContentController {
       @ApiResponse(responseCode = "404", description = "첨부 파일을 찾을 수 없음",
           content = @Content(
               mediaType = "*/*",
-              examples = @ExampleObject(value = "BinaryContent with userId {binaryContentId} not found")
+              examples = @ExampleObject(value = "BinaryContent with id {binaryContentId} not found")
           ))
   })
   @GetMapping("{binaryContentId}")

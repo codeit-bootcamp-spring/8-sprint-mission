@@ -64,10 +64,10 @@ public class BasicUserStatusService implements UserStatusService {
   }
 
   @Override
-  public UserStatusResponse update(UserStatusUpdateRequest request) {
-    UserStatus status = userStatusRepository.findById(request.userId())
+  public UserStatusResponse update(UUID userStatusId, UserStatusUpdateRequest request) {
+    UserStatus status = userStatusRepository.findById(userStatusId)
         .orElseThrow(
-            () -> new NoSuchElementException("UserStatus를 찾을 수 없습니다. " + request.userId()));
+            () -> new NoSuchElementException("UserStatus를 찾을 수 없습니다. " + userStatusId));
 
     status.update(request.newLastActiveAt());
     userStatusRepository.save(status);
@@ -77,7 +77,6 @@ public class BasicUserStatusService implements UserStatusService {
 
   @Override
   public UserStatusResponse updateByUserId(UUID userId, Instant lastConnAt) {
-    System.out.println("userId는 = " + userId);
     UserStatus status = userStatusRepository.findByUserId(userId)
         .orElseThrow(() -> new NoSuchElementException("UserStatus를 찾을 수 없습니다: " + userId));
 
