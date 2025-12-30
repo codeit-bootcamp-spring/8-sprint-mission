@@ -52,6 +52,9 @@ public class BasicUserService implements UserService {
         return convertToResponse(savedUser);
     }
 
+    /**
+     * 유저 수정: 선택적 프로필 이미지 교체 및 이름 중복 검사
+     */
     @Override
     public UserResponse update(UserUpdateRequest request) {
         return null;
