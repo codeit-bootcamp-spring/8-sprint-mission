@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,8 +13,10 @@ public class OpenApiConfig {
   public OpenAPI openAPI() {
     return new OpenAPI()
         .info(new Info()
-            .title("Sprint-Mission API 문서")
-            .description("스프린트 미션 4에 대한 API 명세서 입니다.")
-            .version("0.0.1"));
+            .title("Discodeit API 문서")
+            .description("Discodeit 프로젝트의 Swagger API 문서입니다."))
+        .addServersItem(new Server()
+            .url("http://localhost:8080")
+            .description("로컬 서버"));
   }
 }

@@ -10,8 +10,9 @@ package com.sprint.mission.discodeit.dto.user;
     • username          : 유저 이름
     • password          : 유저 패스워드
  */
-public record AuthLoginRequest(
-        String username,
-        String password
+public record LoginRequest(
+    String username,
+    String password
 ) {
+
 }
