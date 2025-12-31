@@ -1,5 +1,7 @@
 package com.sprint.mission.discodeit.dto.user;
 
+import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.entity.UserStatus;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -29,4 +31,17 @@ public record UserResponse(
     UUID profileId
 ) {
 
+  // 도메인 객체들을 조합하여 DTO를 생성하는 책임을 부여
+  public static UserResponse of(User user, UserStatus userStatus) {
+    return new UserResponse(
+        user.getId(),
+        user.getCreatedAt(),
+        user.getUpdatedAt(),
+        user.getName(),
+        user.getEmail(),
+        userStatus != null && userStatus.isOnline(),
+        userStatus != null ? userStatus.getLastActiveAt() : null,
+        user.getProfileId()
+    );
+  }
 }
