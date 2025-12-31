@@ -19,7 +19,7 @@ public record BinaryContentResponse(
     UUID id,
     String fileName,
     String contentType,
-    String base64Data,
+    byte[] bytes,
     Instant createdAt,
     UUID authorId,
     UUID messageId

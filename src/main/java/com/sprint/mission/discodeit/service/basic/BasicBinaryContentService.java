@@ -5,14 +5,12 @@ import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.util.Base64;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -51,9 +49,6 @@ public class BasicBinaryContentService implements BinaryContentService {
   }
 
   private BinaryContentResponse convertDto(BinaryContent binaryContent) {
-    String base64 = (binaryContent.getBytes() == null)
-        ? null
-        : Base64.getEncoder().encodeToString(binaryContent.getBytes());
 
     // 파일 저장소에서 옛날 데이터 읽어온 경우 contentType이 null일 수 있음 → 안전 처리
     String contentType = binaryContent.getContentType();
@@ -64,7 +59,7 @@ public class BasicBinaryContentService implements BinaryContentService {
         binaryContent.getId(),
         binaryContent.getFileName(),
         contentType,
-        base64,
+        binaryContent.getBytes(),
         binaryContent.getCreatedAt(),
         binaryContent.getOptionalHostUserId().orElse(null),
         binaryContent.getOptionalHostMessageId().orElse(null)
