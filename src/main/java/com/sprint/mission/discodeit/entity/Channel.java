@@ -17,7 +17,7 @@ public class Channel {
 
     //  private Set<UUID> memberIds = new HashSet<>(); -> 삭제 (ReadStatus에서 관리)
 
-    public Channel(String name, String description) {
+    public Channel(String name, String description, ChannelType type, UUID ownerId) {
         this.id = UUID.randomUUID();
         this.name = name;
         this.description = description;

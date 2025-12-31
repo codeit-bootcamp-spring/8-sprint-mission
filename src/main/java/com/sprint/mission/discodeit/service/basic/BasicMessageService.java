@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.MessageCreateRequest;
+import com.sprint.mission.discodeit.dto.MessageResponse;
 import com.sprint.mission.discodeit.dto.MessageUpdateRequest;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
@@ -72,5 +73,15 @@ public class BasicMessageService implements MessageService {
         }
 
         messageRepository.delete(id);
+    }
+
+    @Override
+    public MessageResponse create(String content, UUID authorId, UUID channelId) {
+        return null;
+    }
+
+    @Override
+    public List<MessageResponse> findByChannelId(UUID channelId) {
+        return List.of();
     }
 }

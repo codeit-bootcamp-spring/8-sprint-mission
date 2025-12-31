@@ -51,4 +51,9 @@ public class FileUserStatusRepository implements UserStatusRepository {
     public Optional<UserStatus> findByUserId(UUID userId) {
         return findAll().stream().filter(s -> s.getUserId().equals(userId)).findFirst();
     }
+
+    @Override
+    public void deleteByUserId(UUID id) {
+
+    }
 }

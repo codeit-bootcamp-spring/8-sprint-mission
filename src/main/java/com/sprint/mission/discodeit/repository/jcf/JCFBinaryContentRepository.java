@@ -27,11 +27,11 @@ public class JCFBinaryContentRepository implements BinaryContentRepository {
 
     @Override
     public Object findAll() {
-        return null;
+        return database.values().stream().toList();
     }
 
     @Override
     public void delete(UUID id) {
-
+        database.remove(id);
     }
 }

@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.repository.file;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.util.FileUtil;
@@ -7,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,7 +44,7 @@ public class FileUserRepository implements UserRepository {
 
     @Override
     public List<User> findAll() {
-        return Collections.singletonList(FileUtil.readFromFile(filePath, User.class));
+        return FileUtil.readListFromFile(filePath, new TypeReference<List<User>>() {});
     }
 
     @Override

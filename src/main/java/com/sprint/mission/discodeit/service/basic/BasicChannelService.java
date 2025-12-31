@@ -4,14 +4,17 @@ import com.sprint.mission.discodeit.dto.ChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.ChannelResponse;
 import com.sprint.mission.discodeit.dto.ChannelUpdateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -20,11 +23,13 @@ import java.util.stream.Collectors;
 public class BasicChannelService implements ChannelService {
 
     private final ChannelRepository channelRepository;
-    private final MessageRepository messageRepository; // ✅ 연관 데이터 삭제를 위해 주입
+    private final MessageRepository messageRepository; // 연관 데이터 삭제를 위해 주입
+    private final ReadStatusRepository readStatusRepository; // 사용자별 채널 조회를 위해 주입
 
     @Override
     public ChannelResponse create(String name, String description) {
-        Channel channel = new Channel(name, description);
+        // 기본적으로 PUBLIC 채널로 생성 (기존 호환성 유지)
+        Channel channel = new Channel(name, description, com.sprint.mission.discodeit.entity.ChannelType.PUBLIC, null);
         channelRepository.save(channel);
         return convertToResponse(channel);
     }
@@ -38,7 +43,29 @@ public class BasicChannelService implements ChannelService {
 
     @Override
     public List<ChannelResponse> findAllByUserId(UUID userId) {
-        return List.of();
+        // 1. 모든 PUBLIC 채널 조회 (모든 사용자가 볼 수 있음)
+        List<Channel> publicChannels = channelRepository.findAll().stream()
+                .filter(channel -> channel.getType() == ChannelType.PUBLIC)
+                .collect(Collectors.toList());
+
+        // 2. 해당 사용자가 ReadStatus에 등록된 PRIVATE 채널 ID 조회
+        Set<UUID> privateChannelIds = readStatusRepository.findAllByUserId(userId).stream()
+                .map(readStatus -> readStatus.getChannelId())
+                .collect(Collectors.toSet());
+
+        // 3. 해당 사용자가 접근 가능한 PRIVATE 채널 조회
+        List<Channel> privateChannels = channelRepository.findAll().stream()
+                .filter(channel -> channel.getType() == ChannelType.PRIVATE
+                        && privateChannelIds.contains(channel.getId()))
+                .collect(Collectors.toList());
+
+        // 4. PUBLIC 채널과 PRIVATE 채널을 합쳐서 DTO로 변환하여 반환
+        List<Channel> allVisibleChannels = new java.util.ArrayList<>(publicChannels);
+        allVisibleChannels.addAll(privateChannels);
+
+        return allVisibleChannels.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -48,17 +75,32 @@ public class BasicChannelService implements ChannelService {
 
     @Override
     public ChannelResponse createPublic(ChannelCreateRequest request) {
-        return null;
+        Channel channel = new Channel(
+                request.getName(),
+                request.getDescription(),
+                com.sprint.mission.discodeit.entity.ChannelType.PUBLIC,
+                request.getOwnerId()
+        );
+        Channel savedChannel = channelRepository.save(channel);
+        return convertToResponse(savedChannel);
     }
 
     @Override
     public ChannelResponse create(ChannelCreateRequest request) {
-        return null;
+        // 기본적으로 PUBLIC 채널로 생성
+        return createPublic(request);
     }
 
     @Override
     public ChannelResponse createPrivate(ChannelCreateRequest request) {
-        return null;
+        Channel channel = new Channel(
+                request.getName(),
+                request.getDescription(),
+                com.sprint.mission.discodeit.entity.ChannelType.PRIVATE,
+                request.getOwnerId()
+        );
+        Channel savedChannel = channelRepository.save(channel);
+        return convertToResponse(savedChannel);
     }
 
     @Override
@@ -82,7 +124,7 @@ public class BasicChannelService implements ChannelService {
      */
     @Override
     public void delete(UUID id) {
-        // ✅ [멘토 피드백 반영] 비효율적인 findAll() 스트림 대신 전용 삭제 메서드 호출
+        // [멘토 피드백 반영] 비효율적인 findAll() 스트림 대신 전용 삭제 메서드 호출
         // 이 한 줄의 위임이 데이터가 많아질수록 성능 차이를 극명하게 만듭니다.
         messageRepository.deleteByChannelId(id);
 
