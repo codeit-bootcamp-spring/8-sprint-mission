@@ -20,7 +20,7 @@ import java.util.*;
 public class FileBinaryContentRepository implements BinaryContentRepository {
 
     private final Path directory;
-    private final String EXTENSION = ".ser";
+    private static final String EXTENSION = ".ser";
 
     public FileBinaryContentRepository(
             @Value("${discodeit.repository.file-directory:.discodeit}") String rootDir
@@ -29,7 +29,7 @@ public class FileBinaryContentRepository implements BinaryContentRepository {
         try {
             Files.createDirectories(this.directory);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("디렉토리 생성에 실패 했습니다. " + this.directory, e);
         }
     }
 

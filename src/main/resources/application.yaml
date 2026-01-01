@@ -1,8 +1,13 @@
 spring:
   application:
     name: discodeit
+  servlet:
+    multipart:
+      max-file-size: 10MB       # 파일 1개 최대
+      max-request-size: 20MB    # 요청 전체(여러 파일 합) 최대
 
 discodeit:
   repository:
     type: file # jcf | file
     file-directory: .discodeit
+

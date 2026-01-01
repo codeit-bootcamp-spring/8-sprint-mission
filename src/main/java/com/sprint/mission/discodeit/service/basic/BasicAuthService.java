@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.user.AuthLoginRequest;
-import com.sprint.mission.discodeit.dto.user.UserDto;
+import com.sprint.mission.discodeit.dto.user.UserResponse;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserRepository;
@@ -21,7 +21,7 @@ public class BasicAuthService implements AuthService {
     private final UserStatusRepository userStatusRepository;
 
     @Override
-    public UserDto login(AuthLoginRequest request) {
+    public UserResponse login(AuthLoginRequest request) {
 
         // 1) 유저 이름으로 유저 조회
         User user = userRepository.findByUsername(request.username())
@@ -44,7 +44,7 @@ public class BasicAuthService implements AuthService {
         User + UserStatus를 외부에 출력하기 위한 UserDto로 변환시킨다.
         Online과 lastConnAt은 UserStatus를 토대로 계산한다.
      */
-    private UserDto convertDto(User user, UserStatus userStatus) {
+    private UserResponse convertDto(User user, UserStatus userStatus) {
         boolean online = false;
         Instant lastConn = null;
 
@@ -53,13 +53,15 @@ public class BasicAuthService implements AuthService {
             lastConn = userStatus.getLastConnAt();
         }
 
-        return new UserDto(
+        return new UserResponse(
                 user.getId(),
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
                 user.getName(),
                 user.getEmail(),
                 online,
                 lastConn,
-                user.getProfileId()
+                user.getProfileImageId()
         );
     }
 }

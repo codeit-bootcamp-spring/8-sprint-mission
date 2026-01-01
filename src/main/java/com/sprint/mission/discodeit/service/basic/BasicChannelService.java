@@ -2,7 +2,7 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.channel.ChannelCreatePrivateRequest;
 import com.sprint.mission.discodeit.dto.channel.ChannelCreatePublicRequest;
-import com.sprint.mission.discodeit.dto.channel.ChannelDto;
+import com.sprint.mission.discodeit.dto.channel.ChannelResponse;
 import com.sprint.mission.discodeit.dto.channel.ChannelUpdateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
@@ -33,14 +33,14 @@ public class BasicChannelService implements ChannelService {
     private final BinaryContentRepository binaryContentRepository;
 
     @Override
-    public ChannelDto createPublicChannel(ChannelCreatePublicRequest request) {
+    public ChannelResponse createPublicChannel(ChannelCreatePublicRequest request) {
         Channel channel = new Channel(ChannelType.PUBLIC, request.name(), request.description());
         channelRepository.save(channel);
         return convertDto(channel);
     }
 
     @Override
-    public ChannelDto createPrivateChannel(ChannelCreatePrivateRequest request) {
+    public ChannelResponse createPrivateChannel(ChannelCreatePrivateRequest request) {
         Channel channel = new Channel(ChannelType.PRIVATE, null, null);
         channelRepository.save(channel);
 
@@ -54,14 +54,14 @@ public class BasicChannelService implements ChannelService {
     }
 
     @Override
-    public ChannelDto findChannel(UUID id) {
+    public ChannelResponse findChannel(UUID id) {
         Channel channel = channelRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Channel을 찾을 수 없습니다. " + id));
         return convertDto(channel);
     }
 
     @Override
-    public List<ChannelDto> findAllByUserId(UUID userId) {
+    public List<ChannelResponse> findAllByUserId(UUID userId) {
         return channelRepository.findAll().stream()
                 .filter(ch -> {
                     if (ch.getType() == ChannelType.PUBLIC) {
@@ -74,7 +74,7 @@ public class BasicChannelService implements ChannelService {
     }
 
     @Override
-    public ChannelDto updateChannel(ChannelUpdateRequest request) {
+    public ChannelResponse updateChannel(ChannelUpdateRequest request) {
         Channel channel = channelRepository.findById(request.id())
                 .orElseThrow(() -> new NoSuchElementException("Channel을 찾을 수 없습니다. " + request.id()));
 
@@ -109,7 +109,7 @@ public class BasicChannelService implements ChannelService {
         channelRepository.delete(id);
     }
 
-    private ChannelDto convertDto(Channel channel) {
+    private ChannelResponse convertDto(Channel channel) {
         // 최근 메시지 시각
         Instant lastMessageAt = messageRepository.findAllByChannelId(channel.getId()).stream()
                 .map(message -> message.getCreatedAt())
@@ -124,7 +124,7 @@ public class BasicChannelService implements ChannelService {
                     .collect(Collectors.toList());
         }
 
-        return new ChannelDto(
+        return new ChannelResponse(
                 channel.getId(),
                 channel.getName(),
                 channel.getDescription(),

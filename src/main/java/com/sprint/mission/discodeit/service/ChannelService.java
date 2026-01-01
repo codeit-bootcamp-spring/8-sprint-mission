@@ -2,9 +2,8 @@ package com.sprint.mission.discodeit.service;
 
 import com.sprint.mission.discodeit.dto.channel.ChannelCreatePrivateRequest;
 import com.sprint.mission.discodeit.dto.channel.ChannelCreatePublicRequest;
-import com.sprint.mission.discodeit.dto.channel.ChannelDto;
+import com.sprint.mission.discodeit.dto.channel.ChannelResponse;
 import com.sprint.mission.discodeit.dto.channel.ChannelUpdateRequest;
-import com.sprint.mission.discodeit.entity.Channel;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,13 +15,12 @@ import java.util.UUID;
  */
 public interface ChannelService {
 
-    // 채널 생성
-    ChannelDto createPublicChannel(ChannelCreatePublicRequest request);
+    ChannelResponse createPublicChannel(ChannelCreatePublicRequest request);
 
-    ChannelDto createPrivateChannel(ChannelCreatePrivateRequest request);
+    ChannelResponse createPrivateChannel(ChannelCreatePrivateRequest request);
 
     // 채널 조회 (단건)
-    ChannelDto findChannel(UUID id);
+    ChannelResponse findChannel(UUID id);
 
     // 채널 조회 (다건)
     /*
@@ -30,10 +28,10 @@ public interface ChannelService {
       - PUBLIC 채널: 항상 포함
       - PRIVATE 채널: 해당 유저가 참여한 채널만 포함
      */
-    List<ChannelDto> findAllByUserId(UUID userId);
+    List<ChannelResponse> findAllByUserId(UUID userId);
 
     // 수정
-    ChannelDto updateChannel(ChannelUpdateRequest request);
+    ChannelResponse updateChannel(ChannelUpdateRequest request);
 
     // 삭제
     void deleteChannel(UUID id);

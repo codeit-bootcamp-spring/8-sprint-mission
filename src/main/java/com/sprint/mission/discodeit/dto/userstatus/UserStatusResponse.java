@@ -14,7 +14,7 @@ import java.util.UUID;
     • lastConnAt          : 유저의 마지막 접속 시간
     • online              : 유저 온라인 여부 (5분 지나지 않아야 온라인)
  */
-public record UserStatusDto(
+public record UserStatusResponse(
         UUID id,
         UUID userId,
         Instant lastConnAt,

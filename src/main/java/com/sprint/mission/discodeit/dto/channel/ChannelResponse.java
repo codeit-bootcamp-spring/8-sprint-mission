@@ -17,7 +17,7 @@ import java.util.UUID;
     • lastMessageAt     : 가장 최근 메시지 시각 (없으면 null)
     • memberUserIds     : PRIVATE 채널인 경우 참여한 유저 id 목록
  */
-public record ChannelDto(
+public record ChannelResponse(
         UUID id,
         String name,
         String description,

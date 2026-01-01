@@ -25,6 +25,8 @@ public class UserStatus extends BaseEntity implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    private static final int ONLINE_VERIFICATION_MINUTES = 5;
+
     private UUID userId;
 
     private Instant lastConnAt;
@@ -48,6 +50,6 @@ public class UserStatus extends BaseEntity implements Serializable {
         }
 
         Instant now = Instant.now();
-        return lastConnAt.isBefore(now.minus(Duration.ofMinutes(5)));
+        return lastConnAt.isAfter(now.minus(Duration.ofMinutes(ONLINE_VERIFICATION_MINUTES)));
     }
 }
