@@ -7,14 +7,14 @@ import java.util.UUID;
 
 public record UserStatusResponse(
         UUID id,
-        UUID uId,
+        UUID userId,
         Instant createdAt,
         Instant LastAccessAt
 ) {
     public static UserStatusResponse from(UserStatus status) {
         return new UserStatusResponse(
                 status.getId(),
-                status.getUId(),
+                status.getUserId(),
                 status.getCreatedAt(),
                 status.getLastAccessAt()
         );

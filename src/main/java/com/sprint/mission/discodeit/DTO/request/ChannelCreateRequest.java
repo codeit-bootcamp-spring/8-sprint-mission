@@ -6,13 +6,10 @@ import java.util.List;
 import java.util.UUID;
 
 public record ChannelCreateRequest(
-        UUID uId,
+        UUID userId,
         ChannelStatus status,
         String name,
-        String host,
         String description,
-        int participant,
-        List<String> participants,
         List<UUID> participantsIds
 ) {
 }

@@ -19,6 +19,7 @@ public class User implements Serializable {
     private char gender;
     private int grade;
     private UUID profileId;
+    
 
     public User(String userId, String name, String password, String email, char gender, int grade, UUID profileId) {
         id = UUID.randomUUID();

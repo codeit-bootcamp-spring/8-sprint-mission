@@ -10,13 +10,13 @@ import java.util.UUID;
 
 public record ChannelResponse(
         UUID id,
-        UUID uid,
+        UUID userId,
         ChannelStatus status,
-        Optional<String> name,
+        Optional<String> channelName,
         String host,
         Optional<String> description,
-        int participant,
-        List<String> participants,
+        Optional<Integer> participant,
+        Optional<List<String>> participants,
         Instant latestMessageAt,
         List<UUID> participantUserIds,
         Instant createAt,
@@ -24,22 +24,22 @@ public record ChannelResponse(
 ) {
     public static ChannelResponse ofPublic(
             UUID id,
-            UUID uid,
+            UUID userId,
             String name,
             String host,
             String description,
-            int participant,
+            Integer participant,
             List<String> participants,
             Instant latestMessageAt,
             Instant createdAt,
             Instant modifiedAt
     ) {
-        return new ChannelResponse(id, uid, ChannelStatus.PUBLIC, Optional.of(name), host, Optional.of(description), participant, participants, latestMessageAt, List.of(), createdAt, modifiedAt);
+        return new ChannelResponse(id, userId, ChannelStatus.PUBLIC, Optional.of(name), host, Optional.of(description), Optional.empty(), Optional.empty(), latestMessageAt, List.of(), createdAt, modifiedAt);
     }
 
     public static ChannelResponse ofPrivate(
             UUID id,
-            UUID uid,
+            UUID userId,
             String host,
             int participant,
             List<String> participants,
@@ -48,26 +48,26 @@ public record ChannelResponse(
             Instant createAt,
             Instant modifiedAt
     ) {
-        return new ChannelResponse(id, uid, ChannelStatus.PRIVATE, Optional.empty(), host, Optional.empty(), participant, participants, latestMessageAt, participantUserIds, createAt, modifiedAt);
+        return new ChannelResponse(id, userId, ChannelStatus.PRIVATE, Optional.empty(), host, Optional.empty(), Optional.of(participant), Optional.of(participants), latestMessageAt, participantUserIds, createAt, modifiedAt);
     }
 
     public static ChannelResponse from(Channel channel, Instant latestMessageAt, List<UUID> participantUserIds) {
         return switch(channel.getStatus()) {
             case PUBLIC -> ofPublic(
                     channel.getId(),
-                    channel.getUid(),
+                    channel.getUserId(),
                     channel.getName(),
                     channel.getHost(),
                     channel.getDescription(),
-                    channel.getParticipant(),
-                    channel.getParticipants(),
+                    null,
+                    null,
                     latestMessageAt,
                     channel.getCreatedAt(),
                     channel.getModifiedAt()
             );
             case PRIVATE -> ofPrivate(
                     channel.getId(),
-                    channel.getUid(),
+                    channel.getUserId(),
                     channel.getHost(),
                     channel.getParticipant(),
                     channel.getParticipants(),

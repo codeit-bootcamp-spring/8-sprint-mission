@@ -38,10 +38,13 @@ public class BasicUserService implements UserService {
 
         UUID profileIdNullable = requestDTO
                 .map(profileRequest -> {
-                    String fileName = profileRequest.fileName();
+                    String originalFileName = profileRequest.originalFileName();
+                    String savedName = profileRequest.savedName();
+                    String uploadPath = profileRequest.uploadPath();
                     String contentType = profileRequest.contentType();
                     byte[] bytes = profileRequest.bytes();
-                    BinaryContent binaryContent = new BinaryContent(fileName, (long)bytes.length, contentType, bytes);
+                    String description = profileRequest.description();
+                    BinaryContent binaryContent = new BinaryContent(originalFileName, savedName, uploadPath, contentType, bytes, description);
                     return binaryContentRepository.save(binaryContent).getId();
                 })
                 .orElse(null);
@@ -94,15 +97,22 @@ public class BasicUserService implements UserService {
     }
 
     @Override
-    public UserResponse update(UserUpdateRequest request, Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
-        User user = userRepository.findById(request.id())
+    public UserResponse update(UUID id, UserUpdateRequest request, Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("수정하려는 유저가 없습니다."));
 
-        if (userRepository.existsByName(request.name())) {
-            throw new IllegalArgumentException("이미" + request.name() + "을 가진 유저가 존재합니다.");
+        // 기존 유저의 이름과 요청한 이름이 다를 경우, 같으면 넘어감
+        if (!user.getName().equals(request.name())) {
+            if (userRepository.existsByName(request.name())) {
+                throw new IllegalArgumentException("이미 " + request.name() + "을 가진 유저가 존재합니다.");
+            }
         }
-        if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("이미" + request.email()+ "을 가진 유저가 존재합니다.");
+
+        // 기존 유저의 이메일과 요청한 이메일 다를 경우, 같으면 넘어감
+        if (!user.getEmail().equals(request.email())) {
+            if (userRepository.existsByEmail(request.email())) {
+                throw new IllegalArgumentException("이미 " + request.email()+ "을 가진 유저가 존재합니다.");
+            }
         }
 
         UUID newProfileId = optionalProfileCreateRequest
@@ -110,22 +120,54 @@ public class BasicUserService implements UserService {
                     Optional.ofNullable(user.getProfileId())
                             .ifPresent(binaryContentRepository::delete);
 
-                    String fileName = profileRequest.fileName();
+                    String originalFileName = profileRequest.originalFileName();
+                    String savedName = profileRequest.savedName();
+                    String uploadPath = profileRequest.uploadPath();
                     String contentType = profileRequest.contentType();
                     byte[] bytes = profileRequest.bytes();
-                    BinaryContent binaryContent = new BinaryContent(fileName, (long)bytes.length, contentType, bytes);
+                    String description = profileRequest.description();
+
+                    BinaryContent binaryContent = new BinaryContent(originalFileName, savedName, uploadPath, contentType, bytes, description);
                     return binaryContentRepository.save(binaryContent).getId();
                 })
                 .orElse(null);
 
+        String encodedPassword = passwordEncoder.encode(request.password());
 
-
-        user.update(request.userId(), request.name(), request.email(), request.password(), request.gender(), request.grade(), newProfileId);
+        user.update(request.userId(), request.name(), encodedPassword, request.email(), request.gender(), request.grade(), newProfileId);
 
         User savedUser = userRepository.save(user);
         UserStatus status = userStatusRepository.findByUserId(savedUser.getId())
                 .orElseThrow(()-> new NoSuchElementException("존재하지 않는 UserStatus입니다."));
         return UserResponse.from(savedUser, status);
+    }
+
+    @Override
+    public UserResponse updateOnlineStatus(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 유저입니다."));
+
+        UserStatus status = userStatusRepository.findByUserId(userId)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 UserStatus입니다."));
+
+        status.markOnline();
+        userStatusRepository.save(status);
+
+        return UserResponse.from(user, status);
+    }
+
+    @Override
+    public UserResponse updateOfflineStatus(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 유저입니다."));
+
+        UserStatus status = userStatusRepository.findByUserId(userId)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 UserStatus입니다."));
+
+        status.markOffline();
+        userStatusRepository.save(status);
+
+        return UserResponse.from(user, status);
     }
 
     @Override

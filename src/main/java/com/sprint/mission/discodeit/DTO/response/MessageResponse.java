@@ -8,8 +8,8 @@ import java.util.UUID;
 
 public record MessageResponse(
         UUID id,
-        UUID uid,
-        UUID cid,
+        UUID userId,
+        UUID channelId,
         String channelName,
         String from,
         String content,
@@ -21,8 +21,8 @@ public record MessageResponse(
     public static MessageResponse from(Message message) {
         return new MessageResponse(
                 message.getId(),
-                message.getUid(),
-                message.getCid(),
+                message.getUserId(),
+                message.getChannelId(),
                 message.getChannelName(),
                 message.getFrom(),
                 message.getContent(),

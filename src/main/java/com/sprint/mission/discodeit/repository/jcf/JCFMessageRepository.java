@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "jcf", matchIfMissing = true)
 @Repository
@@ -14,7 +15,12 @@ public class JCFMessageRepository implements MessageRepository {
     private final Map<UUID, Message> data;
 
     public JCFMessageRepository() {
-        this.data = new HashMap<>();
+        /*
+        //기존에 사용했던 HashMap은 모든 HTTP 요청이 같은 HashMap에 접근하기 때문에 Tread-Safe 하지 못함
+        //기본적으로 @Repository scope는 Singleton
+        //Tread-Safe한 ConcurrentHashMap사용
+        */
+        this.data = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -29,9 +35,9 @@ public class JCFMessageRepository implements MessageRepository {
     }
 
     @Override
-    public Optional<Instant> findLatestMessageTimeByChannelId(UUID cId) {
+    public Optional<Instant> findLatestMessageTimeByChannelId(UUID channelId) {
         return data.values().stream()
-                .filter(message -> message.getCid().equals(cId))
+                .filter(message -> message.getChannelId().equals(channelId))
                 .map(Message::getCreatedAt)
                 .max(Comparator.naturalOrder());
     }
@@ -47,7 +53,7 @@ public class JCFMessageRepository implements MessageRepository {
     }
 
     @Override
-    public void deleteAllByChannelId(UUID id) {
-        data.values().removeIf(message -> message.getCid().equals(id));
+    public void deleteAllByChannelId(UUID ChannelId) {
+        data.values().removeIf(message -> message.getChannelId().equals(ChannelId));
     }
 }

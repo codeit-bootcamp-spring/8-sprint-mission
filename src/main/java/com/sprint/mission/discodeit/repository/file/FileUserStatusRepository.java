@@ -54,7 +54,7 @@ public class FileUserStatusRepository implements UserStatusRepository {
     }
 
     @Override
-    public boolean existsByUserId(UUID uId) {
+    public boolean existsByUserId(UUID userId) {
         try {
             return Files.list(directory)
                     .map(path -> {
@@ -67,9 +67,9 @@ public class FileUserStatusRepository implements UserStatusRepository {
                             throw new RuntimeException(e);
                         }
                     })
-                    .anyMatch(status -> status.getUId().equals(uId));
+                    .anyMatch(status -> status.getUserId().equals(userId));
         } catch (IOException e) {
-            throw new RuntimeException(uId + "로 UserStatus를 조회할 수 없습니다.", e);
+            throw new RuntimeException(userId + "로 UserStatus를 조회할 수 없습니다.", e);
         }
     }
 
@@ -92,7 +92,7 @@ public class FileUserStatusRepository implements UserStatusRepository {
     }
 
     @Override
-    public Optional<UserStatus> findByUserId(UUID uId) {
+    public Optional<UserStatus> findByUserId(UUID userId) {
         try {
             return Files.list(directory)
                     .map(path -> {
@@ -105,10 +105,10 @@ public class FileUserStatusRepository implements UserStatusRepository {
                             throw new RuntimeException(e);
                         }
                     })
-                    .filter(userStatus -> userStatus.getUId().equals(uId))
+                    .filter(userStatus -> userStatus.getUserId().equals(userId))
                     .findFirst();
         } catch (IOException e) {
-            throw new RuntimeException(uId + "로 UserStatus를 조회할 수 없습니다.", e);
+            throw new RuntimeException(userId + "로 UserStatus를 조회할 수 없습니다.", e);
         }
     }
 
@@ -142,8 +142,34 @@ public class FileUserStatusRepository implements UserStatusRepository {
         }
     }
 
+    //파일을 읽고 스트림을 닫지 않은 상태에서 삭제를 요청해서 에러 발생..
+    //스트림을 닫고 삭제 요청
     @Override
-    public void deleteByUserId(UUID id) {
+    public void deleteByUserId(UUID userId) {
+        try {
+            Files.list(directory)
+                    .forEach(path -> {
+                        UserStatus userStatus;
+                        try (
+                                FileInputStream fis = new FileInputStream(path.toFile());
+                                ObjectInputStream ois = new ObjectInputStream(fis);
+                        ) {
+                            userStatus =  (UserStatus) ois.readObject();
 
+                        } catch (IOException | ClassNotFoundException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        if(userStatus.getUserId().equals(userId)) {
+                            try {
+                                Files.delete(path);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

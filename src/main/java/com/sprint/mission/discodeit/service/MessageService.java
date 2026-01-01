@@ -23,7 +23,7 @@ public interface MessageService {
     Map<String, List<Message>> findMessagesByFrom();
 
     //메시지 수정
-    MessageResponse update(UUID id, MessageUpdateRequest request);
+    MessageResponse update(UUID id, MessageUpdateRequest request, List<BinaryContentCreateRequest> binaryContentCreateRequest);
 
     //메시지 삭제
     void delete(UUID id);

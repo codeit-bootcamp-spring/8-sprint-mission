@@ -4,8 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record ReadStatusCreateRequest(
-        UUID uId,
-        UUID cId,
-        Instant newLastMessageReadAt
+        UUID userId,
+        UUID channelId
 ) {
 }

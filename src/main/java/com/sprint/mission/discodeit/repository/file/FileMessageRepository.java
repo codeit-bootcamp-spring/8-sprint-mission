@@ -77,7 +77,7 @@ public class FileMessageRepository implements MessageRepository {
     }
 
     @Override
-    public Optional<Instant> findLatestMessageTimeByChannelId(UUID cId) {
+    public Optional<Instant> findLatestMessageTimeByChannelId(UUID channelId) {
         try {
             return Files.list(directory)
                     .map(path -> {
@@ -90,7 +90,7 @@ public class FileMessageRepository implements MessageRepository {
                             throw new  RuntimeException(e);
                         }
                     })
-                    .filter(message -> message.getCid().equals(cId))
+                    .filter(message -> message.getChannelId().equals(channelId))
                     .map(Message::getCreatedAt)
                     .max(Comparator.naturalOrder());
         } catch (IOException e) {
@@ -129,7 +129,7 @@ public class FileMessageRepository implements MessageRepository {
     }
 
     @Override
-    public void deleteAllByChannelId(UUID cId) {
+    public void deleteAllByChannelId(UUID channelId) {
         try {
             Files.list(directory)
                     .forEach(path -> {
@@ -138,8 +138,8 @@ public class FileMessageRepository implements MessageRepository {
                                 ObjectInputStream ois = new ObjectInputStream(fis)
                         ) {
                             Message message = (Message) ois.readObject();
-                            if (message.getCid().equals(cId)) {
-                                Files.delete(path); // 🔥 핵심
+                            if (message.getChannelId().equals(channelId)) {
+                                Files.delete(path);
                             }
                         } catch (IOException | ClassNotFoundException e) {
                             throw new RuntimeException(e);

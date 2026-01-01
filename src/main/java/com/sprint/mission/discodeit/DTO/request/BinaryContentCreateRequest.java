@@ -1,8 +1,11 @@
 package com.sprint.mission.discodeit.DTO.request;
 
 public record BinaryContentCreateRequest(
-        String fileName,
+        String originalFileName,
+        String savedName,
+        String uploadPath,
         String contentType,
-        byte[] bytes
+        byte[] bytes,
+        String description
 ) {
 }

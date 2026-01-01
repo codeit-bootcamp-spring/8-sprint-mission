@@ -6,22 +6,23 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record BinaryContentResponse(
-        UUID id,
-        String fileName,
+        String originalFileName,
+        String savedName,
+        String uploadPath,
         String contentType,
-        long size,
         byte[] bytes,
+        String description,
         Instant createdAt
-
 ) {
     public static BinaryContentResponse from(BinaryContent binaryContent) {
 
         return new BinaryContentResponse(
-                binaryContent.getId(),
-                binaryContent.getFileName(),
+                binaryContent.getOriginalFileName(),
+                binaryContent.getSavedName(),
+                binaryContent.getUploadPath(),
                 binaryContent.getContentType(),
-                binaryContent.getSize(),
                 binaryContent.getBytes(),
+                binaryContent.getDescription(),
                 binaryContent.getCreatedAt()
         );
     }

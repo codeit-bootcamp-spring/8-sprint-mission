@@ -13,5 +13,5 @@ public interface ChannelRepository {
     List<Channel> findAll();
     List<Channel> findAllByStatus(ChannelStatus status);
     void delete(UUID id);
-    List<Channel> findAllPrivateChannelIdsByUserId(UUID uId);
+    List<Channel> findAllPrivateChannelIdsByUserId(UUID userId);
 }

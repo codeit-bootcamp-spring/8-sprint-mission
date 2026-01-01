@@ -71,7 +71,7 @@ public class FileReadStatusRepository implements ReadStatusRepository {
     }
 
     @Override
-    public Optional<ReadStatus> findByChannelId(UUID cId) {
+    public Optional<ReadStatus> findByChannelId(UUID channelId) {
         try {
             return Files.list(directory)
                     .map(path -> {
@@ -84,37 +84,15 @@ public class FileReadStatusRepository implements ReadStatusRepository {
                             throw new RuntimeException(e);
                         }
                     })
-                    .filter(readStatus -> readStatus.getCId().equals(cId))
+                    .filter(readStatus -> readStatus.getChannelId().equals(channelId))
                     .findFirst();
         }  catch (IOException e) {
-            throw new RuntimeException(cId + "로 ReadStatus를 조회할 수 없습니다.");
+            throw new RuntimeException(channelId + "로 ReadStatus를 조회할 수 없습니다.");
         }
     }
 
     @Override
-    public boolean existsByUserIdAndChannelId(UUID uId, UUID cId) {
-        try {
-            return Files.list(directory)
-                    .map(path -> {
-                        try (
-                                FileInputStream fis = new FileInputStream(path.toFile());
-                                ObjectInputStream ois = new ObjectInputStream(fis);
-                        ) {
-                            return (ReadStatus) ois.readObject();
-                        } catch (IOException | ClassNotFoundException e) {
-                            throw new  RuntimeException(e);
-                        }
-                    })
-                    .anyMatch(readStatus -> readStatus.getUId().equals(uId) &&
-                                                        readStatus.getCId().equals(cId));
-
-        } catch (IOException e) {
-            throw new RuntimeException(uId + "&" + cId + "로 ReadStatus를 조회할 수  없습니다. ", e);
-        }
-    }
-
-    @Override
-    public List<UUID> findAllByChannelId(UUID cId) {
+    public Optional<ReadStatus> findByUserIdAndChannelId(UUID userId, UUID channelId) {
         try {
             return Files.list(directory)
                     .map(path -> {
@@ -127,11 +105,55 @@ public class FileReadStatusRepository implements ReadStatusRepository {
                             throw new RuntimeException(e);
                         }
                     })
-                    .map(ReadStatus::getCId)
-                    .filter(readStatus -> readStatus.equals(cId))
+                    .filter(readStatus -> readStatus.getUserId().equals(userId) &&
+                                                        readStatus.getChannelId().equals(channelId))
+                    .findFirst();
+        } catch (IOException e) {
+            throw new RuntimeException(userId + "&" + channelId + "로 ReadStatus를 조회할 수 없습니다.", e);
+        }
+    }
+
+    @Override
+    public boolean existsByUserIdAndChannelId(UUID userId, UUID channelId) {
+        try {
+            return Files.list(directory)
+                    .map(path -> {
+                        try (
+                                FileInputStream fis = new FileInputStream(path.toFile());
+                                ObjectInputStream ois = new ObjectInputStream(fis);
+                        ) {
+                            return (ReadStatus) ois.readObject();
+                        } catch (IOException | ClassNotFoundException e) {
+                            throw new  RuntimeException(e);
+                        }
+                    })
+                    .anyMatch(readStatus -> readStatus.getUserId().equals(userId) &&
+                                                        readStatus.getChannelId().equals(channelId));
+
+        } catch (IOException e) {
+            throw new RuntimeException(userId + "&" + channelId + "로 ReadStatus를 조회할 수  없습니다. ", e);
+        }
+    }
+
+    @Override
+    public List<UUID> findAllByChannelId(UUID channelId) {
+        try {
+            return Files.list(directory)
+                    .map(path -> {
+                        try (
+                                FileInputStream fis = new FileInputStream(path.toFile());
+                                ObjectInputStream ois = new ObjectInputStream(fis);
+                        ) {
+                            return (ReadStatus) ois.readObject();
+                        } catch (IOException | ClassNotFoundException e) {
+                            throw new RuntimeException(e);
+                        }
+                    })
+                    .map(ReadStatus::getChannelId)
+                    .filter(readStatus -> readStatus.equals(channelId))
                     .toList();
         } catch (IOException e) {
-            throw new RuntimeException(cId + "로 ReadStatus를 조회할 수 없습니다.", e);
+            throw new RuntimeException(channelId + "로 ReadStatus를 조회할 수 없습니다.", e);
         }
     }
 
@@ -146,7 +168,7 @@ public class FileReadStatusRepository implements ReadStatusRepository {
     }
 
     @Override
-    public void deleteAllByChannelId(UUID cId) {
+    public void deleteAllByChannelId(UUID channelId) {
         try {
             List<UUID> readStatusIds = Files.list(directory)
                     .map(path -> {
@@ -159,7 +181,7 @@ public class FileReadStatusRepository implements ReadStatusRepository {
                             throw new RuntimeException(e);
                         }
                     })
-                    .filter(readStatus -> readStatus.getCId().equals(cId))
+                    .filter(readStatus -> readStatus.getChannelId().equals(channelId))
                     .map(ReadStatus::getId)
                     .toList();
             for (UUID readStatusId : readStatusIds) {
@@ -171,12 +193,12 @@ public class FileReadStatusRepository implements ReadStatusRepository {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(cId + "로 ReadStatus를 조회할 수 없습니다.", e);
+            throw new RuntimeException(channelId + "로 ReadStatus를 조회할 수 없습니다.", e);
         }
     }
 
     @Override
-    public List<ReadStatus> findAllByUserId(UUID uId) {
+    public List<ReadStatus> findAllByUserId(UUID userId) {
         try {
             return Files.list(directory)
                     .map(path -> {
@@ -189,7 +211,7 @@ public class FileReadStatusRepository implements ReadStatusRepository {
                             throw new RuntimeException(e);
                         }
                     })
-                    .filter(readStatus -> readStatus.getUId().equals(uId))
+                    .filter(readStatus -> readStatus.getUserId().equals(userId))
                     .toList();
         } catch (IOException e) {
             throw new RuntimeException(e);

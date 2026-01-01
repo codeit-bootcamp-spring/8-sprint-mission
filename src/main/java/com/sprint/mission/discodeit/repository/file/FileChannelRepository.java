@@ -142,7 +142,7 @@ public class FileChannelRepository implements ChannelRepository {
                             throw new RuntimeException(e);
                         }
                     })
-                    .filter(channel -> channel.getUid().equals(uId) && channel.getStatus().equals(ChannelStatus.PRIVATE))
+                    .filter(channel -> channel.getUserId().equals(uId) && channel.getStatus().equals(ChannelStatus.PRIVATE))
                     .toList();
         } catch (IOException e) {
             throw new RuntimeException(uId + "로 채널을 조회할 수 없습니다.", e);

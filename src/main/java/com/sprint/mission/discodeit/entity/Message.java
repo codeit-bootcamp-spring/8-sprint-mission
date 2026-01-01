@@ -13,8 +13,8 @@ public class Message implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final UUID id;
-    private final UUID uid;
-    private final UUID cid;
+    private final UUID userId;
+    private final UUID channelId;
 
     private final Instant createdAt;
     private Instant modifiedAt;
@@ -23,13 +23,13 @@ public class Message implements Serializable {
     private String content;
     private List<UUID> attachmentIds;
 
-    public Message(UUID uid, UUID cid, String channelName, String from, String content, List<UUID> attachmentIds) {
+    public Message(UUID userId, UUID channelId, String channelName, String from, String content, List<UUID> attachmentIds) {
         id = UUID.randomUUID();
         createdAt = Instant.now();
         modifiedAt = createdAt;
 
-        this.uid = uid;
-        this.cid = cid;
+        this.userId = userId;
+        this.channelId = channelId;
         this.channelName = channelName;
         this.from = from;
         this.content = content;
@@ -55,8 +55,8 @@ public class Message implements Serializable {
     public String toString() {
         return "Message{" +
                 "id=" + id +
-                ", uid=" + uid +
-                ", cid=" + cid +
+                ", uid=" + userId +
+                ", cid=" + channelId +
                 ", createdAt=" + createdAt +
                 ", modifiedAt=" + modifiedAt +
                 ", channelName='" + channelName + '\'' +

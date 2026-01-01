@@ -17,21 +17,22 @@ import java.util.UUID;
 public class BasicBinaryContentService implements BinaryContentService {
     private final BinaryContentRepository binaryContentRepository;
 
+    @Override
     public BinaryContentResponse create(BinaryContentCreateRequest request) {
-        String fileName = request.fileName();
-        byte[] bytes = request.bytes();
-        String contentType = request.contentType();
         BinaryContent binaryContent = new BinaryContent(
-                fileName,
-                (long) bytes.length,
-                contentType,
-                bytes
+                request.originalFileName(),
+                request.savedName(),
+                request.uploadPath(),
+                request.contentType(),
+                request.bytes(),
+                request.description()
         );
 
         binaryContentRepository.save(binaryContent);
         return BinaryContentResponse.from(binaryContent);
     }
 
+    @Override
     public BinaryContentResponse find(UUID id) {
         BinaryContent binaryContent = binaryContentRepository.findById(id)
                 .orElseThrow(()-> new NoSuchElementException("BinaryContent not found"));
@@ -39,6 +40,7 @@ public class BasicBinaryContentService implements BinaryContentService {
         return BinaryContentResponse.from(binaryContent);
     }
 
+    @Override
     public List<UUID> findAllByIn() {
         return binaryContentRepository.findAll();
     }

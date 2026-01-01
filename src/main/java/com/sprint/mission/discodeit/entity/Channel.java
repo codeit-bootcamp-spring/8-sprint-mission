@@ -11,22 +11,21 @@ import java.util.UUID;
 public class Channel implements Serializable {
     private static final long serialVersionUID = 1L;
     private final UUID id;
-    private UUID uid;
+    private final UUID userId;
     private final Instant createdAt;
     private Instant modifiedAt;
-    private ChannelStatus status;
+    private final ChannelStatus status;
     private String name;
-    private String host;
+    private final String host;
     private String description;
-    private int participant;
+    private Integer participant;
     private List<String> participants;
 
-    public Channel(UUID uid, ChannelStatus status, String name, String host, String description, int participant, List<String> participants) {
+    public Channel(UUID userId, ChannelStatus status, String name, String host, String description, Integer participant, List<String> participants) {
         id = UUID.randomUUID();
         createdAt = Instant.now();
         modifiedAt = createdAt;
-
-        this.uid = uid;
+        this.userId = userId;
         this.status = status;
         this.name = name;
         this.host = host;
@@ -39,7 +38,7 @@ public class Channel implements Serializable {
         return id.toString().concat(".ser");
     }
 
-    public void update(String name, String description, int participant, List<String> participants) {
+    public void update(String name, String description) {
         boolean anyValueUpdated = false;
         if(name != null && !name.equals(this.name)) {
             this.name = name;
@@ -47,14 +46,6 @@ public class Channel implements Serializable {
         }
         if(description != null && !description.equals(this.description)) {
             this.description = description;
-            anyValueUpdated = true;
-        }
-        if(participant != 0 && participant != this.participant) {
-            this.participant = participant;
-            anyValueUpdated = true;
-        }
-        if(participants != null && !participants.equals(this.participants)) {
-            this.participants = participants;
             anyValueUpdated = true;
         }
         if (anyValueUpdated) {
@@ -66,7 +57,7 @@ public class Channel implements Serializable {
     public String toString() {
         return "Channel{" +
                 "id=" + id +
-                ", uid=" + uid +
+                ", uid=" + userId +
                 ", createdAt=" + createdAt +
                 ", modifiedAt=" + modifiedAt +
                 ", status=" + status +
