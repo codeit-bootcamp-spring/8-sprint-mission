@@ -11,16 +11,22 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriUtils;
 
 @Tag(name = "BinaryContent", description = "첨부 파일 API")
 @RestController
@@ -54,6 +60,27 @@ public class BinaryContentController {
         .status(HttpStatus.OK)
         .body(response);
   }
+
+  // 추가 방식: 실제 파일 다운로드용
+  @GetMapping("{binaryContentId}/download")
+  public ResponseEntity<Resource> download(
+      @PathVariable UUID binaryContentId) {
+
+    BinaryContentResponse response = binaryContentService.findById(binaryContentId);
+
+    byte[] fileBytes = response.bytes();
+    Resource resource = new ByteArrayResource(fileBytes);
+
+    // 파일명 인코딩
+    String encodedFileName = UriUtils.encode(response.fileName(), StandardCharsets.UTF_8);
+
+    return ResponseEntity.ok()
+        .contentType(MediaType.parseMediaType(response.contentType()))
+        .header(HttpHeaders.CONTENT_DISPOSITION,
+            "attachment; filename=\"" + encodedFileName + "\"; filename*=UTF-8''" + encodedFileName)
+        .body(resource);
+  }
+
 
   // 바이너리 파일 다건 조회 (GET-only 미션 대응)
   @Operation(summary = "여러 첨부 파일 조회")

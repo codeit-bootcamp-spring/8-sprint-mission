@@ -11,14 +11,13 @@ import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -32,34 +31,23 @@ public class BasicUserService implements UserService {
   public UserResponse create(UserCreateRequest request, BinaryContentCreateRequest profileRequest) {
 
     // Username / Email 중복 검증
-    if (userRepository.existsByUsernameOrEmail(request.username(), request.email())) {
-      throw new IllegalArgumentException("이미 사용 중인 newUsername 또는 newEmail 입니다. 다시 입력 부탁드립니다.");
-    }
+    validateNewUser(request.username(), request.email());
 
     // User 생성
-    User user = new User(request.username(), request.email(), request.password());
-    userRepository.save(user);
+    User user = userRepository.save(
+        new User(request.username(), request.email(), request.password()));
 
     // UserStatus 생성 (마지막 접속 시간 = 지금)
-    UserStatus status = new UserStatus(user.getId(), Instant.now());
-    userStatusRepository.save(status);
+    UserStatus status = userStatusRepository.save(new UserStatus(user.getId(), Instant.now()));
 
-    // 프로필 이미지 있으면 BinaryContent 생성 -> User.profileId 설정
-    if (profileRequest != null && profileRequest.bytes() != null) {
-      BinaryContent content = new BinaryContent(
-          profileRequest.fileName(),
-          profileRequest.contentType(),
-          profileRequest.bytes(),
-          user.getId(),
-          null
-      );
-      binaryContentRepository.save(content);
-
-      user.update(null, null, null, content.getId());
-      userRepository.save(user);
+    // 프로필 이미지 처리
+    UUID profileId = handleProfileImage(user.getId(), null, profileRequest);
+    if (profileId != null) {
+      user.update(null, null, null, profileId);
+      userRepository.save(user); // 프로필 ID 반영을 위한 업데이트 저장
     }
 
-    return convertDto(user, status);
+    return UserResponse.of(user, status);
   }
 
   @Override
@@ -70,7 +58,7 @@ public class BasicUserService implements UserService {
     UserStatus status = userStatusRepository.findByUserId(id)
         .orElse(null);
 
-    return convertDto(user, status);
+    return UserResponse.of(user, status);
   }
 
   @Override
@@ -79,9 +67,9 @@ public class BasicUserService implements UserService {
         .map(user -> {
           UserStatus status = userStatusRepository.findByUserId(user.getId())
               .orElse(null);
-          return convertDto(user, status);
+          return UserResponse.of(user, status);
         })
-        .collect(Collectors.toList());
+        .toList();
   }
 
   @Override
@@ -91,55 +79,18 @@ public class BasicUserService implements UserService {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + userId));
 
-    // newUsername 변경 시에 중복 체크
-    if (request.newUsername() != null && !request.newUsername().equals(user.getName())) {
-      userRepository.findByUsername(request.newUsername())
-          .filter(other -> !other.getId().equals(user.getId()))
-          .ifPresent(other -> {
-            throw new IllegalArgumentException("이미 사용 중인 Username 입니다." + request.newUsername());
-          });
-    }
-
-    // newEmail 변경 시에 중복 체크
-    if (request.newEmail() != null && !request.newEmail().equals(user.getEmail())) {
-      userRepository.findByEmail(request.newEmail())
-          .filter(other -> !other.getId().equals(user.getId()))
-          .ifPresent(other -> {
-            throw new IllegalArgumentException("이미 사용 중인 Email 입니다." + request.newEmail());
-          });
-    }
+    // 수정 정보 중복 체크
+    validateUpdateUser(user, request);
 
     // 프로필 이미지 교체
-    UUID newProfileId = user.getProfileId();
+    UUID newProfileId = handleProfileImage(user.getId(), user.getProfileId(), profileRequest);
 
-    if (profileRequest != null && profileRequest.bytes() != null) {
-      // 기존 이미지 삭제 (존재 한다면)
-      if (user.getProfileId() != null) {
-        binaryContentRepository.deleteById(user.getProfileId());
-      }
-
-      // 새 이미지 저장
-      BinaryContent content = new BinaryContent(
-          profileRequest.fileName(),
-          profileRequest.contentType(),
-          profileRequest.bytes(),
-          user.getId(),
-          null
-      );
-      binaryContentRepository.save(content);
-      newProfileId = content.getId();
-    }
-
-    // 유저 정보 업데이트
+    // 필드 업데이트 및 저장
     user.update(request.newUsername(), request.newEmail(), request.newPassword(), newProfileId);
-
-    // 덮어쓰기
     userRepository.save(user);
 
-    UserStatus status = userStatusRepository.findByUserId(user.getId())
-        .orElse(null);
-
-    return convertDto(user, status);
+    UserStatus status = userStatusRepository.findByUserId(user.getId()).orElse(null);
+    return UserResponse.of(user, status);
   }
 
   @Override
@@ -160,24 +111,52 @@ public class BasicUserService implements UserService {
     userRepository.delete(id);
   }
 
-  private UserResponse convertDto(User user, UserStatus status) {
-    boolean online = false;
-    Instant lastConn = null;
+  // 비즈니스 로직 헬퍼 메서드
+  public void validateNewUser(String username, String email) {
+    if (userRepository.existsByUsernameOrEmail(username, email)) {
+      throw new IllegalArgumentException("이미 사용 중인 newUsername 또는 newEmail 입니다. 다시 입력 부탁드립니다.");
+    }
+  }
 
-    if (status != null) {
-      online = status.isOnline();
-      lastConn = status.getLastActiveAt();
+  public void validateUpdateUser(User user, UserUpdateRequest request) {
+    if (request.newUsername() != null && !request.newUsername().equals(user.getName())) {
+      userRepository.findByUsername(request.newUsername())
+          .filter(u -> !u.getId().equals(user.getId()))
+          .ifPresent(other -> {
+            throw new IllegalArgumentException("이미 사용 중인 Username 입니다." + request.newUsername());
+          });
     }
 
-    return new UserResponse(
-        user.getId(),
-        user.getCreatedAt(),
-        user.getUpdatedAt(),
-        user.getName(),
-        user.getEmail(),
-        online,
-        lastConn,
-        user.getProfileId()
+    if (request.newEmail() != null && !request.newEmail().equals(user.getEmail())) {
+      userRepository.findByEmail(request.newEmail())
+          .filter(u -> !u.getId().equals(user.getId()))
+          .ifPresent(u -> {
+            throw new IllegalArgumentException("이미 사용 중인 Email 입니다." + request.newEmail());
+          });
+    }
+  }
+
+  public UUID handleProfileImage(UUID userId, UUID existingProfileId,
+      BinaryContentCreateRequest profileRequest) {
+
+    // 이미지가 전달 되지 않은 경우 -> 기존 ID 그대로 반환
+    if (profileRequest == null || profileRequest.bytes() == null) {
+      return existingProfileId;
+    }
+
+    // 기존 이미지 있다면 삭제 처리
+    if (existingProfileId != null) {
+      binaryContentRepository.deleteById(existingProfileId);
+    }
+
+    // 새로운 이미지 저장
+    BinaryContent content = new BinaryContent(
+        profileRequest.fileName(),
+        profileRequest.contentType(),
+        profileRequest.bytes(),
+        userId,
+        null
     );
+    return binaryContentRepository.save(content).getId();
   }
 }
