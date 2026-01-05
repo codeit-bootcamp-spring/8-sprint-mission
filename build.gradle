@@ -9,10 +9,14 @@ version = '0.0.1-SNAPSHOT'
 description = 'discodeit'
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
+//    toolchain {
+//        languageVersion = JavaLanguageVersion.of(17)
+//    }
 }
+
+// (JDK 21 환경에서도 17 버전으로 결과물을 만듦)
+sourceCompatibility = '17'
+targetCompatibility = '17'
 
 configurations {
     compileOnly {
