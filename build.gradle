@@ -28,6 +28,17 @@ repositories {
     mavenCentral()
 }
 
+// 1. 일반 jar 파일 생성을 방지 (껍데기 생성 방지)
+jar {
+    enabled = false
+}
+
+// 2. 실행 가능한 jar 파일의 이름을 고정 (Railway가 찾기 쉽게 함)
+bootJar {
+    enabled = true
+    archiveFileName = 'app.jar'
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.projectlombok:lombok'
