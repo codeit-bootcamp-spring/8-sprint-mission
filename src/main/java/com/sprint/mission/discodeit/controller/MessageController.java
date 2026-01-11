@@ -1,13 +1,20 @@
 package com.sprint.mission.discodeit.controller;
 
+import com.sprint.mission.discodeit.dto.BinaryContentCreateRequest;
+import com.sprint.mission.discodeit.dto.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.MessageResponse;
 import com.sprint.mission.discodeit.dto.MessageUpdateRequest;
 import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.MessageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,6 +24,7 @@ import java.util.UUID;
 public class MessageController {
 
     private final MessageService messageService;
+    private final BinaryContentService binaryContentService;
 
     /**
      * Channel의 Message 목록 조회
@@ -31,9 +39,43 @@ public class MessageController {
      * Message 생성
      * POST /api/messages
      */
-    @RequestMapping(method = RequestMethod.POST)
-    public MessageResponse create(@RequestParam String content, @RequestParam UUID authorId, @RequestParam UUID channelId) {
-        return messageService.create(content, authorId, channelId);
+    @RequestMapping(method = RequestMethod.POST, consumes = "multipart/form-data")
+    public ResponseEntity<Message> create(
+            @RequestPart("messageCreateRequest") MessageCreateRequest messageCreateRequest,
+            @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments) {
+        
+        List<UUID> attachmentIds = new ArrayList<>();
+        
+        // 첨부 파일이 있는 경우 BinaryContent로 저장
+        if (attachments != null && !attachments.isEmpty()) {
+            for (MultipartFile file : attachments) {
+                if (!file.isEmpty()) {
+                    try {
+                        BinaryContentCreateRequest binaryRequest = new BinaryContentCreateRequest(
+                                file.getOriginalFilename(),
+                                file.getContentType(),
+                                file.getSize(),
+                                Base64.getEncoder().encodeToString(file.getBytes())
+                        );
+                        attachmentIds.add(binaryContentService.create(binaryRequest).getId());
+                    } catch (Exception e) {
+                        throw new RuntimeException("파일 첨부 처리 중 오류가 발생했습니다: " + e.getMessage(), e);
+                    }
+                }
+            }
+        }
+        
+        // MessageCreateRequest에 attachmentIds 설정
+        messageCreateRequest = new MessageCreateRequest(
+                messageCreateRequest.getAuthorId(),
+                messageCreateRequest.getChannelId(),
+                messageCreateRequest.getContent(),
+                attachmentIds
+        );
+        
+        // 메시지 생성
+        Message message = messageService.create(messageCreateRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(message);
     }
 
     /**

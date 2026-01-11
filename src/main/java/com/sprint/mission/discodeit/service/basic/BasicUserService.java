@@ -38,7 +38,7 @@ public class BasicUserService implements UserService {
 
         // 3. User 객체 생성 및 저장 (반드시 저장된 객체를 변수에 담으세요)
         User user = new User(
-                request.getName(),
+                request.getUsername() != null ? request.getUsername() : request.getName(),
                 request.getEmail(),
                 request.getPassword(),
                 savedContent.getId()
@@ -57,7 +57,31 @@ public class BasicUserService implements UserService {
      */
     @Override
     public UserResponse update(UserUpdateRequest request) {
-        return null;
+        // 1. 사용자 조회
+        User user = userRepository.findById(request.getId())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 2. 이름 변경 (name이 제공된 경우)
+        String newName = request.getName();
+        String newPassword = request.getPassword();
+        
+        // 이름이 변경되는 경우에만 중복 검사
+        if (newName != null && !newName.equals(user.getName())) {
+            if (userRepository.existsByName(newName)) {
+                throw new IllegalArgumentException("이미 사용 중인 이름입니다.");
+            }
+        }
+
+        // 3. 업데이트할 필드들을 한 번에 처리
+        user.update(newName, null, newPassword);
+
+        // 4. 프로필 이미지 변경은 현재 구현하지 않음 (프론트엔드에서 multipart/form-data로 처리 필요)
+
+        // 5. 사용자 저장
+        User savedUser = userRepository.save(user);
+
+        // 6. 응답 DTO 변환
+        return convertToResponse(savedUser);
     }
 
     @Override

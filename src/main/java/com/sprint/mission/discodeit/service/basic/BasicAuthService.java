@@ -10,8 +10,6 @@ import com.sprint.mission.discodeit.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 
 @Service
 @RequiredArgsConstructor
@@ -63,16 +61,10 @@ public class BasicAuthService implements AuthService {
         }
         
         // 1. [인증] 사용자명(username/name)으로 사용자 조회
-        List<User> allUsers = userRepository.findAll();
-        System.out.println("=== 로그인 디버그 ===");
-        System.out.println("조회하려는 username: " + username);
-        System.out.println("전체 사용자 수: " + allUsers.size());
-        allUsers.forEach(u -> System.out.println("  - name: " + u.getName() + ", email: " + u.getEmail()));
-        
-        User user = allUsers.stream()
+        User user = userRepository.findAll().stream()
                 .filter(u -> u.getName() != null && u.getName().equals(username))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자명입니다: " + username));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자명입니다."));
 
         // 2. [인증] 비밀번호 검증
         if (user.getPassword() == null || !user.getPassword().equals(password)) {
