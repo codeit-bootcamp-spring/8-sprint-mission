@@ -24,7 +24,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception e) {
-        ErrorResponse response = new ErrorResponse("서버 내부 오류가 발생했습니다.", "INTERNAL_SERVER_ERROR");
+        e.printStackTrace(); // 서버 콘솔에 에러 메시지 출력
+        ErrorResponse response = new ErrorResponse("서버 내부 오류가 발생했습니다: " + e.getMessage(), "INTERNAL_SERVER_ERROR");
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

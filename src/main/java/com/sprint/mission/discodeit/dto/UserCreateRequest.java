@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,11 +9,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor //  모든 필드를 받는 생성자 자동 생성
 public class UserCreateRequest {
-    private String name;
+    @JsonProperty("username")
+    private String username;
     private String email;
     private String password; // 멘토님 요청으로 추가된 필드
     private String fileName;
     private String fileType;
     private Long fileSize;
     private String profileImage;
+    
+    // name 필드에 대한 getter (기존 코드 호환성을 위해)
+    public String getName() {
+        return username;
+    }
 }

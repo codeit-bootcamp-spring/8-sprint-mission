@@ -17,7 +17,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -25,10 +25,10 @@ public class UserController {
     private final UserStatusService userStatusService;
 
     /**
-     * [심화] 모든 사용자 조회
-     * 브라우저(user-list.html)의 500 에러를 방지하기 위해 필드 구성을 단순화했습니다.
+     * 모든 사용자 조회
+     * GET /api/users
      */
-    @RequestMapping(value = "/findAll", method = RequestMethod.GET)
+    @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<UserDto>> findAll() {
         try {
             List<UserDto> userDtos = userService.findAll().stream()
@@ -51,30 +51,37 @@ public class UserController {
         }
     }
 
+    /**
+     * User 등록
+     * POST /api/users
+     */
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<UserResponse> create(@RequestBody UserCreateRequest request) {
         return ResponseEntity.ok(userService.create(request));
     }
 
-    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public ResponseEntity<UserResponse> findById(@PathVariable UUID id) {
-        return ResponseEntity.ok(userService.findById(id));
-    }
-
-    @RequestMapping(value = "/{id}", method = RequestMethod.PATCH)
-    public ResponseEntity<UserResponse> update(@PathVariable UUID id, @RequestBody UserUpdateRequest request) {
+    /**
+     * User 정보 수정
+     * PATCH /api/users/{userId}
+     */
+    @RequestMapping(value = "/{userId}", method = RequestMethod.PATCH)
+    public ResponseEntity<UserResponse> update(@PathVariable UUID userId, @RequestBody UserUpdateRequest request) {
         return ResponseEntity.ok(userService.update(request));
     }
 
-    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        userService.delete(id);
+    /**
+     * User 삭제
+     * DELETE /api/users/{userId}
+     */
+    @RequestMapping(value = "/{userId}", method = RequestMethod.DELETE)
+    public ResponseEntity<Void> delete(@PathVariable UUID userId) {
+        userService.delete(userId);
         return ResponseEntity.noContent().build();
     }
 
     /**
-     * 사용자 상태 업데이트 (온라인/오프라인 상태 갱신)
-     * PATCH /api/user/status
+     * User 온라인 상태 업데이트
+     * PATCH /api/users/{userId}/userStatus
      * 
      * [활용 방법 및 호출 시점]
      * 1. 클라이언트 앱 실행 시: 앱이 백그라운드에서 포그라운드로 전환될 때 호출하여 사용자를 온라인 상태로 만듭니다.
@@ -94,9 +101,11 @@ public class UserController {
      * - 서버에서 isOnline() 메서드는 lastAccessAt 기준으로 5분(300초) 이내 접근 시 온라인으로 판단합니다.
      * - 이를 통해 네트워크 오류나 앱 크래시로 인한 상태 업데이트 실패를 자동으로 처리할 수 있습니다.
      */
-    @RequestMapping(value = "/status", method = RequestMethod.PATCH)
-    public ResponseEntity<UserStatusResponse> updateStatus(@RequestBody UserStatusRequest request) {
-        UserStatusResponse response = userStatusService.update(request);
+    @RequestMapping(value = "/{userId}/userStatus", method = RequestMethod.PATCH)
+    public ResponseEntity<UserStatusResponse> updateStatus(@PathVariable UUID userId, @RequestBody UserStatusRequest request) {
+        // 경로 파라미터의 userId를 사용하여 UserStatusRequest 생성
+        UserStatusRequest statusRequest = new UserStatusRequest(userId);
+        UserStatusResponse response = userStatusService.update(statusRequest);
         return ResponseEntity.ok(response);
     }
 }
