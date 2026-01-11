@@ -2,24 +2,34 @@ package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.dto.ChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.ChannelResponse;
+import com.sprint.mission.discodeit.dto.ChannelUpdateRequest;
 import com.sprint.mission.discodeit.service.ChannelService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/channels")
+@RequestMapping("/api/channels")
 @RequiredArgsConstructor
 public class ChannelController {
 
     private final ChannelService channelService;
 
     /**
-     * Public 채널 생성
-     * POST /channels/public
+     * User가 참여 중인 Channel 목록 조회
+     * GET /api/channels?userId=...
+     */
+    @RequestMapping(method = RequestMethod.GET)
+    public List<ChannelResponse> findAllByUserId(@RequestParam UUID userId) {
+        return channelService.findAllByUserId(userId);
+    }
+
+    /**
+     * Public Channel 생성
+     * POST /api/channels/public
      */
     @RequestMapping(value = "/public", method = RequestMethod.POST)
     public ChannelResponse createPublic(@RequestBody ChannelCreateRequest request) {
@@ -27,40 +37,32 @@ public class ChannelController {
     }
 
     /**
-     * Private 채널 생성
-     * POST /channels/private
+     * Private Channel 생성
+     * POST /api/channels/private
      */
     @RequestMapping(value = "/private", method = RequestMethod.POST)
     public ChannelResponse createPrivate(@RequestBody ChannelCreateRequest request) {
         return channelService.createPrivate(request);
     }
 
-    @RequestMapping(method = RequestMethod.GET)
-    public List<ChannelResponse> findAll() {
-        return channelService.findAll();
+    /**
+     * Channel 정보 수정
+     * PATCH /api/channels/{channelId}
+     */
+    @RequestMapping(value = "/{channelId}", method = RequestMethod.PATCH)
+    public ChannelResponse update(@PathVariable UUID channelId, @RequestBody ChannelUpdateRequest request) {
+        // 경로 파라미터의 channelId를 사용하여 ChannelUpdateRequest 생성
+        ChannelUpdateRequest updateRequest = new ChannelUpdateRequest(channelId, request.getName(), request.getDescription());
+        return channelService.update(updateRequest);
     }
 
     /**
-     * 특정 사용자가 볼 수 있는 모든 채널 목록 조회
-     * GET /channels/user/{userId}
+     * Channel 삭제
+     * DELETE /api/channels/{channelId}
      */
-    @RequestMapping(value = "/user/{userId}", method = RequestMethod.GET)
-    public List<ChannelResponse> findAllByUserId(@PathVariable UUID userId) {
-        return channelService.findAllByUserId(userId);
-    }
-
-    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public Optional<ChannelResponse> findById(@PathVariable UUID id) {
-        return channelService.findById(id);
-    }
-
-    @RequestMapping(value = "/{id}", method = RequestMethod.PATCH)
-    public ChannelResponse update(@PathVariable UUID id, @RequestParam String name, @RequestParam String description) {
-        return channelService.update(id, name, description);
-    }
-
-    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    public void delete(@PathVariable UUID id) {
-        channelService.delete(id);
+    @RequestMapping(value = "/{channelId}", method = RequestMethod.DELETE)
+    public ResponseEntity<Void> delete(@PathVariable UUID channelId) {
+        channelService.delete(channelId);
+        return ResponseEntity.noContent().build();
     }
 }

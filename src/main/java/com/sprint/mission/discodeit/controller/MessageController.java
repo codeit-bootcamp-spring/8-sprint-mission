@@ -12,34 +12,49 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/messages")
+@RequestMapping("/api/messages")
 @RequiredArgsConstructor
 public class MessageController {
 
     private final MessageService messageService;
 
+    /**
+     * Channel의 Message 목록 조회
+     * GET /api/messages?channelId=...
+     */
+    @RequestMapping(method = RequestMethod.GET)
+    public List<MessageResponse> findByChannelId(@RequestParam UUID channelId) {
+        return messageService.findByChannelId(channelId);
+    }
+
+    /**
+     * Message 생성
+     * POST /api/messages
+     */
     @RequestMapping(method = RequestMethod.POST)
     public MessageResponse create(@RequestParam String content, @RequestParam UUID authorId, @RequestParam UUID channelId) {
         return messageService.create(content, authorId, channelId);
     }
 
-    @RequestMapping(value = "/channel/{channelId}", method = RequestMethod.GET)
-    public List<MessageResponse> findByChannelId(@PathVariable UUID channelId) {
-        return messageService.findByChannelId(channelId);
-    }
-
     /**
-     * 메시지 수정
-     * PATCH /messages
+     * Message 내용 수정
+     * PATCH /api/messages/{messageId}
      */
-    @RequestMapping(method = RequestMethod.PATCH)
-    public ResponseEntity<Message> update(@RequestBody MessageUpdateRequest request) {
-        Message updatedMessage = messageService.update(request);
+    @RequestMapping(value = "/{messageId}", method = RequestMethod.PATCH)
+    public ResponseEntity<Message> update(@PathVariable UUID messageId, @RequestBody MessageUpdateRequest request) {
+        // 경로 파라미터의 messageId를 사용하여 MessageUpdateRequest 생성
+        MessageUpdateRequest updateRequest = new MessageUpdateRequest(messageId, request.getContent(), request.getAttachmentIds());
+        Message updatedMessage = messageService.update(updateRequest);
         return ResponseEntity.ok(updatedMessage);
     }
 
-    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    public void delete(@PathVariable UUID id) {
-        messageService.delete(id);
+    /**
+     * Message 삭제
+     * DELETE /api/messages/{messageId}
+     */
+    @RequestMapping(value = "/{messageId}", method = RequestMethod.DELETE)
+    public ResponseEntity<Void> delete(@PathVariable UUID messageId) {
+        messageService.delete(messageId);
+        return ResponseEntity.noContent().build();
     }
 }
