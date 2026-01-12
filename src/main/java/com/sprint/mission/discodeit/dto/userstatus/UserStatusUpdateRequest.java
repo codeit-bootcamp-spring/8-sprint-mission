@@ -10,11 +10,10 @@ import java.util.UUID;
     UserStatus 수정용 DTO (record)
 
     [필드 설명]
-    • id                  : 수정 될 대상의 id
-    • lastConnAt          : 유저의 마지막 접속 시간
+    • newLastActiveAt     : 유저의 마지막 접속 시간
  */
 public record UserStatusUpdateRequest(
-        UUID id,
-        Instant lastConnAt
+    Instant newLastActiveAt
 ) {
+
 }

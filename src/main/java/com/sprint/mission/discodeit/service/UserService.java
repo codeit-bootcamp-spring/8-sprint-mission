@@ -19,20 +19,21 @@ import java.util.UUID;
  */
 public interface UserService {
 
-    // 유저 생성
-    UserResponse create(UserCreateRequest request, BinaryContentCreateRequest profileRequest);
-    
-    // 유저 조회 (단건)
-    UserResponse findUser(UUID id);
+  // 유저 생성
+  UserResponse create(UserCreateRequest request, BinaryContentCreateRequest profileRequest);
 
-    // 유저 조회 (다건)
-    List<UserResponse> findAll();
+  // 유저 조회 (단건)
+  UserResponse findUser(UUID id);
 
-    // 수정
-    UserResponse update(UserUpdateRequest request, BinaryContentCreateRequest profileRequest);
-    
-    // 삭제
-    void delete(UUID id);
+  // 유저 조회 (다건)
+  List<UserResponse> findAll();
 
-    
+  // 수정
+  UserResponse update(UUID userid, UserUpdateRequest request,
+      BinaryContentCreateRequest profileRequest);
+
+  // 삭제
+  void delete(UUID id);
+
+
 }

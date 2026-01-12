@@ -15,8 +15,9 @@ import java.util.UUID;
     • lastReadAt        : 마지막 읽은 시각
  */
 public record ReadStatusCreateRequest(
-        UUID userId,
-        UUID channelId,
-        Instant lastReadAt
+    UUID userId,
+    UUID channelId,
+    Instant lastReadAt
 ) {
+
 }

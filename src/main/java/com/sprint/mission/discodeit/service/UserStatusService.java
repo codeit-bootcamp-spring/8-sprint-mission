@@ -15,15 +15,15 @@ import java.util.UUID;
  */
 public interface UserStatusService {
 
-    UserStatusResponse create(UserStatusCreateRequest request);
+  UserStatusResponse create(UserStatusCreateRequest request);
 
-    UserStatusResponse find(UUID id);
+  UserStatusResponse find(UUID id);
 
-    List<UserStatusResponse> findAll();
+  List<UserStatusResponse> findAll();
 
-    UserStatusResponse update(UserStatusUpdateRequest request);
+  UserStatusResponse update(UUID userStatusId, UserStatusUpdateRequest request);
 
-    UserStatusResponse updateByUserId(UUID userId, Instant lastConnAt);
+  UserStatusResponse updateByUserId(UUID userId, Instant lastConnAt);
 
-    void delete(UUID id);
+  void delete(UUID id);
 }

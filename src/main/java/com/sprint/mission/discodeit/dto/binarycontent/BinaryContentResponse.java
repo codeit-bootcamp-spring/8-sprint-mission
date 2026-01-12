@@ -12,17 +12,17 @@ import java.util.UUID;
     • id                : BinaryContent의 id
     • fileName          : 파일 이름
     • createdAt         : 파일 생성 시각
-    • userId            : 프로필 이미지와 관련된 유저 id
+    • authorId          : 프로필 이미지와 관련된 유저 id
     • messageId         : 메시지 첨부파일과 관련된 메시지 id
  */
 public record BinaryContentResponse(
-        UUID id,
-        String fileName,
-        String contentType,
-        String base64Data,
-        Instant createdAt,
-        UUID userId,
-        UUID messageId
+    UUID id,
+    String fileName,
+    String contentType,
+    byte[] bytes,
+    Instant createdAt,
+    UUID authorId,
+    UUID messageId
 ) {
 
 }

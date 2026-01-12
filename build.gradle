@@ -9,10 +9,14 @@ version = '0.0.1-SNAPSHOT'
 description = 'discodeit'
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
+//    toolchain {
+//        languageVersion = JavaLanguageVersion.of(17)
+//    }
 }
+
+// (JDK 21 환경에서도 17 버전으로 결과물을 만듦)
+sourceCompatibility = '17'
+targetCompatibility = '17'
 
 configurations {
     compileOnly {
@@ -24,12 +28,25 @@ repositories {
     mavenCentral()
 }
 
+// 1. 일반 jar 파일 생성을 방지 (껍데기 생성 방지)
+jar {
+    enabled = false
+}
+
+// 2. 실행 가능한 jar 파일의 이름을 고정 (Railway가 찾기 쉽게 함)
+bootJar {
+    enabled = true
+    archiveFileName = 'app.jar'
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // Swagger (springdoc-openapi) 추가
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
 }
 
 tasks.named('test') {

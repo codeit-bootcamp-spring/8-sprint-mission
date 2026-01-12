@@ -24,92 +24,93 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BasicMessageService implements MessageService {
 
-    private final MessageRepository messageRepository;
-    private final ChannelRepository channelRepository;
-    private final UserRepository userRepository;
-    private final BinaryContentRepository binaryContentRepository;
+  private final MessageRepository messageRepository;
+  private final ChannelRepository channelRepository;
+  private final UserRepository userRepository;
+  private final BinaryContentRepository binaryContentRepository;
 
-    @Override
-    public MessageResponse createMessage(MessageCreateRequest request) {
-        // 채널, 유저 존재 검사
-        channelRepository.findById(request.channelId())
-                .orElseThrow(() -> new NoSuchElementException("Channel을 찾을 수 없습니다. " + request.channelId()));
+  @Override
+  public MessageResponse createMessage(MessageCreateRequest request) {
+    // 채널, 유저 존재 검사
+    channelRepository.findById(request.channelId())
+        .orElseThrow(
+            () -> new NoSuchElementException("Channel을 찾을 수 없습니다. " + request.channelId()));
 
-        userRepository.findById(request.userId())
-                .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + request.userId()));
+    userRepository.findById(request.authorId())
+        .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + request.authorId()));
 
-        // 파일을 저장
-        List<UUID> attachmentIds = new ArrayList<>();
-        if (request.attachments() != null) {
-            for (BinaryContentCreateRequest dto : request.attachments()) {
-                BinaryContent bc = new BinaryContent(
-                        dto.fileName(),
-                        dto.contentType(),
-                        dto.data(),
-                        request.userId(),
-                        null
-                );
-                binaryContentRepository.save(bc);
-                attachmentIds.add(bc.getId());
-            }
-        }
-
-        Message message = new Message(
-                request.contents(),
-                request.channelId(),
-                request.userId(),
-                attachmentIds
+    // 파일을 저장
+    List<UUID> attachmentIds = new ArrayList<>();
+    if (request.attachments() != null) {
+      for (BinaryContentCreateRequest dto : request.attachments()) {
+        BinaryContent bc = new BinaryContent(
+            dto.fileName(),
+            dto.contentType(),
+            dto.bytes(),
+            request.authorId(),
+            null
         );
-        messageRepository.save(message);
-
-        return convertDto(message);
+        binaryContentRepository.save(bc);
+        attachmentIds.add(bc.getId());
+      }
     }
 
-    @Override
-    public MessageResponse findMessage(UUID id) {
-        Message message = messageRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + id));
-        return convertDto(message);
+    Message message = new Message(
+        request.content(),
+        request.channelId(),
+        request.authorId(),
+        attachmentIds
+    );
+    messageRepository.save(message);
+
+    return convertDto(message);
+  }
+
+  @Override
+  public MessageResponse findMessage(UUID id) {
+    Message message = messageRepository.findById(id)
+        .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + id));
+    return convertDto(message);
+  }
+
+  @Override
+  public List<MessageResponse> findAllByChannelId(UUID channelId) {
+    return messageRepository.findAllByChannelId(channelId).stream()
+        .map(this::convertDto)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public MessageResponse updateMessage(UUID messageId, MessageUpdateRequest request) {
+    Message message = messageRepository.findById(messageId)
+        .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + messageId));
+
+    message.update(request.newContent());
+    messageRepository.save(message);
+
+    return convertDto(message);
+  }
+
+  @Override
+  public void deleteMessage(UUID id) {
+    Message message = messageRepository.findById(id)
+        .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + id));
+
+    if (message.getAttachmentIds() != null && !message.getAttachmentIds().isEmpty()) {
+      binaryContentRepository.deleteAllByIdIn(message.getAttachmentIds());
     }
 
-    @Override
-    public List<MessageResponse> findAllByChannelId(UUID channelId) {
-        return messageRepository.findAllByChannelId(channelId).stream()
-                .map(this::convertDto)
-                .collect(Collectors.toList());
-    }
+    messageRepository.delete(id);
+  }
 
-    @Override
-    public MessageResponse updateMessage(MessageUpdateRequest request) {
-        Message message = messageRepository.findById(request.id())
-                .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + request.id()));
-
-        message.update(request.contents());
-        messageRepository.save(message);
-
-        return convertDto(message);
-    }
-
-    @Override
-    public void deleteMessage(UUID id) {
-        Message message = messageRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + id));
-
-        if (message.getAttachmentIds() != null && !message.getAttachmentIds().isEmpty()) {
-            binaryContentRepository.deleteAllByIdIn(message.getAttachmentIds());
-        }
-
-        messageRepository.delete(id);
-    }
-
-    private MessageResponse convertDto(Message message) {
-        return new MessageResponse(
-                message.getId(),
-                message.getChannelId(),
-                message.getAuthorId(),
-                message.getContents(),
-                message.getCreatedAt(),
-                message.getAttachmentIds()
-        );
-    }
+  private MessageResponse convertDto(Message message) {
+    return new MessageResponse(
+        message.getId(),
+        message.getChannelId(),
+        message.getAuthorId(),
+        message.getContent(),
+        message.getCreatedAt(),
+        message.getAttachmentIds()
+    );
+  }
 }
