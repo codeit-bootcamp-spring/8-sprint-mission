@@ -22,8 +22,6 @@ import java.util.UUID;
     • fileName         : 파일 이름
     • contentType      : 컨텐츠의 타입
     • bytes            : 파일 데이터를 byte 배열로 표현
-    • hostUserId       : 유저의 아이디   (도메인 연결)
-    • hostMessageId    : 메시지의 아이디 (도메인 연결)
  */
 @Getter
 public class BinaryContent implements Serializable {
@@ -38,32 +36,12 @@ public class BinaryContent implements Serializable {
   private String contentType;
   private byte[] bytes;
 
-  private UUID hostUserId;
-  private UUID hostMessageId;
-
-  // [옵션 1] 호스트 정보가 없는 경우를 위한 부가 생성자
-  public BinaryContent(String fileName, String contentType, byte[] bytes) {
-    this(fileName, contentType, bytes, null, null); // 아래 메인 생성자를 호출하며 null을 내부에서 처리
-  }
-
   // [기본] 모든 필드를 받는 메인 생성자
-  public BinaryContent(String fileName, String contentType, byte[] bytes,
-      UUID hostUserId,
-      UUID hostMessageId) {
+  public BinaryContent(String fileName, String contentType, byte[] bytes) {
     this.id = UUID.randomUUID();
     this.createdAt = Instant.now();
     this.fileName = fileName;
     this.contentType = contentType;
     this.bytes = bytes != null ? bytes.clone() : null;
-    this.hostUserId = hostUserId;
-    this.hostMessageId = hostMessageId;
-  }
-
-  public Optional<UUID> getOptionalHostUserId() {
-    return Optional.ofNullable(hostUserId);
-  }
-
-  public Optional<UUID> getOptionalHostMessageId() {
-    return Optional.ofNullable(hostMessageId);
   }
 }

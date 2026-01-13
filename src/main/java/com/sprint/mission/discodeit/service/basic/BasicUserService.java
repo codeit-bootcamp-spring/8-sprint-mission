@@ -153,9 +153,7 @@ public class BasicUserService implements UserService {
     BinaryContent content = new BinaryContent(
         profileRequest.fileName(),
         profileRequest.contentType(),
-        profileRequest.bytes(),
-        userId,
-        null
+        profileRequest.bytes()
     );
     return binaryContentRepository.save(content).getId();
   }

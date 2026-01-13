@@ -60,9 +60,7 @@ public class BasicBinaryContentService implements BinaryContentService {
         binaryContent.getFileName(),
         contentType,
         binaryContent.getBytes(),
-        binaryContent.getCreatedAt(),
-        binaryContent.getOptionalHostUserId().orElse(null),
-        binaryContent.getOptionalHostMessageId().orElse(null)
+        binaryContent.getCreatedAt()
     );
   }
 

@@ -46,9 +46,7 @@ public class BasicMessageService implements MessageService {
         BinaryContent bc = new BinaryContent(
             dto.fileName(),
             dto.contentType(),
-            dto.bytes(),
-            request.authorId(),
-            null
+            dto.bytes()
         );
         binaryContentRepository.save(bc);
         attachmentIds.add(bc.getId());

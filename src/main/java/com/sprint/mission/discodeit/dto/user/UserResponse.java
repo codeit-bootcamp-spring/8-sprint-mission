@@ -17,7 +17,6 @@ import java.util.UUID;
     • username         : 유저 이름
     • email            : 유저 이메일 주소
     • online           : 유저 온라인 여부 (5분 지나지 않아야 온라인)
-    • lastActiveAt     : 유저의 마지막 접속 시간
     • profileId        : 프로필 이미지
  */
 public record UserResponse(
@@ -27,7 +26,6 @@ public record UserResponse(
     String username,
     String email,
     boolean online,
-    Instant lastActiveAt,
     UUID profileId
 ) {
 
@@ -40,7 +38,6 @@ public record UserResponse(
         user.getName(),
         user.getEmail(),
         userStatus != null && userStatus.isOnline(),
-        userStatus != null ? userStatus.getLastActiveAt() : null,
         user.getProfileId()
     );
   }
