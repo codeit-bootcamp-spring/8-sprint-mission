@@ -35,7 +35,7 @@ public class BasicUserService implements UserService {
 
     // User 생성
     User user = userRepository.save(
-        new User(request.username(), request.email(), request.password()));
+        new User(request.username(), request.email(), request.password(), null));
 
     // UserStatus 생성 (마지막 접속 시간 = 지금)
     UserStatus status = userStatusRepository.save(new UserStatus(user.getId(), Instant.now()));
