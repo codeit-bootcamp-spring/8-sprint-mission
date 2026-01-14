@@ -40,7 +40,7 @@ public class User extends BaseUpdatableEntity {
   private String password;
 
   // 프로필 이미지 1:1 단방향
-  @OneToOne(fetch = FetchType.LAZY)
+  @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "profile_id", unique = true)
   private BinaryContent profile;
 
