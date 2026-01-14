@@ -9,64 +9,42 @@ import java.util.UUID;
 
 @Getter
 public class Channel implements Serializable {
-    private static final long serialVersionUID = 1L;
-    private final UUID id;
-    private final UUID userId;
-    private final Instant createdAt;
-    private Instant modifiedAt;
-    private final ChannelStatus status;
-    private String name;
-    private final String host;
-    private String description;
-    private Integer participant;
-    private List<String> participants;
 
-    public Channel(UUID userId, ChannelStatus status, String name, String host, String description, Integer participant, List<String> participants) {
-        id = UUID.randomUUID();
-        createdAt = Instant.now();
-        modifiedAt = createdAt;
-        this.userId = userId;
-        this.status = status;
-        this.name = name;
-        this.host = host;
-        this.description = description;
-        this.participant = participant;
-        this.participants = participants;
+  private static final long serialVersionUID = 1L;
+  private final UUID id;
+  private final Instant createdAt;
+  private Instant updatedAt;
+
+  private ChannelType type;
+  private String name;
+  private String description;
+
+  public Channel(ChannelType type, String name, String description) {
+    id = UUID.randomUUID();
+    createdAt = Instant.now();
+    updatedAt = createdAt;
+
+    this.type = type;
+    this.name = name;
+    this.description = description;
+  }
+
+  public String getFileName() {
+    return id.toString().concat(".ser");
+  }
+
+  public void update(String name, String description) {
+    boolean anyValueUpdated = false;
+    if (name != null && !name.equals(this.name)) {
+      this.name = name;
+      anyValueUpdated = true;
     }
-
-    public String getFileName() {
-        return id.toString().concat(".ser");
+    if (description != null && !description.equals(this.description)) {
+      this.description = description;
+      anyValueUpdated = true;
     }
-
-    public void update(String name, String description) {
-        boolean anyValueUpdated = false;
-        if(name != null && !name.equals(this.name)) {
-            this.name = name;
-            anyValueUpdated = true;
-        }
-        if(description != null && !description.equals(this.description)) {
-            this.description = description;
-            anyValueUpdated = true;
-        }
-        if (anyValueUpdated) {
-            this.modifiedAt = Instant.now();
-        }
+    if (anyValueUpdated) {
+      this.updatedAt = Instant.now();
     }
-
-    @Override
-    public String toString() {
-        return "Channel{" +
-                "id=" + id +
-                ", uid=" + userId +
-                ", createdAt=" + createdAt +
-                ", modifiedAt=" + modifiedAt +
-                ", status=" + status +
-                ", name='" + name + '\'' +
-                ", host='" + host + '\'' +
-                ", description='" + description + '\'' +
-                ", participant=" + participant +
-                ", participants=" + participants +
-                '}';
-    }
-
+  }
 }

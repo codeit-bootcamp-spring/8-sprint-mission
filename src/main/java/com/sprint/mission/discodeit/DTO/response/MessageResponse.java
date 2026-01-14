@@ -7,28 +7,25 @@ import java.util.List;
 import java.util.UUID;
 
 public record MessageResponse(
-        UUID id,
-        UUID userId,
-        UUID channelId,
-        String channelName,
-        String from,
-        String content,
-        List<UUID> attachmentIds,
-        Instant createdAt,
-        Instant modifiedAt
+    UUID id,
+    String content,
+    UUID channelId,
+    UUID authorId,
+    List<UUID> attachmentIds,
+    Instant createdAt,
+    Instant modifiedAt
 
 ) {
-    public static MessageResponse from(Message message) {
-        return new MessageResponse(
-                message.getId(),
-                message.getUserId(),
-                message.getChannelId(),
-                message.getChannelName(),
-                message.getFrom(),
-                message.getContent(),
-                message.getAttachmentIds(),
-                message.getCreatedAt(),
-                message.getModifiedAt()
-        );
-    }
+
+  public static MessageResponse from(Message message) {
+    return new MessageResponse(
+        message.getId(),
+        message.getContent(),
+        message.getChannelId(),
+        message.getAuthorId(),
+        message.getAttachmentIds(),
+        message.getCreatedAt(),
+        message.getUpdatedAt()
+    );
+  }
 }

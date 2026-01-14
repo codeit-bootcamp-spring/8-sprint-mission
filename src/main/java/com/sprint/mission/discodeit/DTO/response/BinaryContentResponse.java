@@ -3,27 +3,23 @@ package com.sprint.mission.discodeit.DTO.response;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 
 import java.time.Instant;
-import java.util.UUID;
 
 public record BinaryContentResponse(
-        String originalFileName,
-        String savedName,
-        String uploadPath,
-        String contentType,
-        byte[] bytes,
-        String description,
-        Instant createdAt
+    String fileName,
+    Long size,
+    String contentType,
+    byte[] bytes,
+    Instant createdAt
 ) {
-    public static BinaryContentResponse from(BinaryContent binaryContent) {
 
-        return new BinaryContentResponse(
-                binaryContent.getOriginalFileName(),
-                binaryContent.getSavedName(),
-                binaryContent.getUploadPath(),
-                binaryContent.getContentType(),
-                binaryContent.getBytes(),
-                binaryContent.getDescription(),
-                binaryContent.getCreatedAt()
-        );
-    }
+  public static BinaryContentResponse from(BinaryContent binaryContent) {
+
+    return new BinaryContentResponse(
+        binaryContent.getFileName(),
+        binaryContent.getSize(),
+        binaryContent.getContentType(),
+        binaryContent.getBytes(),
+        binaryContent.getCreatedAt()
+    );
+  }
 }

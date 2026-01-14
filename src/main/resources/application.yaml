@@ -3,21 +3,11 @@ spring:
     name: discodeit
   servlet:
     multipart:
-      # 파일 업로드 활성화 여부(기본값 true)
-      enabled: true
-      # 업로드 가능한 개별 파일 최대 크기
+      # 파일 하나의 최대 크기
       max-file-size: 10MB
-      # 전체 요청의 최대 크기
+      # 최대 업로드 가능 용량
       max-request-size: 20MB
       # 임시 파일 저장 경로
-      location: /tmp
-
-file:
-  upload:
-    windows:
-      path: 'C:/myWs/uploadedFiles'
-    mac:
-      path: '/myWs/uploadedFiles'
 
 discodeit:
   repository:
@@ -26,3 +16,20 @@ discodeit:
 
   session:
     timeout: 5
+
+  # swagger config
+  # https://springdoc.org/#properties
+  springdoc:
+    api-docs:
+      # OpenAPI 명세서 경로(JSON)
+      path: /api/v3/api-docs
+    swagger-ui:
+      # OpenAPI 명세서 경로(HTML)
+      path: /swagger-ui.html
+      # 요청 응답 시간 표시
+      display-request-duration: true
+      # API 정렬 기준
+      operations-sorter: method # HTTP 메서드의 알파벳 기준
+      # operations-sorter: alpha # Java 메서드의 알파벳 기준
+
+

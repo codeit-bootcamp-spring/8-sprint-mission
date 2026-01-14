@@ -5,64 +5,46 @@ import lombok.Getter;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Getter
 public class Message implements Serializable {
-    private static final long serialVersionUID = 1L;
 
-    private final UUID id;
-    private final UUID userId;
-    private final UUID channelId;
+  private static final long serialVersionUID = 1L;
 
-    private final Instant createdAt;
-    private Instant modifiedAt;
-    private final String channelName;
-    private final String from;
-    private String content;
-    private List<UUID> attachmentIds;
+  private final UUID id;
+  private final Instant createdAt;
+  private Instant updatedAt;
 
-    public Message(UUID userId, UUID channelId, String channelName, String from, String content, List<UUID> attachmentIds) {
-        id = UUID.randomUUID();
-        createdAt = Instant.now();
-        modifiedAt = createdAt;
+  private String content;
 
-        this.userId = userId;
-        this.channelId = channelId;
-        this.channelName = channelName;
-        this.from = from;
-        this.content = content;
-        this.attachmentIds = attachmentIds;
+  private final UUID channelId;
+  private final UUID authorId;
+  private List<UUID> attachmentIds;
+
+  public Message(String content, UUID channelId, UUID authorId, List<UUID> attachmentIds) {
+    id = UUID.randomUUID();
+    createdAt = Instant.now();
+    updatedAt = createdAt;
+
+    this.content = content;
+    this.channelId = channelId;
+    this.authorId = authorId;
+    this.attachmentIds = attachmentIds;
+  }
+
+  public String getFileName() {
+    return id.toString().concat(".ser");
+  }
+
+  public void update(String content) {
+    boolean anyValueUpdated = false;
+    if (content != null && !this.content.equals(content)) {
+      this.content = content;
+      anyValueUpdated = true;
     }
-
-    public String getFileName() {
-        return id.toString().concat(".ser");
+    if (anyValueUpdated) {
+      this.updatedAt = Instant.now();
     }
-
-    public void update(String content) {
-        boolean anyValueUpdated = false;
-        if(this.content != null && !this.content.equals(content)) {
-            this.content = content;
-            anyValueUpdated = true;
-        }
-        if(anyValueUpdated) {
-            this.modifiedAt = Instant.now();
-        }
-    }
-
-    @Override
-    public String toString() {
-        return "Message{" +
-                "id=" + id +
-                ", uid=" + userId +
-                ", cid=" + channelId +
-                ", createdAt=" + createdAt +
-                ", modifiedAt=" + modifiedAt +
-                ", channelName='" + channelName + '\'' +
-                ", from='" + from + '\'' +
-                ", content='" + content + '\'' +
-                ", attachmentIds=" + attachmentIds +
-                '}';
-    }
+  }
 }

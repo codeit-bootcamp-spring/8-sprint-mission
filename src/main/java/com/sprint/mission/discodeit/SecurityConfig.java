@@ -13,23 +13,31 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                .requestMatchers("/", "/user-list.html").permitAll()
-                .requestMatchers("/api/user/**", "/api/channel/**", "/api/message/**", "/api/readStatus/**").permitAll()
-                .requestMatchers("/api/login", "/api/logout").permitAll()
-                .requestMatchers("/api/upload/**").permitAll()
-                .anyRequest().authenticated()
-        );
-        return http.build();
-    }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+        .csrf(AbstractHttpConfigurer::disable)
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+            .requestMatchers(
+                "/swagger-ui/**",
+                "/api/v3/api-docs/**",
+                "/swagger-ui.html"
+            ).permitAll()
+            .requestMatchers("/assets/**").permitAll()
+            .requestMatchers("/", "/index.html", "/user-list.html").permitAll()
+            .requestMatchers("/api/users/**", "/api/channels/**", "/api/messages/**",
+                "/api/readStatuses/**").permitAll()
+            .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers("/api/binaryContents/**").permitAll()
+            .anyRequest().authenticated()
+        );
+    return http.build();
+  }
+
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 }

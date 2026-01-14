@@ -9,50 +9,41 @@ import java.util.UUID;
 
 @Getter
 public class UserStatus implements Serializable {
-    private static final int SESSION_TIMEOUT_MINUTES = 5;
 
-    private static final long serialVersionUID = 1L;
-    private final UUID id;
-    private final UUID userId;
-    private UserStatusType userStatusType;
-    private final Instant createdAt;
-    private Instant lastAccessAt;
+  private static final int SESSION_TIMEOUT_MINUTES = 5;
 
-    public UserStatus(UUID userId) {
-        id = UUID.randomUUID();
-        userStatusType = UserStatusType.OFFLINE;
-        createdAt = Instant.now();
-        lastAccessAt = null;
-        this.userId = userId;
+  private static final long serialVersionUID = 1L;
+  private final UUID id;
+  private final Instant createdAt;
+  private Instant updatedAt;
+
+  private final UUID userId;
+  private Instant lastActiveAt;
+
+  public UserStatus(UUID userId, Instant lastActiveAt) {
+    this.id = UUID.randomUUID();
+    this.createdAt = Instant.now();
+
+    this.userId = userId;
+    this.lastActiveAt = lastActiveAt;
+  }
+
+  public void update(Instant lastActiveAt) {
+    boolean anyValueUpdated = false;
+    if (lastActiveAt != null && !lastActiveAt.equals(this.lastActiveAt)) {
+      this.lastActiveAt = lastActiveAt;
+      anyValueUpdated = true;
     }
 
-    public void update(UserStatusType userStatusType) {
-        this.userStatusType = userStatusType;
+    if (anyValueUpdated) {
+      this.updatedAt = Instant.now();
     }
+  }
 
-    public boolean isCurrentOnline() {
-        return lastAccessAt != null && Duration.between(
-                lastAccessAt,
-                Instant.now()
-        ).toMinutes() <= SESSION_TIMEOUT_MINUTES;
-    }
+  public Boolean isOnline() {
+    Instant instantFiveMinutesAgo = Instant.now()
+        .minus(Duration.ofMinutes(SESSION_TIMEOUT_MINUTES));
 
-    public void updateLastAccess() {
-        lastAccessAt = Instant.now();
-        this.userStatusType = UserStatusType.ONLINE;
-    }
-
-    public UserStatusType getCurrentStatus() {
-        return isCurrentOnline() ? UserStatusType.ONLINE : UserStatusType.OFFLINE;
-    }
-
-    public void markOffline() {
-        this.userStatusType = UserStatusType.OFFLINE;
-        this.lastAccessAt = null;
-    }
-
-    public void markOnline() {
-        this.userStatusType = UserStatusType.ONLINE;
-        this.lastAccessAt = Instant.now();
-    }
+    return lastActiveAt.isAfter(instantFiveMinutesAgo);
+  }
 }
