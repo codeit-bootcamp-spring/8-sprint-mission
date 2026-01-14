@@ -34,14 +34,7 @@ public class UserStatus extends BaseUpdatableEntity {
   private static final int ONLINE_VERIFICATION_MINUTES = 5;
 
   @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(
-      name = "user_id",
-      nullable = false,
-      unique = true,
-      foreignKey = @ForeignKey(
-          name = "fk_user_statuses_users",
-          foreignKeyDefinition = "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
-      ))
+  @JoinColumn(name = "user_id", nullable = false, unique = true)
   private User user;
 
   @Column(name = "last_active_at", nullable = false)

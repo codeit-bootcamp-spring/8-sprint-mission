@@ -25,30 +25,17 @@ import lombok.NoArgsConstructor;
 
  */
 @Entity
-@Table(
-    name = "read_statuses",
-    uniqueConstraints = {
-        @UniqueConstraint(
-            name = "uk_read_statuses_user_channel",   // 제약 조건 이름 정의
-            columnNames = {"user_id", "channel_id"} // 복합 유니크 묶을 컬럼명
-        )
-    })
+@Table(name = "read_statuses")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReadStatus extends BaseUpdatableEntity {
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(
-      name = "user_id", nullable = false,
-      foreignKey = @ForeignKey(foreignKeyDefinition = "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE")
-  )
+  @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(
-      name = "channel_id", nullable = false,
-      foreignKey = @ForeignKey(foreignKeyDefinition = "FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE")
-  )
+  @JoinColumn(name = "channel_id", nullable = false)
   private Channel channel;
 
   @Column(name = "last_read_at", nullable = false)

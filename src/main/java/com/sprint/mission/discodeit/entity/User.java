@@ -41,13 +41,7 @@ public class User extends BaseUpdatableEntity {
 
   // 프로필 이미지 1:1 단방향
   @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(
-      name = "profile_id",
-      unique = true,
-      foreignKey =
-      @ForeignKey(
-          name = "fk_users_profile",
-          foreignKeyDefinition = "FOREIGN KEY (profile_id) REFERENCES binary_contents(id) ON DELETE SET NULL"))
+  @JoinColumn(name = "profile_id", unique = true)
   private BinaryContent profile;
 
   // UserStatus와의 1:1 관계 반영

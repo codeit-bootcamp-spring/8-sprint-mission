@@ -38,35 +38,19 @@ public class Message extends BaseUpdatableEntity {
   private String content;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(
-      name = "channel_id", nullable = false,
-      foreignKey = @ForeignKey(foreignKeyDefinition = "FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE"))
-  // 채널 삭제 시 메시지도 삭제
+  @JoinColumn(name = "channel_id", nullable = false)
   private Channel channel;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(
-      name = "author_id",
-      foreignKey = @ForeignKey(foreignKeyDefinition = "FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL"))
-  // 유저 삭제 시 작성자 정보 -> NULL 처리 (메시지는 유지)
+  @JoinColumn(name = "author_id")
   private User author;
 
   // 메시지에 첨부된 BinaryContent 객체들
   @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinTable(
       name = "message_attachments",
-      joinColumns = @JoinColumn(
-          name = "message_id",
-          foreignKey = @ForeignKey(
-              name = "fk_attachments_message",
-              foreignKeyDefinition = "FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE"
-          )),
-      inverseJoinColumns = @JoinColumn(
-          name = "attachment_id",
-          foreignKey = @ForeignKey(
-              name = "fk_attachments_binary",
-              foreignKeyDefinition = "FOREIGN KEY (attachment_id) REFERENCES binary_contents(id) ON DELETE CASCADE"
-          ))
+      joinColumns = @JoinColumn(name = "message_id"),
+      inverseJoinColumns = @JoinColumn(name = "attachment_id")
   )
   List<BinaryContent> attachments;
 
