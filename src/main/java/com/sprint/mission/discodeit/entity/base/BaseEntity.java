@@ -22,10 +22,10 @@ public abstract class BaseEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(updatable = false, nullable = false)
+  @Column(name = "id", updatable = false, nullable = false)
   private UUID id;
 
   @CreatedDate
-  @Column(updatable = false, nullable = false)
+  @Column(name = "created_at", updatable = false, nullable = false)
   private Instant createdAt;
 }

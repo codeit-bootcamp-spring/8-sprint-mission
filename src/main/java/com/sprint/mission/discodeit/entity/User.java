@@ -12,19 +12,46 @@ package com.sprint.mission.discodeit.entity;
  */
 
 import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@Entity
+@Table(name = "users")
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseUpdatableEntity {
 
+  @Column(name = "username", nullable = false, unique = true, length = 50)
   private String username;
+
+  @Column(name = "email", nullable = false, unique = true, length = 100)
   private String email;
+
+  @Column(name = "password", nullable = false, length = 60)
   private String password;
 
-  // UUID profileId -> 객체 참조로 변경
+  // 프로필 이미지 1:1 단방향
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(
+      name = "profile_id",
+      unique = true,
+      foreignKey =
+      @ForeignKey(
+          name = "fk_users_profile",
+          foreignKeyDefinition = "FOREIGN KEY (profile_id) REFERENCES binary_contents(id) ON DELETE SET NULL"))
   private BinaryContent profile;
 
   // UserStatus와의 1:1 관계 반영
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private UserStatus status;
 
   public User(String username, String email, String password, BinaryContent profile) {

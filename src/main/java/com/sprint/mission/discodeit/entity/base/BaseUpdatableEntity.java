@@ -14,6 +14,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 public class BaseUpdatableEntity extends BaseEntity {
 
   @LastModifiedDate
-  @Column
+  @Column(name = "updated_at")
   private Instant updatedAt;
 }

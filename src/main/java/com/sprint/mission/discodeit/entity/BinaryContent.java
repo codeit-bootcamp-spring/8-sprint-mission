@@ -1,7 +1,13 @@
 package com.sprint.mission.discodeit.entity;
 
 import com.sprint.mission.discodeit.entity.base.BaseEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /*
     파일 하나를 표현하는 순수한 데이터 덩어리
@@ -15,12 +21,23 @@ import lombok.Getter;
     • contentType      : 컨텐츠의 타입
     • bytes            : 파일 데이터를 byte 배열로 표현
  */
+@Entity
+@Table(name = "binary_contents")
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BinaryContent extends BaseEntity {
 
+  @Column(name = "file_name", nullable = false)
   private String fileName;
+
+  @Column(nullable = false)
   private Long size;
+
+  @Column(name = "content_type", nullable = false, length = 100)
   private String contentType;
+
+  @Lob // 대용량 바이너리 데이터(bytea) 매핑
+  @Column(nullable = false)
   private byte[] bytes;
 
   public BinaryContent(String fileName, Long size, String contentType, byte[] bytes) {
