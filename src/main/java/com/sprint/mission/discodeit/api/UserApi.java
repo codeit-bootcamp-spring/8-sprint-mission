@@ -1,9 +1,9 @@
 package com.sprint.mission.discodeit.api;
 
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
-import com.sprint.mission.discodeit.dto.user.UserResponse;
+import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
-import com.sprint.mission.discodeit.dto.userstatus.UserStatusResponse;
+import com.sprint.mission.discodeit.dto.userstatus.UserStatusDto;
 import com.sprint.mission.discodeit.dto.userstatus.UserStatusUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -37,7 +37,7 @@ public interface UserApi {
               examples = @ExampleObject(value = "User with email {email} already exists")))
   })
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  ResponseEntity<UserResponse> create(
+  ResponseEntity<UserDto> create(
       @RequestPart("userCreateRequest") UserCreateRequest userCreateRequest,
       @Parameter(description = "User 프로필 이미지",
           content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -53,7 +53,7 @@ public interface UserApi {
       @ApiResponse(responseCode = "400", description = "중복된 데이터 존재")
   })
   @PatchMapping(path = "/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  ResponseEntity<UserResponse> update(
+  ResponseEntity<UserDto> update(
       @Parameter(description = "수정할 User ID") @PathVariable UUID userId,
       @RequestPart("userUpdateRequest") UserUpdateRequest userUpdateRequest,
       @Parameter(description = "수정할 User 프로필 이미지")
@@ -72,7 +72,7 @@ public interface UserApi {
   @Operation(summary = "전체 User 목록 조회")
   @ApiResponse(responseCode = "200", description = "User 목록 조회 성공")
   @GetMapping
-  ResponseEntity<List<UserResponse>> findAll();
+  ResponseEntity<List<UserDto>> findAll();
 
   @Operation(summary = "User 온라인 상태 업데이트")
   @ApiResponses({
@@ -80,7 +80,7 @@ public interface UserApi {
       @ApiResponse(responseCode = "404", description = "UserStatus 찾을 수 없음")
   })
   @PatchMapping("/{userId}/userStatus")
-  ResponseEntity<UserStatusResponse> updateUserStatusByUserId(
+  ResponseEntity<UserStatusDto> updateUserStatusByUserId(
       @Parameter(description = "상태를 변경할 User ID", schema = @Schema(type = "string", format = "uuid"))
       @PathVariable UUID userId,
       @RequestBody UserStatusUpdateRequest request);

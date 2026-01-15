@@ -11,14 +11,16 @@ import java.util.UUID;
     [필드 설명]
     • id                : BinaryContent의 id
     • fileName          : 파일 이름
-    • createdAt         : 파일 생성 시각
+    • size              : 파일 사이즈
+    • contentType       : 파일 타입
+    • bytes             : 바이너리 데이터
  */
-public record BinaryContentResponse(
+public record BinaryContentDto(
     UUID id,
     String fileName,
+    Long size,
     String contentType,
-    byte[] bytes,
-    Instant createdAt
+    byte[] bytes
 ) {
 
 }

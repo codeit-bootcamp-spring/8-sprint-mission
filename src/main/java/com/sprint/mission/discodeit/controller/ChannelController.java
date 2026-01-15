@@ -3,7 +3,7 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.api.ChannelApi;
 import com.sprint.mission.discodeit.dto.channel.ChannelCreatePrivateRequest;
 import com.sprint.mission.discodeit.dto.channel.ChannelCreatePublicRequest;
-import com.sprint.mission.discodeit.dto.channel.ChannelResponse;
+import com.sprint.mission.discodeit.dto.channel.ChannelDto;
 import com.sprint.mission.discodeit.dto.channel.ChannelUpdateRequest;
 import com.sprint.mission.discodeit.service.ChannelService;
 import java.util.List;
@@ -23,22 +23,22 @@ public class ChannelController implements ChannelApi {
 
   // 공개 채널 생성 (GET-only 미션 대응)
   @Override
-  public ResponseEntity<ChannelResponse> createPublic(ChannelCreatePublicRequest request) {
-    ChannelResponse response = channelService.createPublicChannel(request);
+  public ResponseEntity<ChannelDto> createPublic(ChannelCreatePublicRequest request) {
+    ChannelDto response = channelService.createPublicChannel(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   // 비공개 채널 생성 (GET-only 미션 대응)
   @Override
-  public ResponseEntity<ChannelResponse> createPrivate(ChannelCreatePrivateRequest request) {
-    ChannelResponse response = channelService.createPrivateChannel(request);
+  public ResponseEntity<ChannelDto> createPrivate(ChannelCreatePrivateRequest request) {
+    ChannelDto response = channelService.createPrivateChannel(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   // 공개 채널 수정 (GET-only 미션 대응)
   @Override
-  public ResponseEntity<ChannelResponse> update(UUID channelId, ChannelUpdateRequest request) {
-    ChannelResponse response = channelService.updateChannel(channelId, request);
+  public ResponseEntity<ChannelDto> update(UUID channelId, ChannelUpdateRequest request) {
+    ChannelDto response = channelService.updateChannel(channelId, request);
     return ResponseEntity.ok(response);
   }
 
@@ -51,8 +51,8 @@ public class ChannelController implements ChannelApi {
 
   // 특정 사용자가 볼 수 있는 모든 채널 목록 조회
   @Override
-  public ResponseEntity<List<ChannelResponse>> findAll(UUID userId) {
-    List<ChannelResponse> response = channelService.findAllByUserId(userId);
+  public ResponseEntity<List<ChannelDto>> findAll(UUID userId) {
+    List<ChannelDto> response = channelService.findAllByUserId(userId);
     return ResponseEntity.ok(response);
   }
 

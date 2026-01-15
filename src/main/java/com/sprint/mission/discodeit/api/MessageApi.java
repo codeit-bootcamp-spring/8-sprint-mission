@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.api;
 
 import com.sprint.mission.discodeit.dto.message.MessageCreateRequest;
-import com.sprint.mission.discodeit.dto.message.MessageResponse;
+import com.sprint.mission.discodeit.dto.message.MessageDto;
 import com.sprint.mission.discodeit.dto.message.MessageUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,7 +29,7 @@ public interface MessageApi {
       @ApiResponse(responseCode = "201", description = "Message가 성공적으로 생성됨")
   })
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  ResponseEntity<MessageResponse> create(
+  ResponseEntity<MessageDto> create(
       @RequestPart MessageCreateRequest messageCreateRequest,
       @Parameter(description = "Message 첨부 파일들")
       @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments);
@@ -42,7 +42,7 @@ public interface MessageApi {
               examples = @ExampleObject(value = "Message with id {messageId} not found")))
   })
   @PatchMapping("/{messageId}")
-  ResponseEntity<MessageResponse> update(
+  ResponseEntity<MessageDto> update(
       @Parameter(description = "수정할 Message ID", schema = @Schema(type = "string", format = "uuid"))
       @PathVariable UUID messageId,
       @RequestBody MessageUpdateRequest request);
@@ -62,7 +62,7 @@ public interface MessageApi {
   @Operation(summary = "Channel의 Message 목록 조회")
   @ApiResponse(responseCode = "200", description = "Message 목록 조회 성공")
   @GetMapping
-  ResponseEntity<List<MessageResponse>> findAllByChannelId(
+  ResponseEntity<List<MessageDto>> findAllByChannelId(
       @Parameter(description = "조회할 Channel ID", schema = @Schema(type = "string", format = "uuid"))
       @RequestParam("channelId") UUID channelId);
 }

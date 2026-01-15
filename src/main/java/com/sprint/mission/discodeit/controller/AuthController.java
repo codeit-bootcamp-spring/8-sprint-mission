@@ -2,7 +2,7 @@ package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.api.AuthApi;
 import com.sprint.mission.discodeit.dto.user.LoginRequest;
-import com.sprint.mission.discodeit.dto.user.UserResponse;
+import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,8 +19,8 @@ public class AuthController implements AuthApi {
 
   // 로그인
   @Override
-  public ResponseEntity<UserResponse> login(LoginRequest request) {
-    UserResponse user = authService.login(request);
+  public ResponseEntity<UserDto> login(LoginRequest request) {
+    UserDto user = authService.login(request);
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(user);

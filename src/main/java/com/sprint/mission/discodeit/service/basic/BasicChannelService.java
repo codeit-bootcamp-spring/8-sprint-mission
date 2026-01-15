@@ -2,7 +2,7 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.channel.ChannelCreatePrivateRequest;
 import com.sprint.mission.discodeit.dto.channel.ChannelCreatePublicRequest;
-import com.sprint.mission.discodeit.dto.channel.ChannelResponse;
+import com.sprint.mission.discodeit.dto.channel.ChannelDto;
 import com.sprint.mission.discodeit.dto.channel.ChannelUpdateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
@@ -32,14 +32,14 @@ public class BasicChannelService implements ChannelService {
   private final BinaryContentRepository binaryContentRepository;
 
   @Override
-  public ChannelResponse createPublicChannel(ChannelCreatePublicRequest request) {
+  public ChannelDto createPublicChannel(ChannelCreatePublicRequest request) {
     Channel channel = new Channel(ChannelType.PUBLIC, request.name(), request.description());
     channelRepository.save(channel);
     return convertDto(channel);
   }
 
   @Override
-  public ChannelResponse createPrivateChannel(ChannelCreatePrivateRequest request) {
+  public ChannelDto createPrivateChannel(ChannelCreatePrivateRequest request) {
     Channel channel = new Channel(ChannelType.PRIVATE, null, null);
     channelRepository.save(channel);
 
@@ -53,14 +53,14 @@ public class BasicChannelService implements ChannelService {
   }
 
   @Override
-  public ChannelResponse findChannel(UUID id) {
+  public ChannelDto findChannel(UUID id) {
     Channel channel = channelRepository.findById(id)
         .orElseThrow(() -> new NoSuchElementException("Channel을 찾을 수 없습니다. " + id));
     return convertDto(channel);
   }
 
   @Override
-  public List<ChannelResponse> findAllByUserId(UUID userId) {
+  public List<ChannelDto> findAllByUserId(UUID userId) {
     return channelRepository.findAll().stream()
         .filter(ch -> {
           if (ch.getType() == ChannelType.PUBLIC) {
@@ -73,7 +73,7 @@ public class BasicChannelService implements ChannelService {
   }
 
   @Override
-  public ChannelResponse updateChannel(UUID channelId, ChannelUpdateRequest request) {
+  public ChannelDto updateChannel(UUID channelId, ChannelUpdateRequest request) {
     Channel channel = channelRepository.findById(channelId)
         .orElseThrow(() -> new NoSuchElementException("Channel을 찾을 수 없습니다. " + channelId));
 
@@ -108,7 +108,7 @@ public class BasicChannelService implements ChannelService {
     channelRepository.delete(id);
   }
 
-  private ChannelResponse convertDto(Channel channel) {
+  private ChannelDto convertDto(Channel channel) {
     // 최근 메시지 시각
     Instant lastMessageAt = messageRepository.findAllByChannelId(channel.getId()).stream()
         .map(message -> message.getCreatedAt())
@@ -123,7 +123,7 @@ public class BasicChannelService implements ChannelService {
           .collect(Collectors.toList());
     }
 
-    return new ChannelResponse(
+    return new ChannelDto(
         channel.getId(),
         channel.getName(),
         channel.getDescription(),

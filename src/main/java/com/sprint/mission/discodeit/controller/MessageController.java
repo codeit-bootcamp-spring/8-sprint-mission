@@ -3,7 +3,7 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.api.MessageApi;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.message.MessageCreateRequest;
-import com.sprint.mission.discodeit.dto.message.MessageResponse;
+import com.sprint.mission.discodeit.dto.message.MessageDto;
 import com.sprint.mission.discodeit.dto.message.MessageUpdateRequest;
 import com.sprint.mission.discodeit.service.MessageService;
 import java.io.IOException;
@@ -26,7 +26,7 @@ public class MessageController implements MessageApi {
 
   // 메시지 생성 (GET-only 미션 대응)
   @Override
-  public ResponseEntity<MessageResponse> create(
+  public ResponseEntity<MessageDto> create(
       MessageCreateRequest messageCreateRequest,
       List<MultipartFile> attachments) {
 
@@ -40,14 +40,14 @@ public class MessageController implements MessageApi {
         attachmentList
     );
 
-    MessageResponse created = messageService.createMessage(msgRequest);
+    MessageDto created = messageService.createMessage(msgRequest);
     return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 
   // 메시지 수정 (GET-only 미션 대응)
   @Override
-  public ResponseEntity<MessageResponse> update(UUID messageId, MessageUpdateRequest request) {
-    MessageResponse message = messageService.updateMessage(messageId, request);
+  public ResponseEntity<MessageDto> update(UUID messageId, MessageUpdateRequest request) {
+    MessageDto message = messageService.updateMessage(messageId, request);
     return ResponseEntity.ok(message);
   }
 
@@ -59,8 +59,8 @@ public class MessageController implements MessageApi {
   }
 
   // 특정 채널의 메시지 목록을 조회 (GET-only 미션 대응)
-  public ResponseEntity<List<MessageResponse>> findAllByChannelId(UUID channelId) {
-    List<MessageResponse> messageList = messageService.findAllByChannelId(channelId);
+  public ResponseEntity<List<MessageDto>> findAllByChannelId(UUID channelId) {
+    List<MessageDto> messageList = messageService.findAllByChannelId(channelId);
     return ResponseEntity.ok(messageList);
   }
 

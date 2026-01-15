@@ -15,7 +15,7 @@ import java.util.UUID;
     • channelId           : 채널 id
     • lastReadAt          : 마지막 읽은 시각
  */
-public record ReadStatusResponse(
+public record ReadStatusDto(
     UUID id,
     UUID userId,
     UUID channelId,

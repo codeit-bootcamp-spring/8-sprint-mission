@@ -2,7 +2,7 @@ package com.sprint.mission.discodeit.api;
 
 import com.sprint.mission.discodeit.dto.channel.ChannelCreatePrivateRequest;
 import com.sprint.mission.discodeit.dto.channel.ChannelCreatePublicRequest;
-import com.sprint.mission.discodeit.dto.channel.ChannelResponse;
+import com.sprint.mission.discodeit.dto.channel.ChannelDto;
 import com.sprint.mission.discodeit.dto.channel.ChannelUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,12 +29,12 @@ public interface ChannelApi {
   @Operation(summary = "Public Channel 생성")
   @ApiResponse(responseCode = "201", description = "Public Channel이 성공적으로 생성됨")
   @PostMapping("/public")
-  ResponseEntity<ChannelResponse> createPublic(@RequestBody ChannelCreatePublicRequest request);
+  ResponseEntity<ChannelDto> createPublic(@RequestBody ChannelCreatePublicRequest request);
 
   @Operation(summary = "Private Channel 생성")
   @ApiResponse(responseCode = "201", description = "Private Channel이 성공적으로 생성됨")
   @PostMapping("/private")
-  ResponseEntity<ChannelResponse> createPrivate(@RequestBody ChannelCreatePrivateRequest request);
+  ResponseEntity<ChannelDto> createPrivate(@RequestBody ChannelCreatePrivateRequest request);
 
   @Operation(summary = "Channel 정보 수정")
   @ApiResponses({
@@ -47,7 +47,7 @@ public interface ChannelApi {
       @ApiResponse(responseCode = "200", description = "Channel 정보가 성공적으로 수정됨")
   })
   @PatchMapping("/{channelId}")
-  ResponseEntity<ChannelResponse> update(
+  ResponseEntity<ChannelDto> update(
       @Parameter(description = "수정할 Channel ID", schema = @Schema(type = "string", format = "uuid"))
       @PathVariable UUID channelId,
       @RequestBody ChannelUpdateRequest request);
@@ -67,7 +67,7 @@ public interface ChannelApi {
   @Operation(summary = "User가 참여 중인 Channel 목록 조회")
   @ApiResponse(responseCode = "200", description = "Channel 목록 조회 성공")
   @GetMapping
-  ResponseEntity<List<ChannelResponse>> findAll(
+  ResponseEntity<List<ChannelDto>> findAll(
       @Parameter(description = "조회할 User ID", schema = @Schema(type = "string", format = "uuid"))
       @RequestParam("userId") UUID userId);
 }

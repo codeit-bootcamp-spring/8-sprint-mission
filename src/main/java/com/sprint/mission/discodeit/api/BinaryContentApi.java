@@ -1,6 +1,6 @@
 package com.sprint.mission.discodeit.api;
 
-import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentResponse;
+import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,7 +29,7 @@ public interface BinaryContentApi {
           ))
   })
   @GetMapping("/{binaryContentId}")
-  ResponseEntity<BinaryContentResponse> find(
+  ResponseEntity<BinaryContentDto> find(
       @Parameter(description = "조회할 첨부 파일 ID", schema = @Schema(type = "string", format = "uuid"))
       @PathVariable UUID binaryContentId);
 
@@ -39,7 +38,7 @@ public interface BinaryContentApi {
       @ApiResponse(responseCode = "200", description = "첨부 파일 목록 조회 성공")
   })
   @GetMapping
-  ResponseEntity<List<BinaryContentResponse>> findAllByIdIn(
+  ResponseEntity<List<BinaryContentDto>> findAllByIdIn(
       @Parameter(description = "조회할 첨부 파일 ID 목록",
           array = @ArraySchema(schema = @Schema(type = "string", format = "uuid")))
       @RequestParam List<UUID> binaryContentIds);

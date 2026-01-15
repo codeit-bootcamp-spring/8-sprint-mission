@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.api;
 
 import com.sprint.mission.discodeit.dto.user.LoginRequest;
-import com.sprint.mission.discodeit.dto.user.UserResponse;
+import com.sprint.mission.discodeit.dto.user.UserDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -35,5 +35,5 @@ public interface AuthApi {
   })
   @PostMapping("/login")
     // 엔드포인트 경로 정의
-  ResponseEntity<UserResponse> login(@RequestBody LoginRequest request);
+  ResponseEntity<UserDto> login(@RequestBody LoginRequest request);
 }

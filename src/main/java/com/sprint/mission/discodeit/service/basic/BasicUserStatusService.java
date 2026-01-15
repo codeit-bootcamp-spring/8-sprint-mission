@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.userstatus.UserStatusCreateRequest;
-import com.sprint.mission.discodeit.dto.userstatus.UserStatusResponse;
+import com.sprint.mission.discodeit.dto.userstatus.UserStatusDto;
 import com.sprint.mission.discodeit.dto.userstatus.UserStatusUpdateRequest;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserRepository;
@@ -25,7 +25,7 @@ public class BasicUserStatusService implements UserStatusService {
 
 
   @Override
-  public UserStatusResponse create(UserStatusCreateRequest request) {
+  public UserStatusDto create(UserStatusCreateRequest request) {
 
     // User 검증
     if (!userRepository.existsById(request.userId())) {
@@ -49,7 +49,7 @@ public class BasicUserStatusService implements UserStatusService {
   }
 
   @Override
-  public UserStatusResponse find(UUID id) {
+  public UserStatusDto find(UUID id) {
     UserStatus status = userStatusRepository.findById(id)
         .orElseThrow(() -> new NoSuchElementException("UserStatus를 찾을 수 없습니다. " + id));
 
@@ -57,14 +57,14 @@ public class BasicUserStatusService implements UserStatusService {
   }
 
   @Override
-  public List<UserStatusResponse> findAll() {
+  public List<UserStatusDto> findAll() {
     return userStatusRepository.findAll().stream()
         .map(this::convertDto)
         .collect(Collectors.toList());
   }
 
   @Override
-  public UserStatusResponse update(UUID userStatusId, UserStatusUpdateRequest request) {
+  public UserStatusDto update(UUID userStatusId, UserStatusUpdateRequest request) {
     UserStatus status = userStatusRepository.findById(userStatusId)
         .orElseThrow(
             () -> new NoSuchElementException("UserStatus를 찾을 수 없습니다. " + userStatusId));
@@ -76,7 +76,7 @@ public class BasicUserStatusService implements UserStatusService {
   }
 
   @Override
-  public UserStatusResponse updateByUserId(UUID userId, Instant lastConnAt) {
+  public UserStatusDto updateByUserId(UUID userId, Instant lastConnAt) {
     UserStatus status = userStatusRepository.findByUserId(userId)
         .orElseThrow(() -> new NoSuchElementException("UserStatus를 찾을 수 없습니다: " + userId));
 
@@ -91,8 +91,8 @@ public class BasicUserStatusService implements UserStatusService {
     userStatusRepository.deleteById(id);
   }
 
-  private UserStatusResponse convertDto(UserStatus status) {
-    return new UserStatusResponse(
+  private UserStatusDto convertDto(UserStatus status) {
+    return new UserStatusDto(
         status.getId(),
         status.getUserId(),
         status.getLastActiveAt(),

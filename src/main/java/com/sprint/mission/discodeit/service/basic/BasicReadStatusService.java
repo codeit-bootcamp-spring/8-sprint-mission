@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.readstatus.ReadStatusCreateRequest;
-import com.sprint.mission.discodeit.dto.readstatus.ReadStatusResponse;
+import com.sprint.mission.discodeit.dto.readstatus.ReadStatusDto;
 import com.sprint.mission.discodeit.dto.readstatus.ReadStatusUpdateRequest;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
@@ -26,7 +26,7 @@ public class BasicReadStatusService implements ReadStatusService {
   private final ChannelRepository channelRepository;
 
   @Override
-  public ReadStatusResponse create(ReadStatusCreateRequest request) {
+  public ReadStatusDto create(ReadStatusCreateRequest request) {
     // 1) User 존재 여부 확인
     if (!userRepository.existsById(request.userId())) {
       throw new NoSuchElementException("User 를 찾을 수 없습니다: " + request.userId());
@@ -59,7 +59,7 @@ public class BasicReadStatusService implements ReadStatusService {
   }
 
   @Override
-  public ReadStatusResponse findById(UUID id) {
+  public ReadStatusDto findById(UUID id) {
     ReadStatus readStatus = readStatusRepository.findById(id)
         .orElseThrow(() -> new NoSuchElementException("ReadStatus를 찾을 수 없습니다. " + id));
 
@@ -67,14 +67,14 @@ public class BasicReadStatusService implements ReadStatusService {
   }
 
   @Override
-  public List<ReadStatusResponse> findAllByUserId(UUID userId) {
+  public List<ReadStatusDto> findAllByUserId(UUID userId) {
     return readStatusRepository.findAllByUserId(userId).stream()
         .map(this::convertDto)
         .collect(Collectors.toList());
   }
 
   @Override
-  public ReadStatusResponse update(UUID readStatusId, ReadStatusUpdateRequest request) {
+  public ReadStatusDto update(UUID readStatusId, ReadStatusUpdateRequest request) {
     ReadStatus readStatus = readStatusRepository.findById(readStatusId)
         .orElseThrow(() -> new NoSuchElementException("ReadStatus를 찾을 수 없습니다: " + readStatusId));
 
@@ -89,8 +89,8 @@ public class BasicReadStatusService implements ReadStatusService {
     readStatusRepository.deleteById(id);
   }
 
-  private ReadStatusResponse convertDto(ReadStatus entity) {
-    return new ReadStatusResponse(
+  private ReadStatusDto convertDto(ReadStatus entity) {
+    return new ReadStatusDto(
         entity.getId(),
         entity.getUserId(),
         entity.getChannelId(),

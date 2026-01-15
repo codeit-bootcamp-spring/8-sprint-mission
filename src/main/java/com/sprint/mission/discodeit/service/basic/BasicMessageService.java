@@ -2,7 +2,7 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.message.MessageCreateRequest;
-import com.sprint.mission.discodeit.dto.message.MessageResponse;
+import com.sprint.mission.discodeit.dto.message.MessageDto;
 import com.sprint.mission.discodeit.dto.message.MessageUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Message;
@@ -30,7 +30,7 @@ public class BasicMessageService implements MessageService {
   private final BinaryContentRepository binaryContentRepository;
 
   @Override
-  public MessageResponse createMessage(MessageCreateRequest request) {
+  public MessageDto createMessage(MessageCreateRequest request) {
     // 채널, 유저 존재 검사
     channelRepository.findById(request.channelId())
         .orElseThrow(
@@ -65,21 +65,21 @@ public class BasicMessageService implements MessageService {
   }
 
   @Override
-  public MessageResponse findMessage(UUID id) {
+  public MessageDto findMessage(UUID id) {
     Message message = messageRepository.findById(id)
         .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + id));
     return convertDto(message);
   }
 
   @Override
-  public List<MessageResponse> findAllByChannelId(UUID channelId) {
+  public List<MessageDto> findAllByChannelId(UUID channelId) {
     return messageRepository.findAllByChannelId(channelId).stream()
         .map(this::convertDto)
         .collect(Collectors.toList());
   }
 
   @Override
-  public MessageResponse updateMessage(UUID messageId, MessageUpdateRequest request) {
+  public MessageDto updateMessage(UUID messageId, MessageUpdateRequest request) {
     Message message = messageRepository.findById(messageId)
         .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + messageId));
 
@@ -101,8 +101,8 @@ public class BasicMessageService implements MessageService {
     messageRepository.delete(id);
   }
 
-  private MessageResponse convertDto(Message message) {
-    return new MessageResponse(
+  private MessageDto convertDto(Message message) {
+    return new MessageDto(
         message.getId(),
         message.getChannelId(),
         message.getAuthorId(),

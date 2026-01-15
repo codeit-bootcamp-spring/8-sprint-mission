@@ -2,7 +2,7 @@ package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.api.ReadStatusApi;
 import com.sprint.mission.discodeit.dto.readstatus.ReadStatusCreateRequest;
-import com.sprint.mission.discodeit.dto.readstatus.ReadStatusResponse;
+import com.sprint.mission.discodeit.dto.readstatus.ReadStatusDto;
 import com.sprint.mission.discodeit.dto.readstatus.ReadStatusUpdateRequest;
 import com.sprint.mission.discodeit.service.ReadStatusService;
 import java.util.List;
@@ -24,8 +24,8 @@ public class ReadStatusController implements ReadStatusApi {
       특정 채널의 메시지 수신 정보 생성
    */
   @Override
-  public ResponseEntity<ReadStatusResponse> create(ReadStatusCreateRequest request) {
-    ReadStatusResponse created = readStatusService.create(request);
+  public ResponseEntity<ReadStatusDto> create(ReadStatusCreateRequest request) {
+    ReadStatusDto created = readStatusService.create(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 
@@ -34,9 +34,9 @@ public class ReadStatusController implements ReadStatusApi {
       - 서비스에서 해당 ReadStatus를 찾아 lastReadAt을 갱신한다.
    */
   @Override
-  public ResponseEntity<ReadStatusResponse> update(UUID readStatusId,
+  public ResponseEntity<ReadStatusDto> update(UUID readStatusId,
       ReadStatusUpdateRequest request) {
-    ReadStatusResponse updated = readStatusService.update(readStatusId, request);
+    ReadStatusDto updated = readStatusService.update(readStatusId, request);
     return ResponseEntity.ok(updated);
   }
 
@@ -45,8 +45,8 @@ public class ReadStatusController implements ReadStatusApi {
       - userId로 해당 유저의 ReadStatus 목록을 전부 조회한다.
    */
   @Override
-  public ResponseEntity<List<ReadStatusResponse>> findAllByUserId(UUID userId) {
-    List<ReadStatusResponse> list = readStatusService.findAllByUserId(userId);
+  public ResponseEntity<List<ReadStatusDto>> findAllByUserId(UUID userId) {
+    List<ReadStatusDto> list = readStatusService.findAllByUserId(userId);
     return ResponseEntity.ok(list);
   }
 

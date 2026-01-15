@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.api.BinaryContentApi;
-import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentResponse;
+import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentDto;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -27,8 +27,8 @@ public class BinaryContentController implements BinaryContentApi {
 
   // 바이너리 파일 단건 조회 (GET-only 미션 대응)
   @Override
-  public ResponseEntity<BinaryContentResponse> find(UUID binaryContentId) {
-    BinaryContentResponse response = binaryContentService.findById(binaryContentId);
+  public ResponseEntity<BinaryContentDto> find(UUID binaryContentId) {
+    BinaryContentDto response = binaryContentService.findById(binaryContentId);
     return ResponseEntity.ok(response);
   }
 
@@ -37,7 +37,7 @@ public class BinaryContentController implements BinaryContentApi {
   public ResponseEntity<Resource> download(
       @PathVariable UUID binaryContentId) {
 
-    BinaryContentResponse response = binaryContentService.findById(binaryContentId);
+    BinaryContentDto response = binaryContentService.findById(binaryContentId);
 
     byte[] fileBytes = response.bytes();
     Resource resource = new ByteArrayResource(fileBytes);
@@ -55,8 +55,8 @@ public class BinaryContentController implements BinaryContentApi {
 
   // 바이너리 파일 다건 조회 (GET-only 미션 대응)
   @Override
-  public ResponseEntity<List<BinaryContentResponse>> findAllByIdIn(List<UUID> binaryContentIds) {
-    List<BinaryContentResponse> response = binaryContentService.findAllByIdIn(binaryContentIds);
+  public ResponseEntity<List<BinaryContentDto>> findAllByIdIn(List<UUID> binaryContentIds) {
+    List<BinaryContentDto> response = binaryContentService.findAllByIdIn(binaryContentIds);
     return ResponseEntity.ok(response);
   }
 
