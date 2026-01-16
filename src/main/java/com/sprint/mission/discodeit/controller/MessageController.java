@@ -30,14 +30,14 @@ public class MessageController implements MessageApi {
       MessageCreateRequest messageCreateRequest,
       List<MultipartFile> attachments) {
 
-    List<BinaryContentCreateRequest> attachmentList = toBinaryRequests(attachments);
+    List<BinaryContentCreateRequest> attachmentRequests = toBinaryRequests(attachments);
 
     // 서비스 레이어에 맞는 최종 요청 객체 생성
     MessageCreateRequest msgRequest = new MessageCreateRequest(
         messageCreateRequest.channelId(),
         messageCreateRequest.authorId(),
         messageCreateRequest.content(),
-        attachmentList
+        attachmentRequests
     );
 
     MessageDto created = messageService.createMessage(msgRequest);
@@ -47,8 +47,7 @@ public class MessageController implements MessageApi {
   // 메시지 수정 (GET-only 미션 대응)
   @Override
   public ResponseEntity<MessageDto> update(UUID messageId, MessageUpdateRequest request) {
-    MessageDto message = messageService.updateMessage(messageId, request);
-    return ResponseEntity.ok(message);
+    return ResponseEntity.ok(messageService.updateMessage(messageId, request));
   }
 
   // 메시지 삭제 (GET-only 미션 대응)
@@ -60,8 +59,7 @@ public class MessageController implements MessageApi {
 
   // 특정 채널의 메시지 목록을 조회 (GET-only 미션 대응)
   public ResponseEntity<List<MessageDto>> findAllByChannelId(UUID channelId) {
-    List<MessageDto> messageList = messageService.findAllByChannelId(channelId);
-    return ResponseEntity.ok(messageList);
+    return ResponseEntity.ok(messageService.findAllByChannelId(channelId));
   }
 
   private List<BinaryContentCreateRequest> toBinaryRequests(List<MultipartFile> files) {
@@ -80,6 +78,7 @@ public class MessageController implements MessageApi {
     try {
       return new BinaryContentCreateRequest(
           file.getOriginalFilename(),
+          file.getSize(),
           file.getContentType(),
           file.getBytes()
       );

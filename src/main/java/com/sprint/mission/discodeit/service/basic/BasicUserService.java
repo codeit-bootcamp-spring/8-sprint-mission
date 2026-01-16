@@ -7,8 +7,8 @@ import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserService;
 import java.time.Instant;
 import java.util.List;
@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class BasicUserService implements UserService {
 
   private final UserRepository userRepository;
-  private final UserStatusRepository userStatusRepository;
+  private final UserMapper userMapper;
 
   @Override
   @Transactional
@@ -37,34 +37,34 @@ public class BasicUserService implements UserService {
     BinaryContent profile = createBinaryContent(profileRequest);
 
     // User 생성
-    User user = userRepository.save(
-        new User(request.username(), request.email(), request.password(), profile));
+    User user = new User(request.username(), request.email(), request.password(), profile);
 
     // UserStatus 생성 (마지막 접속 시간 = 지금)
     UserStatus status = new UserStatus(user, Instant.now());
 
+    user.attachStatus(status);
+
     User savedUser = userRepository.save(user);
 
-    return UserDto.of(savedUser, savedUser.getStatus());
+    return userMapper.toDto(savedUser);
   }
 
   @Override
   public UserDto findUser(UUID id) {
-    User user = userRepository.findById(id)
+    return userRepository.findById(id)
+        .map(userMapper::toDto)
         .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + id));
-
-    // user.getStatus() 호출 시점에 실제 DB 쿼리 발생
-    return UserDto.of(user, user.getStatus());
   }
 
   @Override
   public List<UserDto> findAll() {
     return userRepository.findAll().stream()
-        .map(user -> UserDto.of(user, user.getStatus()))
+        .map(userMapper::toDto)
         .toList();
   }
 
   @Override
+  @Transactional
   public UserDto update(UUID userId, UserUpdateRequest request,
       BinaryContentCreateRequest profileRequest) {
 
@@ -80,16 +80,16 @@ public class BasicUserService implements UserService {
     // 필드 업데이트 및 저장
     user.update(request.newUsername(), request.newEmail(), request.newPassword(), newProfile);
 
-    return UserDto.of(user, user.getStatus());
+    return userMapper.toDto(user);
   }
 
   @Override
+  @Transactional
   public void delete(UUID id) {
-    User user = userRepository.findById(id)
-        .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다: " + id));
-
-    // User 삭제
-    userRepository.delete(user);
+    if (!userRepository.existsById(id)) {
+      throw new NoSuchElementException("User를 찾을 수 없습니다. " + id);
+    }
+    userRepository.deleteById(id);
   }
 
   // 비즈니스 로직 헬퍼 메서드

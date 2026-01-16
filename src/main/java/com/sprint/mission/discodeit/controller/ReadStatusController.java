@@ -25,8 +25,7 @@ public class ReadStatusController implements ReadStatusApi {
    */
   @Override
   public ResponseEntity<ReadStatusDto> create(ReadStatusCreateRequest request) {
-    ReadStatusDto created = readStatusService.create(request);
-    return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    return ResponseEntity.status(HttpStatus.CREATED).body(readStatusService.create(request));
   }
 
   /*
@@ -36,8 +35,7 @@ public class ReadStatusController implements ReadStatusApi {
   @Override
   public ResponseEntity<ReadStatusDto> update(UUID readStatusId,
       ReadStatusUpdateRequest request) {
-    ReadStatusDto updated = readStatusService.update(readStatusId, request);
-    return ResponseEntity.ok(updated);
+    return ResponseEntity.ok(readStatusService.update(readStatusId, request));
   }
 
   /*
@@ -46,8 +44,7 @@ public class ReadStatusController implements ReadStatusApi {
    */
   @Override
   public ResponseEntity<List<ReadStatusDto>> findAllByUserId(UUID userId) {
-    List<ReadStatusDto> list = readStatusService.findAllByUserId(userId);
-    return ResponseEntity.ok(list);
+    return ResponseEntity.ok(readStatusService.findAllByUserId(userId));
   }
 
 }

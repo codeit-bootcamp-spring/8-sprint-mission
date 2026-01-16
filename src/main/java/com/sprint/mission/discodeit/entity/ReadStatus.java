@@ -5,7 +5,6 @@ import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -25,7 +24,10 @@ import lombok.NoArgsConstructor;
 
  */
 @Entity
-@Table(name = "read_statuses")
+@Table(name = "read_statuses", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_read_statuses_user_channel", columnNames = {"user_id",
+        "channel_id"})
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReadStatus extends BaseUpdatableEntity {

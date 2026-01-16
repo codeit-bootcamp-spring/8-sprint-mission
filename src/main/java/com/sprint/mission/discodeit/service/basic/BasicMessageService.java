@@ -1,114 +1,92 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.message.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.message.MessageDto;
 import com.sprint.mission.discodeit.dto.message.MessageUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
-import com.sprint.mission.discodeit.repository.BinaryContentRepository;
+import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.mapper.MessageMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.MessageService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BasicMessageService implements MessageService {
 
   private final MessageRepository messageRepository;
   private final ChannelRepository channelRepository;
   private final UserRepository userRepository;
-  private final BinaryContentRepository binaryContentRepository;
+  private final MessageMapper messageMapper;
 
   @Override
+  @Transactional
   public MessageDto createMessage(MessageCreateRequest request) {
+
     // 채널, 유저 존재 검사
-    channelRepository.findById(request.channelId())
+    Channel channel = channelRepository.findById(request.channelId())
         .orElseThrow(
             () -> new NoSuchElementException("Channel을 찾을 수 없습니다. " + request.channelId()));
 
-    userRepository.findById(request.authorId())
+    User author = userRepository.findById(request.authorId())
         .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + request.authorId()));
 
-    // 파일을 저장
-    List<UUID> attachmentIds = new ArrayList<>();
-    if (request.attachments() != null) {
-      for (BinaryContentCreateRequest dto : request.attachments()) {
-        BinaryContent bc = new BinaryContent(
-            dto.fileName(),
-            dto.contentType(),
-            dto.bytes()
-        );
-        binaryContentRepository.save(bc);
-        attachmentIds.add(bc.getId());
-      }
-    }
+    // 첨부파일 엔티티 - CascadeType.ALL 설정 -> save 호출 안해도 됨
+    List<BinaryContent> attachments = request.attachments().stream()
+        .map(req -> new BinaryContent(req.fileName(), req.size(), req.contentType(), req.bytes()))
+        .toList();
 
-    Message message = new Message(
-        request.content(),
-        request.channelId(),
-        request.authorId(),
-        attachmentIds
-    );
-    messageRepository.save(message);
+    // Message 엔티티 생성 및 저장
+    Message message = new Message(author, channel, request.content(), attachments);
+    Message savedMessage = messageRepository.save(message);
 
-    return convertDto(message);
+    return messageMapper.toDto(savedMessage);
   }
 
   @Override
   public MessageDto findMessage(UUID id) {
-    Message message = messageRepository.findById(id)
+    return messageRepository.findById(id)
+        .map(messageMapper::toDto)
         .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + id));
-    return convertDto(message);
   }
 
   @Override
   public List<MessageDto> findAllByChannelId(UUID channelId) {
-    return messageRepository.findAllByChannelId(channelId).stream()
-        .map(this::convertDto)
-        .collect(Collectors.toList());
+    return messageRepository.findAllByChannel_Id(channelId).stream()
+        .map(messageMapper::toDto)
+        .toList();
   }
 
   @Override
+  @Transactional
   public MessageDto updateMessage(UUID messageId, MessageUpdateRequest request) {
     Message message = messageRepository.findById(messageId)
         .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + messageId));
 
     message.update(request.newContent());
-    messageRepository.save(message);
 
-    return convertDto(message);
+    return messageMapper.toDto(message);
   }
 
   @Override
+  @Transactional
   public void deleteMessage(UUID id) {
-    Message message = messageRepository.findById(id)
-        .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + id));
-
-    if (message.getAttachmentIds() != null && !message.getAttachmentIds().isEmpty()) {
-      binaryContentRepository.deleteAllByIdIn(message.getAttachmentIds());
+    if (!messageRepository.existsById(id)) {
+      throw new NoSuchElementException("Message를 찾을 수 없습니다. " + id);
     }
 
-    messageRepository.delete(id);
-  }
-
-  private MessageDto convertDto(Message message) {
-    return new MessageDto(
-        message.getId(),
-        message.getChannelId(),
-        message.getAuthorId(),
-        message.getContent(),
-        message.getCreatedAt(),
-        message.getAttachmentIds()
-    );
+    //  CascadeType.ALL 및 orphanRemoval=true 설정
+    // 연관된 BinaryContent도 DB에서 자동으로 삭제됨
+    messageRepository.deleteById(id);
   }
 }

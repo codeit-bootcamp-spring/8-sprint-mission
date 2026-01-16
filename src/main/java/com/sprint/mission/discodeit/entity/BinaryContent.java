@@ -3,11 +3,12 @@ package com.sprint.mission.discodeit.entity;
 import com.sprint.mission.discodeit.entity.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /*
     파일 하나를 표현하는 순수한 데이터 덩어리
@@ -36,8 +37,8 @@ public class BinaryContent extends BaseEntity {
   @Column(name = "content_type", nullable = false, length = 100)
   private String contentType;
 
-  @Lob // 대용량 바이너리 데이터(bytea) 매핑
-  @Column(nullable = false)
+  @JdbcTypeCode(SqlTypes.BINARY) // 또는 SqlTypes.VARBINARY
+  @Column(name = "bytes", nullable = false, columnDefinition = "bytea")
   private byte[] bytes;
 
   public BinaryContent(String fileName, Long size, String contentType, byte[] bytes) {

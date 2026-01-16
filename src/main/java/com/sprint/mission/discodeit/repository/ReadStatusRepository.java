@@ -18,13 +18,13 @@ import org.springframework.data.repository.query.Param;
  */
 public interface ReadStatusRepository extends JpaRepository<ReadStatus, UUID> {
 
-  List<ReadStatus> findAllByUserId(UUID userId);
+  List<ReadStatus> findAllByUser_Id(UUID userId);
 
-  List<ReadStatus> findAllByChannelId(UUID channelId);
+  List<ReadStatus> findAllByChannel_Id(UUID channelId);
 
-  Optional<ReadStatus> findByUserIdAndChannelId(UUID userId, UUID channelId);
+  Optional<ReadStatus> findByUser_IdAndChannel_Id(UUID userId, UUID channelId);
 
-  void deleteAllByChannelId(UUID channelId);
+  void deleteAllByChannel_Id(UUID channelId);
 
   @Query("SELECT DISTINCT rs.user FROM ReadStatus rs WHERE rs.channel.id = :channelId")
   List<User> findUsersByChannelId(@Param("channelId") UUID channelId);

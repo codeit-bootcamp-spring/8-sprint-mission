@@ -27,38 +27,40 @@ public class UserController implements UserApi {
   private final UserService userService;
   private final UserStatusService userStatusService;
 
-  // 유저 생성 (GET-only 미션 대응)
+  // 유저 생성
   @Override
   public ResponseEntity<UserDto> create(UserCreateRequest userCreateRequest,
       MultipartFile profile) {
-    BinaryContentCreateRequest profileImgRequest = convertProfileInfo(profile);
-    UserDto response = userService.create(userCreateRequest, profileImgRequest);
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    BinaryContentCreateRequest binaryRequest = toBinaryRequest(profile);
+
+    UserDto createdUser = userService.create(userCreateRequest, binaryRequest);
+    return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
   }
 
-  // 유저 수정 (GET-only 미션 대응)
+  // 유저 수정
   @Override
   public ResponseEntity<UserDto> update(UUID userId, UserUpdateRequest userUpdateRequest,
       MultipartFile profile) {
-    BinaryContentCreateRequest profileImgRequest = convertProfileInfo(profile);
-    UserDto response = userService.update(userId, userUpdateRequest, profileImgRequest);
-    return ResponseEntity.ok(response);
+    BinaryContentCreateRequest binaryRequest = toBinaryRequest(profile);
+
+    UserDto updatedUser = userService.update(userId, userUpdateRequest, binaryRequest);
+    return ResponseEntity.ok(updatedUser);
   }
 
-  // 유저 삭제 (GET-only 미션 대응)
+  // 유저 삭제
   @Override
   public ResponseEntity<Void> delete(UUID userId) {
     userService.delete(userId);
     return ResponseEntity.noContent().build();
   }
 
-  // 유저 다건 조회 (GET-only 미션 대응)
+  // 유저 다건 조회
   @Override
   public ResponseEntity<List<UserDto>> findAll() {
     return ResponseEntity.ok(userService.findAll());
   }
 
-  // 사용자 온라인 상태 업데이트 (GET-only 미션 대응)
+  // 사용자 온라인 상태 업데이트
   @Override
   public ResponseEntity<UserStatusDto> updateUserStatusByUserId(UUID userId,
       UserStatusUpdateRequest request) {
@@ -67,19 +69,19 @@ public class UserController implements UserApi {
     return ResponseEntity.ok(response);
   }
 
-  // MultipartFile -> BinaryContentCreateRequest DTO로 변환 메서드
-  private BinaryContentCreateRequest convertProfileInfo(MultipartFile file) {
+  private BinaryContentCreateRequest toBinaryRequest(MultipartFile file) {
     if (file == null || file.isEmpty()) {
       return null;
     }
     try {
       return new BinaryContentCreateRequest(
           file.getOriginalFilename(),
+          file.getSize(),
           file.getContentType(),
           file.getBytes()
       );
     } catch (IOException e) {
-      throw new RuntimeException("프로필 이미지를 처리할 수 없습니다.", e);
+      throw new IllegalArgumentException("프로필 이미지를 처리할 수 없습니다.", e);
     }
   }
 

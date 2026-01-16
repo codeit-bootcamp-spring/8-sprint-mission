@@ -7,8 +7,9 @@ package com.sprint.mission.discodeit.dto.binarycontent;
 
     [필드 설명]
     • fileName          : 파일 이름
-    • bytes             : 파일 데이터를 byte 배열로 표현
+    • size              : 파일 사이즈
     • contentType       : 파일의 타입
+    • bytes             : 파일 데이터를 byte 배열로 표현
  */
 public record BinaryContentCreateRequest(
     String fileName,

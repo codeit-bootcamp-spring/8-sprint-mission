@@ -13,14 +13,9 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-
-discodeit:
-  repository:
-    type: file # jcf | file
-    file-directory: .discodeit
 

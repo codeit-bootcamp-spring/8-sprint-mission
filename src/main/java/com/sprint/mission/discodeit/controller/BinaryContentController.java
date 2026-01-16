@@ -28,8 +28,7 @@ public class BinaryContentController implements BinaryContentApi {
   // 바이너리 파일 단건 조회 (GET-only 미션 대응)
   @Override
   public ResponseEntity<BinaryContentDto> find(UUID binaryContentId) {
-    BinaryContentDto response = binaryContentService.findById(binaryContentId);
-    return ResponseEntity.ok(response);
+    return ResponseEntity.ok(binaryContentService.findById(binaryContentId));
   }
 
   // 추가 방식: 실제 파일 다운로드용
@@ -39,8 +38,7 @@ public class BinaryContentController implements BinaryContentApi {
 
     BinaryContentDto response = binaryContentService.findById(binaryContentId);
 
-    byte[] fileBytes = response.bytes();
-    Resource resource = new ByteArrayResource(fileBytes);
+    Resource resource = new ByteArrayResource(response.bytes());
 
     // 파일명 인코딩
     String encodedFileName = UriUtils.encode(response.fileName(), StandardCharsets.UTF_8);
@@ -56,8 +54,6 @@ public class BinaryContentController implements BinaryContentApi {
   // 바이너리 파일 다건 조회 (GET-only 미션 대응)
   @Override
   public ResponseEntity<List<BinaryContentDto>> findAllByIdIn(List<UUID> binaryContentIds) {
-    List<BinaryContentDto> response = binaryContentService.findAllByIdIn(binaryContentIds);
-    return ResponseEntity.ok(response);
+    return ResponseEntity.ok(binaryContentService.findAllByIdIn(binaryContentIds));
   }
-
 }
