@@ -5,7 +5,9 @@ import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,8 +34,8 @@ public class JCFBinaryContentRepository implements BinaryContentRepository {
     }
 
     @Override
-    public java.util.List<BinaryContent> findAll() {
-        return new java.util.ArrayList<>(database.values());
+    public List<BinaryContent> findAll() {
+        return new ArrayList<>(database.values());
     }
 
     @Override
