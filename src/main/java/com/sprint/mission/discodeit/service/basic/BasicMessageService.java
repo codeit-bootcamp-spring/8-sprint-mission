@@ -1,5 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateRequest;
+import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.message.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.message.MessageDto;
 import com.sprint.mission.discodeit.dto.message.MessageUpdateRequest;
@@ -8,9 +10,11 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
+import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.MessageService;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -29,22 +33,28 @@ public class BasicMessageService implements MessageService {
   private final UserRepository userRepository;
   private final MessageMapper messageMapper;
 
+  private final BinaryContentService binaryContentService;
+  private final BinaryContentRepository binaryContentRepository;
+
   @Override
   @Transactional
   public MessageDto createMessage(MessageCreateRequest request) {
 
     // 채널, 유저 존재 검사
-    Channel channel = channelRepository.findById(request.channelId())
-        .orElseThrow(
-            () -> new NoSuchElementException("Channel을 찾을 수 없습니다. " + request.channelId()));
+    Channel channel = channelRepository.findById(request.channelId()).orElseThrow(
+        () -> new NoSuchElementException("Channel을 찾을 수 없습니다. " + request.channelId()));
 
     User author = userRepository.findById(request.authorId())
         .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + request.authorId()));
 
     // 첨부파일 엔티티 - CascadeType.ALL 설정 -> save 호출 안해도 됨
-    List<BinaryContent> attachments = request.attachments().stream()
-        .map(req -> new BinaryContent(req.fileName(), req.size(), req.contentType(), req.bytes()))
-        .toList();
+    List<BinaryContent> attachments = (request.attachments() == null
+        ? List.<BinaryContentCreateRequest>of() : request.attachments()).stream()
+        .filter(r -> r.bytes() != null && r.bytes().length > 0).map(r -> {
+          BinaryContentDto dto = binaryContentService.create(r);
+          return binaryContentRepository.findById(dto.id()).orElseThrow(
+              () -> new IllegalStateException("방금 저장된 BinaryContent가 DB에 없습니다: " + dto.id()));
+        }).toList();
 
     // Message 엔티티 생성 및 저장
     Message message = new Message(author, channel, request.content(), attachments);
@@ -55,15 +65,13 @@ public class BasicMessageService implements MessageService {
 
   @Override
   public MessageDto findMessage(UUID id) {
-    return messageRepository.findById(id)
-        .map(messageMapper::toDto)
+    return messageRepository.findById(id).map(messageMapper::toDto)
         .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + id));
   }
 
   @Override
   public List<MessageDto> findAllByChannelId(UUID channelId) {
-    return messageRepository.findAllByChannel_Id(channelId).stream()
-        .map(messageMapper::toDto)
+    return messageRepository.findAllByChannel_Id(channelId).stream().map(messageMapper::toDto)
         .toList();
   }
 

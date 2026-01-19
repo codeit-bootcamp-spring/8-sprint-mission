@@ -19,3 +19,8 @@ spring:
       hibernate:
         format_sql: true
 
+discodeit:
+  storage:
+    type: local
+    local:
+      root-path: C:\myWs\uploadedFiles

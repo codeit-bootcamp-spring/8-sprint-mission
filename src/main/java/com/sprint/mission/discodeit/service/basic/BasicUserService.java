@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateRequest;
+import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
@@ -8,7 +9,9 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.mapper.UserMapper;
+import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.UserService;
 import java.time.Instant;
 import java.util.List;
@@ -25,6 +28,8 @@ public class BasicUserService implements UserService {
 
   private final UserRepository userRepository;
   private final UserMapper userMapper;
+  private final BinaryContentService binaryContentService;
+  private final BinaryContentRepository binaryContentRepository;
 
   @Override
   @Transactional
@@ -118,10 +123,15 @@ public class BasicUserService implements UserService {
   }
 
   private BinaryContent createBinaryContent(BinaryContentCreateRequest request) {
+
     if (request == null || request.bytes() == null) {
       return null;
     }
-    return new BinaryContent(request.fileName(), request.size(), request.contentType(),
-        request.bytes());
+
+    BinaryContentDto dto = binaryContentService.create(request);
+
+    return binaryContentRepository.findById(dto.id())
+        .orElseThrow(
+            () -> new IllegalStateException("방금 저장된 BinaryContent가 DB에 없습니다: " + dto.id()));
   }
 }

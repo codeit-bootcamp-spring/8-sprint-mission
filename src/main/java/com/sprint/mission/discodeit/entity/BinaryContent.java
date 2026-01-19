@@ -7,8 +7,6 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 /*
     파일 하나를 표현하는 순수한 데이터 덩어리
@@ -37,14 +35,9 @@ public class BinaryContent extends BaseEntity {
   @Column(name = "content_type", nullable = false, length = 100)
   private String contentType;
 
-  @JdbcTypeCode(SqlTypes.BINARY) // 또는 SqlTypes.VARBINARY
-  @Column(name = "bytes", nullable = false, columnDefinition = "bytea")
-  private byte[] bytes;
-
-  public BinaryContent(String fileName, Long size, String contentType, byte[] bytes) {
+  public BinaryContent(String fileName, Long size, String contentType) {
     this.fileName = fileName;
     this.size = size;
     this.contentType = contentType;
-    this.bytes = bytes != null ? bytes.clone() : null;
   }
 }

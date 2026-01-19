@@ -92,3 +92,8 @@ CREATE TABLE message_attachments
     CONSTRAINT fk_attachments_binary FOREIGN KEY (attachment_id)
         REFERENCES binary_contents (id) ON DELETE CASCADE
 );
+
+
+-- 9. BinaryContent에서 bytes 제거 -> DB에서도 제거
+ALTER TABLE binary_contents
+    DROP COLUMN bytes;

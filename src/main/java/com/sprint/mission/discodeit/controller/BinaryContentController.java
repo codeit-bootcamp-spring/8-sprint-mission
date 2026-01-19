@@ -3,20 +3,15 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.api.BinaryContentApi;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentDto;
 import com.sprint.mission.discodeit.service.BinaryContentService;
-import java.nio.charset.StandardCharsets;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.util.UriUtils;
 
 @RestController
 @RequestMapping("/api/binaryContents")
@@ -24,6 +19,7 @@ import org.springframework.web.util.UriUtils;
 public class BinaryContentController implements BinaryContentApi {
 
   private final BinaryContentService binaryContentService;
+  private final BinaryContentStorage binaryContentStorage;
 
   // 바이너리 파일 단건 조회 (GET-only 미션 대응)
   @Override
@@ -33,21 +29,12 @@ public class BinaryContentController implements BinaryContentApi {
 
   // 추가 방식: 실제 파일 다운로드용
   @GetMapping("{binaryContentId}/download")
-  public ResponseEntity<Resource> download(
+  public ResponseEntity<?> download(
       @PathVariable UUID binaryContentId) {
 
-    BinaryContentDto response = binaryContentService.findById(binaryContentId);
+    BinaryContentDto dto = binaryContentService.findById(binaryContentId);
 
-    Resource resource = new ByteArrayResource(response.bytes());
-
-    // 파일명 인코딩
-    String encodedFileName = UriUtils.encode(response.fileName(), StandardCharsets.UTF_8);
-
-    return ResponseEntity.ok()
-        .contentType(MediaType.parseMediaType(response.contentType()))
-        .header(HttpHeaders.CONTENT_DISPOSITION,
-            "attachment; filename=\"" + encodedFileName + "\"; filename*=UTF-8''" + encodedFileName)
-        .body(resource);
+    return binaryContentStorage.download(dto);
   }
 
 
