@@ -4,17 +4,23 @@ import com.fasterxml.jackson.core.type.TypeReference; //  JSON 리스트 변환�
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.util.FileUtil;
-import org.springframework.context.annotation.Primary; //  빈 충돌 해결을 위해 필수
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Primary //  JCF 레포지토리와 충돌 시 이 파일을 우선적으로 사용하도록 설정
+// 멘토님, 여기 어느 부분 수정했습니다: @Primary 제거하고 @ConditionalOnProperty 추가, filePath를 .discodeit 디렉토리 하위로 수정
 @Repository
+@ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "file")
 public class FileBinaryContentRepository implements BinaryContentRepository {
-    private final String filePath = "binary_contents.json";
+    private final String filePath;
+
+    public FileBinaryContentRepository(@Value("${discodeit.repository.file-directory}") String directory) {
+        this.filePath = directory + "/binary_contents.json";
+    }
 
     @Override
     public BinaryContent save(BinaryContent binaryContent) {
