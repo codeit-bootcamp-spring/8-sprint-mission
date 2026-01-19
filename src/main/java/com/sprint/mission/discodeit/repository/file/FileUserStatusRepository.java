@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.repository.file;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.util.FileUtil;
@@ -41,7 +40,7 @@ public class FileUserStatusRepository implements UserStatusRepository {
 
     @Override
     public List<UserStatus> findAll() {
-        return FileUtil.readListFromFile(filePath, new TypeReference<List<UserStatus>>() {});
+        return FileUtil.readListFromFile(filePath, UserStatus.class);
     }
 
     @Override

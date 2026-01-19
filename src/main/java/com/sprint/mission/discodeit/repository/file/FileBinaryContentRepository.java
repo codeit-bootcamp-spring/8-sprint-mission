@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.repository.file;
 
-import com.fasterxml.jackson.core.type.TypeReference; //  JSON 리스트 변환을 위해 필수
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.util.FileUtil;
@@ -44,10 +43,7 @@ public class FileBinaryContentRepository implements BinaryContentRepository {
 
   @Override
   public List<BinaryContent> findAll() {
-    //  readListFromFile과 TypeReference를 사용하여 List<BinaryContent> 타입을 명시적으로 반환
-    // 이를 통해 Service 레이어의 .stream() 컴파일 에러를 해결합니다.
-    return FileUtil.readListFromFile(filePath, new TypeReference<List<BinaryContent>>() {
-    });
+    return FileUtil.readListFromFile(filePath, BinaryContent.class);
   }
 
   @Override

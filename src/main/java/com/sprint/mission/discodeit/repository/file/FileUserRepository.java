@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.repository.file;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.util.FileUtil;
@@ -44,7 +43,7 @@ public class FileUserRepository implements UserRepository {
 
     @Override
     public List<User> findAll() {
-        return FileUtil.readListFromFile(filePath, new TypeReference<List<User>>() {});
+        return FileUtil.readListFromFile(filePath, User.class);
     }
 
     @Override

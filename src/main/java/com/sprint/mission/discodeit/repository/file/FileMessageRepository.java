@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.repository.file;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.util.FileUtil;
@@ -38,7 +37,7 @@ public class FileMessageRepository implements MessageRepository {
 
     @Override
     public List<Message> findAll() {
-        return FileUtil.readListFromFile(filePath, new TypeReference<List<Message>>() {});
+        return FileUtil.readListFromFile(filePath, Message.class);
     }
 
     @Override

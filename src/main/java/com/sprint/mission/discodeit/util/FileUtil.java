@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.util;
 
-import com.fasterxml.jackson.core.type.TypeReference; // 추가
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.File;
 import java.io.IOException;
@@ -32,13 +32,19 @@ public class FileUtil {
     }
 
     //  리스트 형태의 데이터를 읽기 위한 전용 메서드 추가
-    public static <T> List<T> readListFromFile(String filePath, TypeReference<List<T>> typeReference) {
+    public static <T> List<T> readListFromFile(String filePath, Class<T> clazz) {
+        File file = new File(filePath);
+        if (!file.exists()) return new ArrayList<>();
+
         try {
-            File file = new File(filePath);
-            if (!file.exists()) return new ArrayList<>();
-            return objectMapper.readValue(file, typeReference);
+            // Class<T>를 기반으로 List<T> 타입을 동적으로 생성
+            CollectionType listType = objectMapper.getTypeFactory()
+                    .constructCollectionType(List.class, clazz);
+            
+            return objectMapper.readValue(file, listType);
         } catch (IOException e) {
-            throw new RuntimeException("파일 리스트 읽기 실패", e);
+            throw new RuntimeException(String.format("파일 리스트 읽기 실패: %s (타입: %s)", 
+                    filePath, clazz.getSimpleName()), e);
         }
     }
 
