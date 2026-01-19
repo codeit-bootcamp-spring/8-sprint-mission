@@ -31,8 +31,14 @@ public class ChannelController {
      * Public Channel 생성
      * POST /api/channels/public
      */
-    @RequestMapping(value = "/public", method = RequestMethod.POST)
-    public ChannelResponse createPublic(@RequestBody ChannelCreateRequest request) {
+    @RequestMapping(value = "/public", method = RequestMethod.POST, consumes = {"application/json", "multipart/form-data"})
+    public ChannelResponse createPublic(@RequestPart(value = "channelCreateRequest", required = false) ChannelCreateRequest requestPart,
+                                       @RequestBody(required = false) ChannelCreateRequest requestBody) {
+        // multipart/form-data로 오는 경우와 JSON으로 오는 경우 모두 처리
+        ChannelCreateRequest request = requestPart != null ? requestPart : requestBody;
+        if (request == null) {
+            throw new IllegalArgumentException("ChannelCreateRequest가 필요합니다.");
+        }
         return channelService.createPublic(request);
     }
 
@@ -40,8 +46,14 @@ public class ChannelController {
      * Private Channel 생성
      * POST /api/channels/private
      */
-    @RequestMapping(value = "/private", method = RequestMethod.POST)
-    public ChannelResponse createPrivate(@RequestBody ChannelCreateRequest request) {
+    @RequestMapping(value = "/private", method = RequestMethod.POST, consumes = {"application/json", "multipart/form-data"})
+    public ChannelResponse createPrivate(@RequestPart(value = "channelCreateRequest", required = false) ChannelCreateRequest requestPart,
+                                        @RequestBody(required = false) ChannelCreateRequest requestBody) {
+        // multipart/form-data로 오는 경우와 JSON으로 오는 경우 모두 처리
+        ChannelCreateRequest request = requestPart != null ? requestPart : requestBody;
+        if (request == null) {
+            throw new IllegalArgumentException("ChannelCreateRequest가 필요합니다.");
+        }
         return channelService.createPrivate(request);
     }
 

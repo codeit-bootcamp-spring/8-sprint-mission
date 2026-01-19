@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.repository.jcf;
 
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
@@ -10,6 +11,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
+@ConditionalOnProperty(
+        name = "discodeit.repository.type",
+        havingValue = "jcf",
+        matchIfMissing = true
+)
 public class JCFBinaryContentRepository implements BinaryContentRepository {
     // 메모리에 BinaryContent를 저장할 Map
     private final Map<UUID, BinaryContent> database = new HashMap<>();
@@ -26,10 +32,12 @@ public class JCFBinaryContentRepository implements BinaryContentRepository {
     }
 
     @Override
-    public Object findAll() {
+    public java.util.List<BinaryContent> findAll() {
+        return new java.util.ArrayList<>(database.values());
     }
 
     @Override
     public void delete(UUID id) {
+        database.remove(id);
     }
 }

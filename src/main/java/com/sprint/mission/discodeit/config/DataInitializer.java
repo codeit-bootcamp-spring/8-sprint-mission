@@ -61,11 +61,58 @@ public class DataInitializer {
             }
         }
 
-        // 모든 사용자에게 랜덤 프로필 이미지 배정
-        assignRandomProfileImages();
+        // 모든 사용자에게 이름에 맞는 프로필 이미지 할당 (기존 이미지가 있어도 재할당)
+        assignProfileImagesToAllUsers();
     }
 
-    private void assignRandomProfileImages() {
+    /**
+     * 특정 사용자에게 이름에 맞는 프로필 이미지 할당
+     */
+    private void assignProfileImageToUser(java.util.UUID userId, String userName) {
+        // 사용자 이름에 맞는 이미지 파일 선택
+        String imageFileName = getImageFileNameForUser(userName);
+        
+        try {
+            // static/images 폴더에서 이미지 파일 읽기
+            org.springframework.core.io.ClassPathResource resource = 
+                    new org.springframework.core.io.ClassPathResource("static/images/" + imageFileName);
+            
+            if (!resource.exists()) {
+                resource = new org.springframework.core.io.ClassPathResource("static/images/default-avatar.png");
+            }
+            
+            byte[] imageBytes = resource.getInputStream().readAllBytes();
+            String base64Bytes = java.util.Base64.getEncoder().encodeToString(imageBytes);
+            
+            // BinaryContent 생성
+            BinaryContentCreateRequest binaryRequest = new BinaryContentCreateRequest(
+                    imageFileName,
+                    "image/png",
+                    (long) imageBytes.length,
+                    base64Bytes
+            );
+            
+            var binaryContent = binaryContentService.create(binaryRequest);
+            
+            // 사용자 프로필 이미지 업데이트
+            UserUpdateRequest updateRequest = new UserUpdateRequest(
+                    userId,
+                    null, // name 변경 없음
+                    null, // password 변경 없음
+                    null, // profileImage (사용 안 함)
+                    binaryContent.getId() // profileId 설정
+            );
+            
+            userService.update(updateRequest);
+        } catch (Exception e) {
+            throw new RuntimeException("프로필 이미지 할당 실패: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 모든 사용자에게 이름에 맞는 프로필 이미지 할당 (강제 재할당)
+     */
+    private void assignProfileImagesToAllUsers() {
         List<com.sprint.mission.discodeit.dto.UserResponse> users = userService.findAll();
         
         for (var user : users) {
@@ -73,24 +120,28 @@ public class DataInitializer {
                 // 사용자 이름에 맞는 이미지 파일 선택
                 String imageFileName = getImageFileNameForUser(user.getName());
                 
-                // 이미지 파일 읽기
-                ClassPathResource resource = new ClassPathResource("static/images/" + imageFileName);
-                byte[] imageBytes;
-                try (InputStream inputStream = resource.getInputStream()) {
-                    imageBytes = inputStream.readAllBytes();
+                // static/images 폴더에서 이미지 파일 읽기
+                org.springframework.core.io.ClassPathResource resource = 
+                        new org.springframework.core.io.ClassPathResource("static/images/" + imageFileName);
+                
+                if (!resource.exists()) {
+                    resource = new org.springframework.core.io.ClassPathResource("static/images/default-avatar.png");
                 }
+                
+                byte[] imageBytes = resource.getInputStream().readAllBytes();
+                String base64Bytes = java.util.Base64.getEncoder().encodeToString(imageBytes);
                 
                 // BinaryContent 생성
                 BinaryContentCreateRequest binaryRequest = new BinaryContentCreateRequest(
                         imageFileName,
                         "image/png",
                         (long) imageBytes.length,
-                        Base64.getEncoder().encodeToString(imageBytes)
+                        base64Bytes
                 );
                 
                 var binaryContent = binaryContentService.create(binaryRequest);
                 
-                // 사용자 프로필 이미지 업데이트
+                // 사용자 프로필 이미지 업데이트 (기존 이미지가 있어도 재할당)
                 UserUpdateRequest updateRequest = new UserUpdateRequest(
                         user.getId(),
                         null, // name 변경 없음
@@ -100,6 +151,7 @@ public class DataInitializer {
                 );
                 
                 userService.update(updateRequest);
+                System.out.println("프로필 이미지 배정 완료 (사용자: " + user.getName() + ", 이미지: " + imageFileName + ")");
             } catch (Exception e) {
                 System.err.println("프로필 이미지 배정 실패 (사용자 ID: " + user.getId() + ", 이름: " + user.getName() + "): " + e.getMessage());
                 e.printStackTrace();

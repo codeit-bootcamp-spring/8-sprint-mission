@@ -19,10 +19,15 @@ public class FileUtil {
 
     public static <T> void saveToFile(File file, T data) {
         try {
+            // 디렉토리가 없으면 생성
+            File parentDir = file.getParentFile();
+            if (parentDir != null && !parentDir.exists()) {
+                parentDir.mkdirs();
+            }
             // [멘토 피드백 반영] Thread.sleep(100) 제거
             objectMapper.writeValue(file, data);
         } catch (IOException e) {
-            throw new RuntimeException("파일 저장 실패", e);
+            throw new RuntimeException("파일 저장 실패: " + file.getAbsolutePath(), e);
         }
     }
 

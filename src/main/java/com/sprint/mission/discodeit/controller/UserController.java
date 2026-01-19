@@ -1,11 +1,13 @@
 package com.sprint.mission.discodeit.controller;
 
+import com.sprint.mission.discodeit.dto.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.UserResponse;
 import com.sprint.mission.discodeit.dto.UserStatusRequest;
 import com.sprint.mission.discodeit.dto.UserStatusResponse;
 import com.sprint.mission.discodeit.dto.UserUpdateRequest;
+import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.UserStatusService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class UserController {
 
   private final UserService userService;
   private final UserStatusService userStatusService;
+  private final BinaryContentService binaryContentService;
 
   /**
    * 모든 사용자 조회 GET /api/users
@@ -58,6 +61,23 @@ public class UserController {
   public ResponseEntity<UserResponse> createMultipart(
       @RequestPart("userCreateRequest") UserCreateRequest userCreateRequest,
       @RequestPart(value = "profile", required = false) MultipartFile profile) {
+    
+    // 프로필 이미지 파일이 있는 경우 처리
+    if (profile != null && !profile.isEmpty()) {
+      try {
+        byte[] fileBytes = profile.getBytes();
+        String base64Bytes = java.util.Base64.getEncoder().encodeToString(fileBytes);
+        
+        // UserCreateRequest에 프로필 이미지 정보 설정
+        userCreateRequest.setFileName(profile.getOriginalFilename());
+        userCreateRequest.setFileType(profile.getContentType() != null ? profile.getContentType() : "image/png");
+        userCreateRequest.setFileSize(profile.getSize());
+        userCreateRequest.setProfileImage(base64Bytes);
+      } catch (Exception e) {
+        throw new RuntimeException("프로필 이미지 처리 중 오류가 발생했습니다: " + e.getMessage(), e);
+      }
+    }
+    
     return ResponseEntity.ok(userService.create(userCreateRequest));
   }
   
@@ -70,17 +90,64 @@ public class UserController {
   }
 
   /**
-   * User 정보 수정 PATCH /api/users/{userId}
+   * User 정보 수정 PATCH /api/users/{userId} (multipart/form-data - 이미지 포함 가능)
    */
-  @RequestMapping(value = "/{userId}", method = RequestMethod.PATCH)
-  public ResponseEntity<UserResponse> update(@PathVariable UUID userId,
-      @RequestBody UserUpdateRequest request) {
+  @RequestMapping(value = "/{userId}", method = RequestMethod.PATCH, consumes = "multipart/form-data")
+  public ResponseEntity<UserResponse> updateMultipart(
+      @PathVariable UUID userId,
+      @RequestPart(value = "userUpdateRequest", required = false) UserUpdateRequest requestPart,
+      @RequestPart(value = "profile", required = false) MultipartFile profile) {
+    
+    // userUpdateRequest가 없으면 기본 객체 생성
+    UserUpdateRequest actualRequest = requestPart != null ? requestPart : new UserUpdateRequest(userId, null, null, null, null);
+    
+    UUID profileId = actualRequest.getProfileId();
+    
+    // 프로필 이미지 파일이 있는 경우 BinaryContent로 저장하고 profileId 설정
+    if (profile != null && !profile.isEmpty()) {
+      try {
+        byte[] fileBytes = profile.getBytes();
+        String base64Bytes = java.util.Base64.getEncoder().encodeToString(fileBytes);
+        
+        BinaryContentCreateRequest binaryRequest = new BinaryContentCreateRequest(
+            profile.getOriginalFilename(),
+            profile.getContentType() != null ? profile.getContentType() : "image/png",
+            profile.getSize(),
+            base64Bytes
+        );
+        var binaryContent = binaryContentService.create(binaryRequest);
+        profileId = binaryContent.getId();
+      } catch (Exception e) {
+        throw new RuntimeException("프로필 이미지 처리 중 오류가 발생했습니다: " + e.getMessage(), e);
+      }
+    }
+    
     // 경로 파라미터의 userId를 사용하여 UserUpdateRequest 생성
     UserUpdateRequest updateRequest = new UserUpdateRequest(
         userId,
-        request.getName(),
-        request.getPassword(),
-        request.getProfileImage()
+        actualRequest.getName(),
+        actualRequest.getPassword(),
+        actualRequest.getProfileImage(),
+        profileId != null ? profileId : actualRequest.getProfileId()
+    );
+    return ResponseEntity.ok(userService.update(updateRequest));
+  }
+
+  /**
+   * User 정보 수정 PATCH /api/users/{userId} (application/json - 이미지 없음)
+   */
+  @RequestMapping(value = "/{userId}", method = RequestMethod.PATCH, consumes = "application/json")
+  public ResponseEntity<UserResponse> updateJson(
+      @PathVariable UUID userId,
+      @RequestBody UserUpdateRequest requestBody) {
+    
+    // 경로 파라미터의 userId를 사용하여 UserUpdateRequest 생성
+    UserUpdateRequest updateRequest = new UserUpdateRequest(
+        userId,
+        requestBody.getName(),
+        requestBody.getPassword(),
+        requestBody.getProfileImage(),
+        requestBody.getProfileId()
     );
     return ResponseEntity.ok(userService.update(updateRequest));
   }

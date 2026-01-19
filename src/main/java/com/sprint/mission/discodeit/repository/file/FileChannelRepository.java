@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.repository.file;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.util.FileUtil;
@@ -37,7 +38,7 @@ public class FileChannelRepository implements ChannelRepository {
 
     @Override
     public List<Channel> findAll() {
-        return Collections.singletonList(FileUtil.readFromFile(filePath, Channel.class));
+        return FileUtil.readListFromFile(filePath, new TypeReference<List<Channel>>() {});
     }
 
     @Override

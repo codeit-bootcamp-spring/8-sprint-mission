@@ -49,37 +49,20 @@ public class BasicAuthService implements AuthService {
 
     @Override
     public UserResponse login(LoginRequest request) {
-        // API 스펙에 따라 username으로 로그인 (User 엔티티의 name 필드와 매칭)
-        String username = request.getUsername();
+        // username 필드에 이메일 또는 사용자명이 올 수 있음
+        String usernameOrEmail = request.getUsername();
         String password = request.getPassword();
         
-        if (username == null || username.isEmpty()) {
-            throw new IllegalArgumentException("사용자명을 입력해주세요.");
+        if (usernameOrEmail == null || usernameOrEmail.isEmpty()) {
+            throw new IllegalArgumentException("사용자명 또는 이메일을 입력해주세요.");
         }
         if (password == null || password.isEmpty()) {
             throw new IllegalArgumentException("비밀번호를 입력해주세요.");
         }
         
-        // 1. [인증] 사용자명(username/name)으로 사용자 조회
-        User user = userRepository.findAll().stream()
-                .filter(u -> u.getName() != null && u.getName().equals(username))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자명입니다."));
-
-        // 2. [인증] 비밀번호 검증
-        if (user.getPassword() == null || !user.getPassword().equals(password)) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
-        }
-
-        // 3. [상태 관리] 온라인 상태 업데이트
-        UserStatus status = userStatusRepository.findByUserId(user.getId())
-                .orElseGet(() -> userStatusRepository.save(new UserStatus(user.getId())));
-
-        status.updateLastAccessAt();
-        userStatusRepository.save(status);
-
-        // 4. 응답 DTO 변환 및 반환
-        return convertToResponse(user, status);
+        // 기존 login(String email, String password) 메서드 재사용
+        // (이메일 또는 이름 모두 처리 가능)
+        return login(usernameOrEmail, password);
     }
 
     /**
