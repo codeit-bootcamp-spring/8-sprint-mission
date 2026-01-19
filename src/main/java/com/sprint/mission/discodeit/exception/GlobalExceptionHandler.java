@@ -1,11 +1,13 @@
 package com.sprint.mission.discodeit.exception;
 
 import com.sprint.mission.discodeit.dto.ErrorResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+@Slf4j
 @RestControllerAdvice //  전역 예외 처리기 지정
 public class GlobalExceptionHandler {
 
@@ -24,7 +26,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception e) {
-        e.printStackTrace(); // 서버 콘솔에 에러 메시지 출력
+        log.error("서버 내부 오류 발생", e);
         ErrorResponse response = new ErrorResponse("서버 내부 오류가 발생했습니다: " + e.getMessage(), "INTERNAL_SERVER_ERROR");
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
