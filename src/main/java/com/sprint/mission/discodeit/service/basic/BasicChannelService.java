@@ -3,7 +3,6 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.ChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.ChannelResponse;
 import com.sprint.mission.discodeit.dto.ChannelUpdateRequest;
-import com.sprint.mission.discodeit.dto.ReadStatusCreateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
@@ -11,11 +10,9 @@ import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
-import com.sprint.mission.discodeit.service.ReadStatusService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +27,6 @@ public class BasicChannelService implements ChannelService {
     private final ChannelRepository channelRepository;
     private final MessageRepository messageRepository; // 연관 데이터 삭제를 위해 주입
     private final ReadStatusRepository readStatusRepository; // 사용자별 채널 조회를 위해 주입
-    private final ReadStatusService readStatusService; // ReadStatus 생성을 위해 주입
 
     @Override
     public ChannelResponse create(String name, String description) {
@@ -126,20 +122,10 @@ public class BasicChannelService implements ChannelService {
             allParticipantIds.add(request.getOwnerId());
         }
         
-        // 각 참여자에 대해 ReadStatus 생성
-        for (UUID participantId : allParticipantIds) {
-            try {
-                ReadStatusCreateRequest readStatusRequest = new ReadStatusCreateRequest(
-                        participantId,
-                        savedChannel.getId(),
-                        null // lastReadMessageId는 null (아직 메시지가 없음)
-                );
-                readStatusService.create(readStatusRequest);
-            } catch (IllegalStateException e) {
-                // 이미 ReadStatus가 존재하는 경우 무시 (중복 생성 방지)
-                // 이는 이미 해당 사용자가 채널에 참여하고 있다는 의미
-            }
-        }
+        // 각 참여자에 대해 ReadStatus 생성 (채널 생성 시간을 lastReadAt으로 설정)
+        allParticipantIds.stream()
+                .map(userId -> new ReadStatus(userId, savedChannel.getId(), savedChannel.getCreatedAt()))
+                .forEach(readStatusRepository::save);
         
         return convertToResponse(savedChannel);
     }
