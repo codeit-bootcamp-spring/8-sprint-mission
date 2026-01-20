@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,7 +37,7 @@ public class FileMessageRepository implements MessageRepository {
 
     @Override
     public List<Message> findAll() {
-        return Collections.singletonList(FileUtil.readFromFile(filePath, Message.class));
+        return FileUtil.readListFromFile(filePath, Message.class);
     }
 
     @Override
@@ -65,6 +64,8 @@ public class FileMessageRepository implements MessageRepository {
 
     @Override
     public void deleteByChannelId(UUID channelId) {
-
+        List<Message> list = findAll();
+        list.removeIf(e -> e.getChannelId().equals(channelId));
+        FileUtil.saveToFile(filePath, list);
     }
 }

@@ -12,15 +12,25 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/readStatus")
+@RequestMapping("/api/readStatuses")
 @RequiredArgsConstructor
 public class ReadStatusController {
 
     private final ReadStatusService readStatusService;
 
     /**
-     * 읽음 상태 생성
-     * POST /api/readStatus
+     * User의 Message 읽음 상태 목록 조회
+     * GET /api/readStatuses?userId=...
+     */
+    @RequestMapping(method = RequestMethod.GET)
+    public ResponseEntity<List<ReadStatus>> findAllByUserId(@RequestParam UUID userId) {
+        List<ReadStatus> readStatuses = readStatusService.findAllByUserId(userId);
+        return ResponseEntity.ok(readStatuses);
+    }
+
+    /**
+     * Message 읽음 상태 생성
+     * POST /api/readStatuses
      */
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<ReadStatus> create(@RequestBody ReadStatusCreateRequest request) {
@@ -29,44 +39,16 @@ public class ReadStatusController {
     }
 
     /**
-     * ID로 읽음 상태 조회
-     * GET /api/readStatus/{id}
+     * Message 읽음 상태 수정
+     * PATCH /api/readStatuses/{readStatusId}
      */
-    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public ResponseEntity<ReadStatus> findById(@PathVariable UUID id) {
-        ReadStatus readStatus = readStatusService.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("읽음 상태를 찾을 수 없습니다."));
+    @RequestMapping(value = "/{readStatusId}", method = RequestMethod.PATCH)
+    public ResponseEntity<ReadStatus> update(@PathVariable UUID readStatusId, @RequestBody ReadStatusUpdateRequest request) {
+        // 경로 파라미터의 readStatusId를 사용하여 ReadStatusUpdateRequest 생성
+        ReadStatusUpdateRequest updateRequest = new ReadStatusUpdateRequest(readStatusId, request.getLastReadMessageId());
+        ReadStatus readStatus = readStatusService.update(updateRequest);
         return ResponseEntity.ok(readStatus);
-    }
-
-    /**
-     * 특정 유저의 모든 읽음 상태 조회
-     * GET /api/readStatus/user/{userId}
-     */
-    @RequestMapping(value = "/user/{userId}", method = RequestMethod.GET)
-    public ResponseEntity<List<ReadStatus>> findAllByUserId(@PathVariable UUID userId) {
-        List<ReadStatus> readStatuses = readStatusService.findAllByUserId(userId);
-        return ResponseEntity.ok(readStatuses);
-    }
-
-    /**
-     * 읽음 상태 업데이트
-     * PATCH /api/readStatus
-     */
-    @RequestMapping(method = RequestMethod.PATCH)
-    public ResponseEntity<ReadStatus> update(@RequestBody ReadStatusUpdateRequest request) {
-        ReadStatus readStatus = readStatusService.update(request);
-        return ResponseEntity.ok(readStatus);
-    }
-
-    /**
-     * 읽음 상태 삭제
-     * DELETE /api/readStatus/{id}
-     */
-    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        readStatusService.delete(id);
-        return ResponseEntity.noContent().build();
     }
 }
+
 

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BinaryContentCreateRequest {
     private String fileName;
-    private String fileType; // MIME 타입 (예: "image/png", "application/json")
-    private Long fileSize; // 파일 크기 (바이트 단위)
-    private String bytes; // Base64 인코딩된 바이너리 데이터 (선택적)
+    private String contentType;
+    private Long fileSize;
+    private String bytes; // Base64 encoded file data
 }

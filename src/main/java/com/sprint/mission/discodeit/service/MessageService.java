@@ -4,26 +4,24 @@ import com.sprint.mission.discodeit.dto.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.MessageResponse;
 import com.sprint.mission.discodeit.dto.MessageUpdateRequest;
 import com.sprint.mission.discodeit.entity.Message;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface MessageService {
-    // 고도화: DTO 활용
+
+    // DTO 기반 생성
     Message create(MessageCreateRequest request);
 
-    Optional<Message> findById(UUID id);
-
-    // 고도화: 특정 Channel의 Message 목록을 조회하도록 변경
-    List<Message> findAllByChannelId(UUID channelId);
-
-    // 고도화: DTO 활용
+    // DTO 기반 수정
     Message update(MessageUpdateRequest request);
 
-    void delete(UUID id);
-
-    MessageResponse create(String content, UUID authorId, UUID channelId);
-
+    Optional<Message> findById(UUID id);
+    List<Message> findAll();
+    List<Message> findAllByChannelId(UUID channelId);
+    
+    // Response DTO 반환 메서드
     List<MessageResponse> findByChannelId(UUID channelId);
+    
+    void delete(UUID id);
 }

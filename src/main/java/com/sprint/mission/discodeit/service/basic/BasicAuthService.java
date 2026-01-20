@@ -10,7 +10,6 @@ import com.sprint.mission.discodeit.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -22,14 +21,18 @@ public class BasicAuthService implements AuthService {
 
     @Override
     public UserResponse login(String email, String password) {
-        // 1. [인증] 이메일로 사용자 조회
-        User user = userRepository.findAll().stream()
-                .filter(u -> u.getEmail() != null && u.getEmail().equals(email))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다."));
+        // 1. [인증] 이메일 또는 사용자명으로 사용자 조회
+        User user = userRepository.findByEmail(email)
+                .orElseGet(() -> {
+                    // 이메일로 찾지 못하면 이름으로 시도 (프론트엔드 호환성)
+                    return userRepository.findAll().stream()
+                            .filter(u -> u.getName() != null && u.getName().equals(email))
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일 또는 사용자명입니다."));
+                });
 
         // 2. [인증] 비밀번호 검증 (UserService에 위임하지 않고 직접 수행)
-        if (!user.getPassword().equals(password)) {
+        if (user.getPassword() == null || !user.getPassword().equals(password)) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
@@ -46,7 +49,20 @@ public class BasicAuthService implements AuthService {
 
     @Override
     public UserResponse login(LoginRequest request) {
-        return null;
+        // username 필드에 이메일 또는 사용자명이 올 수 있음
+        String usernameOrEmail = request.getUsername();
+        String password = request.getPassword();
+        
+        if (usernameOrEmail == null || usernameOrEmail.isEmpty()) {
+            throw new IllegalArgumentException("사용자명 또는 이메일을 입력해주세요.");
+        }
+        if (password == null || password.isEmpty()) {
+            throw new IllegalArgumentException("비밀번호를 입력해주세요.");
+        }
+        
+        // 기존 login(String email, String password) 메서드 재사용
+        // (이메일 또는 이름 모두 처리 가능)
+        return login(usernameOrEmail, password);
     }
 
     /**

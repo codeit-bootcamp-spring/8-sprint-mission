@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.repository.file;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.util.FileUtil;
@@ -18,7 +17,7 @@ public class FileUserRepository implements UserRepository {
     private final String filePath;
 
     public FileUserRepository(@Value("${discodeit.repository.file-directory}") String directory) {
-        this.filePath = directory + "/users.json";
+        this.filePath = directory + "/user.json";
     }
 
     @Override
@@ -29,13 +28,6 @@ public class FileUserRepository implements UserRepository {
         FileUtil.saveToFile(filePath, list);
         return user;
     }
-    // 멘토님 피드백 반영: 이메일로 유저 찾기
-    @Override
-    public Optional<User> findByEmail(String email) {
-        return findAll().stream()
-                .filter(u -> u.getEmail().equals(email))
-                .findFirst();
-    }
 
     @Override
     public Optional<User> findById(UUID id) {
@@ -43,8 +35,15 @@ public class FileUserRepository implements UserRepository {
     }
 
     @Override
+    public Optional<User> findByEmail(String email) {
+        return findAll().stream()
+                .filter(e -> e.getEmail() != null && e.getEmail().equals(email))
+                .findFirst();
+    }
+
+    @Override
     public List<User> findAll() {
-        return FileUtil.readListFromFile(filePath, new TypeReference<List<User>>() {});
+        return FileUtil.readListFromFile(filePath, User.class);
     }
 
     @Override
@@ -56,11 +55,13 @@ public class FileUserRepository implements UserRepository {
 
     @Override
     public boolean existsByName(String name) {
-        return findAll().stream().anyMatch(u -> u.getName().equals(name));
+        return findAll().stream()
+                .anyMatch(e -> e.getName() != null && e.getName().equals(name));
     }
 
     @Override
     public boolean existsByEmail(String email) {
-        return findAll().stream().anyMatch(u -> u.getEmail().equals(email));
+        return findAll().stream()
+                .anyMatch(e -> e.getEmail() != null && e.getEmail().equals(email));
     }
 }

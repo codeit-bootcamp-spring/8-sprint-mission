@@ -1,51 +1,55 @@
 package com.sprint.mission.discodeit.repository.file;
 
-import com.fasterxml.jackson.core.type.TypeReference; //  JSON 리스트 변환을 위해 필수
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.util.FileUtil;
-import org.springframework.context.annotation.Primary; //  빈 충돌 해결을 위해 필수
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Primary //  JCF 레포지토리와 충돌 시 이 파일을 우선적으로 사용하도록 설정
 @Repository
+@ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "file")
 public class FileBinaryContentRepository implements BinaryContentRepository {
-    private final String filePath = "binary_contents.json";
 
-    @Override
-    public BinaryContent save(BinaryContent binaryContent) {
-        List<BinaryContent> list = findAll();
-        // 기존에 동일한 ID가 있다면 제거하고 새로 추가 (업데이트 로직)
-        list.removeIf(e -> e.getId().equals(binaryContent.getId()));
-        list.add(binaryContent);
+  private final String filePath;
 
-        // FileUtil을 사용하여 파일에 저장 (Thread.sleep 없음)
-        FileUtil.saveToFile(filePath, list);
-        return binaryContent;
-    }
+  public FileBinaryContentRepository(
+      @Value("${discodeit.repository.file-directory}") String directory) {
+    this.filePath = directory + "/binary_contents.json";
+  }
 
-    @Override
-    public Optional<BinaryContent> findById(UUID id) {
-        return findAll().stream()
-                .filter(e -> e.getId().equals(id))
-                .findFirst();
-    }
+  @Override
+  public BinaryContent save(BinaryContent binaryContent) {
+    List<BinaryContent> list = findAll();
+    // 기존에 동일한 ID가 있다면 제거하고 새로 추가 (업데이트 로직)
+    list.removeIf(e -> e.getId().equals(binaryContent.getId()));
+    list.add(binaryContent);
 
-    @Override
-    public List<BinaryContent> findAll() {
-        //  readListFromFile과 TypeReference를 사용하여 List<BinaryContent> 타입을 명시적으로 반환
-        // 이를 통해 Service 레이어의 .stream() 컴파일 에러를 해결합니다.
-        return FileUtil.readListFromFile(filePath, new TypeReference<List<BinaryContent>>() {});
-    }
+    // FileUtil을 사용하여 파일에 저장 (Thread.sleep 없음)
+    FileUtil.saveToFile(filePath, list);
+    return binaryContent;
+  }
 
-    @Override
-    public void delete(UUID id) {
-        List<BinaryContent> list = findAll();
-        list.removeIf(e -> e.getId().equals(id));
-        FileUtil.saveToFile(filePath, list);
-    }
+  @Override
+  public Optional<BinaryContent> findById(UUID id) {
+    return findAll().stream()
+        .filter(e -> e.getId().equals(id))
+        .findFirst();
+  }
+
+  @Override
+  public List<BinaryContent> findAll() {
+    return FileUtil.readListFromFile(filePath, BinaryContent.class);
+  }
+
+  @Override
+  public void delete(UUID id) {
+    List<BinaryContent> list = findAll();
+    list.removeIf(e -> e.getId().equals(id));
+    FileUtil.saveToFile(filePath, list);
+  }
 }

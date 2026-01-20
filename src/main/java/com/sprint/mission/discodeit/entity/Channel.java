@@ -2,20 +2,20 @@ package com.sprint.mission.discodeit.entity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
+import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 @Getter
 @NoArgsConstructor
-public class Channel {
+public class Channel implements Serializable {
     private UUID id;
     private String name;
     private String description;
     private ChannelType type;
-    private UUID ownerId; //  소유자 정보는 채널의 속성이므로 유지
-
-    //  private Set<UUID> memberIds = new HashSet<>(); -> 삭제 (ReadStatus에서 관리)
+    private UUID ownerId;
+    private Set<UUID> memberIds;
 
     public Channel(String name, String description, ChannelType type, UUID ownerId) {
         this.id = UUID.randomUUID();
@@ -23,14 +23,12 @@ public class Channel {
         this.description = description;
         this.type = type;
         this.ownerId = ownerId;
+        this.memberIds = new HashSet<>();
     }
 
-    public void update(String name, String description) {
-        this.name = name;
-        this.description = description;
-    }
-
-    public Set<UUID> getMemberIds() {
-        return Set.of();
+    // Service가 호출하는 상태 변경 메서드
+    public void update(String newName, String newDescription) {
+        if (newName != null) this.name = newName;
+        if (newDescription != null) this.description = newDescription;
     }
 }

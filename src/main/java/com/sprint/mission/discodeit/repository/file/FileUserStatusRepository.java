@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,7 +23,9 @@ public class FileUserStatusRepository implements UserStatusRepository {
     @Override
     public UserStatus save(UserStatus userStatus) {
         List<UserStatus> list = findAll();
-        list.removeIf(e -> e.getId().equals(userStatus.getId()));
+        if (userStatus.getId() != null) {
+            list.removeIf(e -> e != null && e.getId() != null && e.getId().equals(userStatus.getId()));
+        }
         list.add(userStatus);
         FileUtil.saveToFile(filePath, list);
         return userStatus;
@@ -32,28 +33,27 @@ public class FileUserStatusRepository implements UserStatusRepository {
 
     @Override
     public Optional<UserStatus> findById(UUID id) {
-        return findAll().stream().filter(e -> e.getId().equals(id)).findFirst();
+        return findAll().stream()
+                .filter(e -> e != null && e.getId() != null && e.getId().equals(id))
+                .findFirst();
     }
 
     @Override
     public List<UserStatus> findAll() {
-        return (List<UserStatus>) Collections.singletonList(FileUtil.readFromFile(filePath, UserStatus.class));
+        return FileUtil.readListFromFile(filePath, UserStatus.class);
     }
 
     @Override
     public void delete(UUID id) {
         List<UserStatus> list = findAll();
-        list.removeIf(e -> e.getId().equals(id));
+        list.removeIf(e -> e != null && e.getId() != null && e.getId().equals(id));
         FileUtil.saveToFile(filePath, list);
     }
 
     @Override
     public Optional<UserStatus> findByUserId(UUID userId) {
-        return findAll().stream().filter(s -> s.getUserId().equals(userId)).findFirst();
-    }
-
-    @Override
-    public void deleteByUserId(UUID id) {
-
+        return findAll().stream()
+                .filter(s -> s != null && s.getUserId() != null && s.getUserId().equals(userId))
+                .findFirst();
     }
 }

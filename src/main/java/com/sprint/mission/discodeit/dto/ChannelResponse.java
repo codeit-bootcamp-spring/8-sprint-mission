@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import java.util.UUID;
 import java.util.Set;
@@ -14,6 +15,8 @@ public class ChannelResponse {
     private String description;
     private ChannelType type;
     private UUID ownerId;
+    
+    @JsonProperty("participantIds") // 프론트엔드가 participantIds를 기대
     private Set<UUID> memberIds;
 
     // 만약 직접 생성자를 만드셨다면 아래처럼 public이 있어야 합니다.

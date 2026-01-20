@@ -3,15 +3,20 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.ChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.ChannelResponse;
 import com.sprint.mission.discodeit.dto.ChannelUpdateRequest;
+import com.sprint.mission.discodeit.dto.ReadStatusCreateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
+import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
+import com.sprint.mission.discodeit.service.ReadStatusService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -25,6 +30,7 @@ public class BasicChannelService implements ChannelService {
     private final ChannelRepository channelRepository;
     private final MessageRepository messageRepository; // 연관 데이터 삭제를 위해 주입
     private final ReadStatusRepository readStatusRepository; // 사용자별 채널 조회를 위해 주입
+    private final ReadStatusService readStatusService; // ReadStatus 생성을 위해 주입
 
     @Override
     public ChannelResponse create(String name, String description) {
@@ -93,20 +99,77 @@ public class BasicChannelService implements ChannelService {
 
     @Override
     public ChannelResponse createPrivate(ChannelCreateRequest request) {
+        // 채널 이름이 없으면 기본값 설정
+        String channelName = request.getName();
+        if (channelName == null || channelName.trim().isEmpty()) {
+            channelName = "개인 메시지";
+        }
+        
         Channel channel = new Channel(
-                request.getName(),
+                channelName,
                 request.getDescription(),
                 com.sprint.mission.discodeit.entity.ChannelType.PRIVATE,
                 request.getOwnerId()
         );
         Channel savedChannel = channelRepository.save(channel);
+        
+        // 모든 참여자(participantIds + ownerId)에 대해 ReadStatus 생성
+        Set<UUID> allParticipantIds = new HashSet<>();
+        
+        // participantIds 추가
+        if (request.getParticipantIds() != null) {
+            allParticipantIds.addAll(request.getParticipantIds());
+        }
+        
+        // ownerId도 참여자로 추가 (없으면 제외)
+        if (request.getOwnerId() != null) {
+            allParticipantIds.add(request.getOwnerId());
+        }
+        
+        // 각 참여자에 대해 ReadStatus 생성
+        for (UUID participantId : allParticipantIds) {
+            try {
+                ReadStatusCreateRequest readStatusRequest = new ReadStatusCreateRequest(
+                        participantId,
+                        savedChannel.getId(),
+                        null // lastReadMessageId는 null (아직 메시지가 없음)
+                );
+                readStatusService.create(readStatusRequest);
+            } catch (IllegalStateException e) {
+                // 이미 ReadStatus가 존재하는 경우 무시 (중복 생성 방지)
+                // 이는 이미 해당 사용자가 채널에 참여하고 있다는 의미
+            }
+        }
+        
         return convertToResponse(savedChannel);
     }
 
     @Override
     public Optional<ChannelResponse> findById(UUID id) {
+        // 기본 구현: 권한 체크 없이 조회 (기존 호환성 유지)
         Channel channel = channelRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 채널을 찾을 수 없습니다."));
+        return Optional.of(convertToResponse(channel));
+    }
+    
+    /**
+     * 채널 조회 (권한 체크 포함)
+     * 개인 채널인 경우 사용자가 참여자인지 확인
+     */
+    public Optional<ChannelResponse> findById(UUID id, UUID userId) {
+        Channel channel = channelRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 채널을 찾을 수 없습니다."));
+        
+        // 개인 채널인 경우 사용자가 참여자인지 확인
+        if (channel.getType() == ChannelType.PRIVATE) {
+            boolean hasAccess = readStatusRepository.findAllByUserId(userId).stream()
+                    .anyMatch(readStatus -> readStatus.getChannelId().equals(id));
+            
+            if (!hasAccess) {
+                throw new IllegalArgumentException("이 채널에 접근할 권한이 없습니다.");
+            }
+        }
+        
         return Optional.of(convertToResponse(channel));
     }
 
@@ -133,13 +196,24 @@ public class BasicChannelService implements ChannelService {
     }
 
     private ChannelResponse convertToResponse(Channel channel) {
+        // ReadStatus에서 실제 참여자 ID 조회 (PRIVATE 채널의 경우)
+        Set<UUID> memberIds;
+        if (channel.getType() == ChannelType.PRIVATE) {
+            memberIds = readStatusRepository.findAllByChannelId(channel.getId()).stream()
+                    .map(ReadStatus::getUserId)
+                    .collect(Collectors.toSet());
+        } else {
+            // PUBLIC 채널은 memberIds가 없거나 빈 Set
+            memberIds = channel.getMemberIds() != null ? channel.getMemberIds() : new HashSet<>();
+        }
+        
         return new ChannelResponse(
                 channel.getId(),            // 1. UUID id
                 channel.getName(),          // 2. String name
                 channel.getDescription(),   // 3. String description
-                channel.getType(),          // 4. ChannelType type (엔티티에 해당 필드가 있어야 함)
-                channel.getOwnerId(),       // 5. UUID ownerId (엔티티에 해당 필드가 있어야 함)
-                channel.getMemberIds()      // 6. Set<UUID> memberIds (엔티티에 해당 필드가 있어야 함)
+                channel.getType(),          // 4. ChannelType type
+                channel.getOwnerId(),       // 5. UUID ownerId
+                memberIds                   // 6. Set<UUID> memberIds (실제 참여자 ID)
         );
     }
 }

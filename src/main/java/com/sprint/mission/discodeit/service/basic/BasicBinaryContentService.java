@@ -20,12 +20,11 @@ public class BasicBinaryContentService implements BinaryContentService {
 
     @Override
     public BinaryContent create(BinaryContentCreateRequest request) {
-        // BinaryContentCreateRequest의 fileType을 contentType으로 사용
         BinaryContent binaryContent = new BinaryContent(
                 request.getFileName(),
-                request.getFileType(), // MIME 타입
+                request.getContentType(),
                 request.getFileSize(),
-                request.getBytes() // Base64 인코딩된 바이너리 데이터
+                request.getBytes()
         );
         return binaryContentRepository.save(binaryContent);
     }
@@ -36,13 +35,8 @@ public class BasicBinaryContentService implements BinaryContentService {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<BinaryContent> findAllByIdIn(List<UUID> ids) {
-        Object result = binaryContentRepository.findAll();
-        if (result == null) {
-            return List.of();
-        }
-        List<BinaryContent> allContents = (List<BinaryContent>) result;
+        java.util.List<BinaryContent> allContents = binaryContentRepository.findAll();
         return allContents.stream()
                 .filter(content -> ids.contains(content.getId()))
                 .collect(Collectors.toList());

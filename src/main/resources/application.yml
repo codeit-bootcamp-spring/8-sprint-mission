@@ -2,3 +2,10 @@ discodeit:
   repository:
     type: jcf # jcf 또는 file
     file-directory: .discodeit
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true

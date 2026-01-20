@@ -44,12 +44,6 @@ public class JCFUserStatusRepository implements UserStatusRepository {
     @Override
     public Optional<UserStatus> findByUserId(UUID userId) {
         return list.stream()
-                .filter(s -> s.getUserId() != null && s.getUserId().equals(userId)) // s.getUserId() != null 추가
                 .findFirst();
-    }
-
-    @Override
-    public void deleteByUserId(UUID id) {
-
     }
 }

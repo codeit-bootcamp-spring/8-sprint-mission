@@ -26,4 +26,8 @@ public class User {
         if (email != null) this.email = email;
         if (password != null) this.password = password;
     }
+
+    public void updateProfileId(UUID profileId) {
+        this.profileId = profileId;
+    }
 }
