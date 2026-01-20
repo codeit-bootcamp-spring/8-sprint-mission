@@ -156,12 +156,18 @@ public class BasicUserService implements UserService {
   @Override
   public UserResponse update(UserUpdateRequest request) {
     // 1. 사용자 조회
-    User user = userRepository.findById(request.getId())
+    UUID userId = request.getId() != null ? request.getId() : null;
+    if (userId == null) {
+      throw new IllegalArgumentException("사용자 ID가 필요합니다.");
+    }
+    
+    User user = userRepository.findById(userId)
         .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-    // 2. 이름 변경 (name이 제공된 경우)
-    String newName = request.getName();
-    String newPassword = request.getPassword();
+    // 2. API 명세서에 맞춘 필드명 처리 (newUsername, newEmail, newPassword)
+    String newName = request.getNewUsername() != null ? request.getNewUsername() : request.getName();
+    String newEmail = request.getNewEmail();
+    String newPassword = request.getNewPassword() != null ? request.getNewPassword() : request.getPassword();
 
     // 이름이 변경되는 경우에만 중복 검사
     if (newName != null && !newName.equals(user.getName())) {
@@ -169,9 +175,16 @@ public class BasicUserService implements UserService {
         throw new IllegalArgumentException("이미 사용 중인 이름입니다.");
       }
     }
+    
+    // 이메일이 변경되는 경우 중복 검사
+    if (newEmail != null && !newEmail.equals(user.getEmail())) {
+      if (userRepository.existsByEmail(newEmail)) {
+        throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+      }
+    }
 
     // 3. 업데이트할 필드들을 한 번에 처리
-    user.update(newName, null, newPassword);
+    user.update(newName, newEmail, newPassword);
 
     // 4. 프로필 이미지 ID 업데이트 (profileId가 제공된 경우)
     if (request.getProfileId() != null) {

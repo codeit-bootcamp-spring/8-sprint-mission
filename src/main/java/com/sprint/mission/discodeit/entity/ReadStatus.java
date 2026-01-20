@@ -31,4 +31,8 @@ public class ReadStatus {
     public void updateLastReadMessage(UUID lastReadMessageId) {
         this.lastReadMessageId = lastReadMessageId;
     }
+    
+    public void updateLastReadAt(Instant lastReadAt) {
+        this.lastReadAt = lastReadAt;
+    }
 }

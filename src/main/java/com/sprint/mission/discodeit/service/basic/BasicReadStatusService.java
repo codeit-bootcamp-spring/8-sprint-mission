@@ -39,11 +39,22 @@ public class BasicReadStatusService implements ReadStatusService {
             throw new IllegalStateException("해당 유저의 채널 읽음 상태가 이미 존재합니다.");
         }
 
-        ReadStatus readStatus = new ReadStatus(
-                request.getUserId(),
-                request.getChannelId(),
-                request.getLastReadMessageId()
-        );
+        ReadStatus readStatus;
+        // API 명세서에 맞춘 lastReadAt 필드 우선 사용
+        if (request.getLastReadAt() != null) {
+            readStatus = new ReadStatus(
+                    request.getUserId(),
+                    request.getChannelId(),
+                    request.getLastReadAt()
+            );
+        } else {
+            // 하위 호환성을 위한 lastReadMessageId 사용
+            readStatus = new ReadStatus(
+                    request.getUserId(),
+                    request.getChannelId(),
+                    request.getLastReadMessageId()
+            );
+        }
 
         return readStatusRepository.save(readStatus);
     }
@@ -63,8 +74,16 @@ public class BasicReadStatusService implements ReadStatusService {
         ReadStatus readStatus = readStatusRepository.findById(request.getId())
                 .orElseThrow(() -> new IllegalArgumentException("읽음 상태 객체를 찾을 수 없습니다."));
 
-        // 마지막 읽은 메시지 ID 업데이트
-        readStatus.updateLastReadMessage(request.getLastReadMessageId());
+        // API 명세서에 맞춘 lastReadAt 업데이트
+        if (request.getNewLastReadAt() != null) {
+            readStatus.updateLastReadAt(request.getNewLastReadAt());
+        }
+        
+        // 하위 호환성을 위한 lastReadMessageId 업데이트
+        if (request.getLastReadMessageId() != null) {
+            readStatus.updateLastReadMessage(request.getLastReadMessageId());
+        }
+        
         return readStatusRepository.save(readStatus);
     }
 

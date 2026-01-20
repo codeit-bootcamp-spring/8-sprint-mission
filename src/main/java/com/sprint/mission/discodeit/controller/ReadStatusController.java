@@ -35,7 +35,7 @@ public class ReadStatusController {
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<ReadStatus> create(@RequestBody ReadStatusCreateRequest request) {
         ReadStatus readStatus = readStatusService.create(request);
-        return ResponseEntity.ok(readStatus);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(readStatus);
     }
 
     /**
@@ -45,7 +45,7 @@ public class ReadStatusController {
     @RequestMapping(value = "/{readStatusId}", method = RequestMethod.PATCH)
     public ResponseEntity<ReadStatus> update(@PathVariable UUID readStatusId, @RequestBody ReadStatusUpdateRequest request) {
         // 경로 파라미터의 readStatusId를 사용하여 ReadStatusUpdateRequest 생성
-        ReadStatusUpdateRequest updateRequest = new ReadStatusUpdateRequest(readStatusId, request.getLastReadMessageId());
+        ReadStatusUpdateRequest updateRequest = new ReadStatusUpdateRequest(readStatusId, request.getNewLastReadAt(), request.getLastReadMessageId());
         ReadStatus readStatus = readStatusService.update(updateRequest);
         return ResponseEntity.ok(readStatus);
     }
