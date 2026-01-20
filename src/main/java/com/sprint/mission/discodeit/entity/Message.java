@@ -1,36 +1,38 @@
 package com.sprint.mission.discodeit.entity;
 
+import lombok.Getter;
+import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
+@Getter
 public class Message implements Serializable {
-    private final UUID id;
-    private final UUID senderId;
-    private final UUID channelId;
-    private String content; // 메시지 내용
-    private final LocalDateTime timestamp; // 메시지 전송 시간
+    @Serial
+    private static final long serialVersionUID = 1L;
 
-    public Message(UUID senderId, UUID channelId, String content) {
+    private final UUID id;
+    private final UUID authorId;
+    private final UUID channelId;
+    private String content;
+    private List<UUID> attachmentIds; // 관계도에 따른 첨부파일 ID 리스트 추가
+    private final Instant createdAt;
+    private Instant updatedAt;
+
+    public Message(UUID authorId, UUID channelId, String content, List<UUID> attachmentIds) {
         this.id = UUID.randomUUID();
-        this.senderId = senderId;
+        this.authorId = authorId;
         this.channelId = channelId;
         this.content = content;
-        this.timestamp = LocalDateTime.now();
+        this.attachmentIds = attachmentIds;
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
     }
 
-    // --- Getter 메서드 유지 ---
-    public UUID getId() { return id; }
-    public UUID getSenderId() { return senderId; }
-    public UUID getChannelId() { return channelId; }
-    public String getContent() { return content; }
-    public LocalDateTime getTimestamp() { return timestamp; }
-
-    //  Service가 호출하는 상태 변경 메서드 추가
-    public void update(String newContent) {
-        this.content = newContent;
-        // 메시지 내용만 수정 가능하도록 가정
+    public void update(String content, List<UUID> attachmentIds) {
+        this.content = content;
+        this.attachmentIds = attachmentIds;
+        this.updatedAt = Instant.now();
     }
-
-    // toString(), hashCode(), equals() 등 필요한 메서드는 유지
 }

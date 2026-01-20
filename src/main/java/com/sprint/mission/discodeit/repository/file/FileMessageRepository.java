@@ -2,70 +2,70 @@ package com.sprint.mission.discodeit.repository.file;
 
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.repository.MessageRepository;
-import java.io.*;
-import java.util.*;
+import com.sprint.mission.discodeit.util.FileUtil;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Repository
+@ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "file")
 public class FileMessageRepository implements MessageRepository {
+    private final String filePath;
 
-    private static FileMessageRepository INSTANCE;
-    private static final String FILE_PATH = "data/message.json";
-
-    private FileMessageRepository() {}
-
-    public static FileMessageRepository getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new FileMessageRepository();
-        }
-        return INSTANCE;
+    public FileMessageRepository(@Value("${discodeit.repository.file-directory}") String directory) {
+        this.filePath = directory + "/messages.json";
     }
-
-    // --- 파일 IO 유틸리티 ---
-    private Map<UUID, Message> readAll() {
-        File file = new File(FILE_PATH);
-        if (!file.exists() || file.length() == 0) {
-            return new HashMap<>();
-        }
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-            return (Map<UUID, Message>) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Message Repository 역직렬화 오류: " + e.getMessage());
-            return new HashMap<>();
-        }
-    }
-
-    private void writeAll(Map<UUID, Message> data) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_PATH))) {
-            oos.writeObject(data);
-        } catch (IOException e) {
-            System.err.println("Message Repository 직렬화 오류: " + e.getMessage());
-        }
-    }
-
-    // --- Repository 인터페이스 구현 ---
 
     @Override
     public Message save(Message message) {
-        Map<UUID, Message> data = readAll();
-        data.put(message.getId(), message);
-        writeAll(data);
+        List<Message> list = findAll();
+        list.removeIf(e -> e.getId().equals(message.getId()));
+        list.add(message);
+        FileUtil.saveToFile(filePath, list);
         return message;
     }
 
     @Override
     public Optional<Message> findById(UUID id) {
-        return Optional.ofNullable(readAll().get(id));
+        return findAll().stream().filter(e -> e.getId().equals(id)).findFirst();
     }
 
     @Override
     public List<Message> findAll() {
-        return readAll().values().stream().collect(Collectors.toList());
+        return FileUtil.readListFromFile(filePath, Message.class);
     }
 
     @Override
     public void delete(UUID id) {
-        Map<UUID, Message> data = readAll();
-        data.remove(id);
-        writeAll(data);
+        List<Message> list = findAll();
+        list.removeIf(e -> e.getId().equals(id));
+        FileUtil.saveToFile(filePath, list);
+    }
+
+    @Override
+    public List<Message> findAllByChannelId(UUID channelId) {
+        return findAll().stream()
+                .filter(m -> m.getChannelId().equals(channelId))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<Message> findTopByChannelIdOrderByCreatedAtDesc(UUID channelId) {
+        return findAll().stream()
+                .filter(m -> m.getChannelId().equals(channelId))
+                .sorted((m1, m2) -> m2.getCreatedAt().compareTo(m1.getCreatedAt()))
+                .findFirst();
+    }
+
+    @Override
+    public void deleteByChannelId(UUID channelId) {
+        List<Message> list = findAll();
+        list.removeIf(e -> e.getChannelId().equals(channelId));
+        FileUtil.saveToFile(filePath, list);
     }
 }

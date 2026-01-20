@@ -1,19 +1,31 @@
 package com.sprint.mission.discodeit.service;
 
-import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.dto.ChannelCreateRequest;
+import com.sprint.mission.discodeit.dto.ChannelResponse;
+import com.sprint.mission.discodeit.dto.ChannelUpdateRequest;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface ChannelService {
+    ChannelResponse createPublic(ChannelCreateRequest request);
 
-    // 생성 책임: 이름과 소유자 ID를 받아 새로운 채널 객체를 생성 후 저장
-    Channel create(String name, UUID ownerId);
+    ChannelResponse create(ChannelCreateRequest request);
 
-    // 수정 책임: 채널 ID와 변경할 이름 및 소유자 ID를 받아 채널 정보를 수정
-    Channel update(UUID channelId, String newName, UUID newOwnerId);
+    ChannelResponse createPrivate(ChannelCreateRequest request);
+    Optional<ChannelResponse> findById(UUID id);
 
-    Optional<Channel> findById(UUID id);
-    List<Channel> findAll();
+    ChannelResponse create(String name, String description);
+
+    List<ChannelResponse> findAll();
+
+    // 에러 발생 지점: 이 메서드가 인터페이스에 있다면 구현체에도 반드시 있어야 합니다.
+    List<ChannelResponse> findAllByUserId(UUID userId);
+
+    ChannelResponse update(ChannelUpdateRequest request);
+
+    ChannelResponse update(UUID id, String name, String description);
+
     void delete(UUID id);
 }

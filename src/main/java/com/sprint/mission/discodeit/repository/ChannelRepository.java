@@ -6,15 +6,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ChannelRepository {
-
-
-    Channel save(Channel channel);
-
-
+    Channel save(Channel channel); // 반환 타입이 Channel이어야 함
     Optional<Channel> findById(UUID id);
-
-
     List<Channel> findAll();
-
     void delete(UUID id);
 }

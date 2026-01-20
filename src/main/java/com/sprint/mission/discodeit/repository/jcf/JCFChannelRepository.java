@@ -2,43 +2,43 @@ package com.sprint.mission.discodeit.repository.jcf;
 
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
-import java.util.*;
-import java.util.stream.Collectors;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+@ConditionalOnProperty(
+        name = "discodeit.repository.type",
+        havingValue = "jcf",
+        matchIfMissing = true
+)
 public class JCFChannelRepository implements ChannelRepository {
-
-    private static JCFChannelRepository INSTANCE;
-    private final Map<UUID, Channel> data;
-
-    private JCFChannelRepository() {
-        this.data = new HashMap<>();
-    }
-
-    public static JCFChannelRepository getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new JCFChannelRepository();
-        }
-        return INSTANCE;
-    }
+    private final List<Channel> channels = new ArrayList<>();
 
     @Override
     public Channel save(Channel channel) {
-        data.put(channel.getId(), channel);
-        return channel;
+        // 기존에 같은 ID가 있으면 업데이트, 없으면 추가
+        channels.removeIf(c -> c.getId().equals(channel.getId()));
+        channels.add(channel);
+        return channel; //  이 return이 없거나 null이면 Service에서 null을 받게 됨
     }
 
     @Override
     public Optional<Channel> findById(UUID id) {
-        return Optional.ofNullable(data.get(id));
+        return channels.stream().filter(c -> c.getId().equals(id)).findFirst();
     }
 
     @Override
     public List<Channel> findAll() {
-        return data.values().stream().collect(Collectors.toList());
+        return new ArrayList<>(channels);
     }
 
     @Override
     public void delete(UUID id) {
-        data.remove(id);
+        channels.removeIf(c -> c.getId().equals(id));
     }
 }

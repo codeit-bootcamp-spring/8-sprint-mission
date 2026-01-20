@@ -1,24 +1,44 @@
 plugins {
+    id 'org.springframework.boot' version '3.5.9'
+    id 'io.spring.dependency-management' version '1.1.7'
     id 'java'
 }
 
-group = 'com.ohgiraffers'
+group = 'com.sprint.mission'
 version = '1.0-SNAPSHOT'
 
+// 2. Repositories 블록은 최상위 레벨에 위치해야 합니다.
 repositories {
     mavenCentral()
 }
+
+// 3. Java 설정 블록
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
 }
+
+// 4. Dependencies 블록은 최상위 레벨에 위치해야 합니다.
 dependencies {
+    // Spring Boot Dependency
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Lombok Dependency
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // SpringDoc OpenAPI (Swagger UI)
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+
+    // Test Dependencies
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+// 5. Test 블록
 test {
     useJUnitPlatform()
 }

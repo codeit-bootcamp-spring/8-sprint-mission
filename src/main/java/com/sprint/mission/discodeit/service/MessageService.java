@@ -1,5 +1,8 @@
 package com.sprint.mission.discodeit.service;
 
+import com.sprint.mission.discodeit.dto.MessageCreateRequest;
+import com.sprint.mission.discodeit.dto.MessageResponse;
+import com.sprint.mission.discodeit.dto.MessageUpdateRequest;
 import com.sprint.mission.discodeit.entity.Message;
 import java.util.List;
 import java.util.Optional;
@@ -7,13 +10,18 @@ import java.util.UUID;
 
 public interface MessageService {
 
-    // 생성 책임: 발신자 ID, 채널 ID, 내용을 받아 메시지 객체를 생성 후 저장
-    Message create(UUID senderId, UUID channelId, String content);
+    // DTO 기반 생성
+    Message create(MessageCreateRequest request);
 
-    // 수정 책임: 메시지 ID와 변경할 내용(content)을 받아 메시지를 수정
-    Message update(UUID messageId, String newContent);
+    // DTO 기반 수정
+    Message update(MessageUpdateRequest request);
 
     Optional<Message> findById(UUID id);
     List<Message> findAll();
+    List<Message> findAllByChannelId(UUID channelId);
+    
+    // Response DTO 반환 메서드
+    List<MessageResponse> findByChannelId(UUID channelId);
+    
     void delete(UUID id);
 }
