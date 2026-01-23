@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,5 +42,19 @@ public interface BinaryContentApi {
   ResponseEntity<List<BinaryContentDto>> findAllByIdIn(
       @Parameter(description = "조회할 첨부 파일 ID 목록",
           array = @ArraySchema(schema = @Schema(type = "string", format = "uuid")))
-      @RequestParam List<UUID> binaryContentIds);
+      @RequestParam("binaryContentIds") List<UUID> binaryContentIds);
+
+  @Operation(summary = "파일 다운로드")
+  @ApiResponse(
+      responseCode = "200",
+      description = "파일 다운로드 성공",
+      content = @Content(
+          mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE,
+          schema = @Schema(type = "string", format = "binary")
+      )
+  )
+  @GetMapping(value = "/{binaryContentId}/download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+  ResponseEntity<?> download(
+      @Parameter(description = "다운로드할 파일 ID", schema = @Schema(type = "string", format = "uuid"))
+      @PathVariable UUID binaryContentId);
 }

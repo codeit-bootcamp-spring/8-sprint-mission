@@ -5,11 +5,13 @@ import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateRequest
 import com.sprint.mission.discodeit.dto.message.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.message.MessageDto;
 import com.sprint.mission.discodeit.dto.message.MessageUpdateRequest;
+import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.service.MessageService;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,22 +46,23 @@ public class MessageController implements MessageApi {
     return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 
-  // 메시지 수정 (GET-only 미션 대응)
+  // 메시지 수정
   @Override
   public ResponseEntity<MessageDto> update(UUID messageId, MessageUpdateRequest request) {
     return ResponseEntity.ok(messageService.updateMessage(messageId, request));
   }
 
-  // 메시지 삭제 (GET-only 미션 대응)
+  // 메시지 삭제
   @Override
   public ResponseEntity<Void> delete(UUID messageId) {
     messageService.deleteMessage(messageId);
     return ResponseEntity.noContent().build();
   }
 
-  // 특정 채널의 메시지 목록을 조회 (GET-only 미션 대응)
-  public ResponseEntity<List<MessageDto>> findAllByChannelId(UUID channelId) {
-    return ResponseEntity.ok(messageService.findAllByChannelId(channelId));
+  // 특정 채널의 메시지 목록 조회 (50개, 최신순, Slice 기반)
+  public ResponseEntity<PageResponse<MessageDto>> findAllByChannelId(UUID channelId,
+      Pageable pageable) {
+    return ResponseEntity.ok(messageService.findAllByChannelId(channelId, pageable));
   }
 
   private List<BinaryContentCreateRequest> toBinaryRequests(List<MultipartFile> files) {
