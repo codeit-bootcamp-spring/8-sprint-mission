@@ -20,11 +20,12 @@ public class BasicBinaryContentService implements BinaryContentService {
 
     @Override
     public BinaryContent create(BinaryContentCreateRequest request) {
+        // BinaryContent 생성자는 Base64 문자열을 받아서 byte 배열로 변환합니다
         BinaryContent binaryContent = new BinaryContent(
                 request.getFileName(),
                 request.getContentType(),
                 request.getFileSize(),
-                request.getBytes()
+                request.getBytes() != null ? request.getBytes() : ""
         );
         return binaryContentRepository.save(binaryContent);
     }

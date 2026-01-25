@@ -60,7 +60,12 @@ public class BinaryContentController {
         response.setFileName(content.getFileName());
         response.setContentType(content.getContentType());
         response.setFileSize(content.getFileSize());
-        response.setBytes(content.getBytes());
+        // byte 배열을 Base64 문자열로 변환
+        if (content.getBytes() != null) {
+            response.setBytes(Base64.getEncoder().encodeToString(content.getBytes()));
+        } else {
+            response.setBytes("");
+        }
         
         return ResponseEntity.ok(response);
     }
