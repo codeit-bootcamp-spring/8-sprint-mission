@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.dto.BinaryContentCreateRequest;
+import com.sprint.mission.discodeit.dto.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.UserResponse;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserController {
 
+  private static final BinaryContentDto T = null;
   private final UserService userService;
   private final UserStatusService userStatusService;
   private final BinaryContentService binaryContentService;
@@ -46,7 +48,8 @@ public class UserController {
                     // BinaryContentDto는 별도로 생성해야 함
                   });
               // 간단히 변환
-              var binaryContent = binaryContentService.findById(response.getProfileId()).orElse(null);
+              var binaryContent = binaryContentService.findById(response.getProfileId())
+                  .orElse(null);
               if (binaryContent != null) {
                 profileDto = new com.sprint.mission.discodeit.dto.BinaryContentDto(
                     binaryContent.getId(),
@@ -56,7 +59,7 @@ public class UserController {
                 );
               }
             }
-            
+
             return UserDto.builder()
                 .id(response.getId())
                 .username(response.getName() != null ? response.getName() : "Unknown")
@@ -156,12 +159,16 @@ public class UserController {
     // 경로 파라미터의 userId를 사용하여 UserUpdateRequest 생성
     UserUpdateRequest updateRequest = new UserUpdateRequest();
     updateRequest.setId(userId);
-    updateRequest.setNewUsername(actualRequest.getNewUsername() != null ? actualRequest.getNewUsername() : actualRequest.getName());
+    updateRequest.setNewUsername(
+        actualRequest.getNewUsername() != null ? actualRequest.getNewUsername()
+            : actualRequest.getName());
     updateRequest.setNewEmail(actualRequest.getNewEmail());
-    updateRequest.setNewPassword(actualRequest.getNewPassword() != null ? actualRequest.getNewPassword() : actualRequest.getPassword());
+    updateRequest.setNewPassword(
+        actualRequest.getNewPassword() != null ? actualRequest.getNewPassword()
+            : actualRequest.getPassword());
     updateRequest.setProfileImage(actualRequest.getProfileImage());
     updateRequest.setProfileId(profileId != null ? profileId : actualRequest.getProfileId());
-    
+
     return ResponseEntity.ok(userService.update(updateRequest));
   }
 
@@ -176,12 +183,14 @@ public class UserController {
     // 경로 파라미터의 userId를 사용하여 UserUpdateRequest 생성
     UserUpdateRequest updateRequest = new UserUpdateRequest();
     updateRequest.setId(userId);
-    updateRequest.setNewUsername(requestBody.getNewUsername() != null ? requestBody.getNewUsername() : requestBody.getName());
+    updateRequest.setNewUsername(requestBody.getNewUsername() != null ? requestBody.getNewUsername()
+        : requestBody.getName());
     updateRequest.setNewEmail(requestBody.getNewEmail());
-    updateRequest.setNewPassword(requestBody.getNewPassword() != null ? requestBody.getNewPassword() : requestBody.getPassword());
+    updateRequest.setNewPassword(requestBody.getNewPassword() != null ? requestBody.getNewPassword()
+        : requestBody.getPassword());
     updateRequest.setProfileImage(requestBody.getProfileImage());
     updateRequest.setProfileId(requestBody.getProfileId());
-    
+
     return ResponseEntity.ok(userService.update(updateRequest));
   }
 
