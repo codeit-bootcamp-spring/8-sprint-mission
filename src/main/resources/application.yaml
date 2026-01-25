@@ -21,7 +21,14 @@ spring:
         # 주석을 통해 어떤 쿼리인지 설명합니다. (디버깅용)
         use_sql_comments: true
 
-# 3. SQL 로그 상세 설정
+# 3. BinaryContent 저장소 설정
+discodeit:
+  storage:
+    type: local  # local, s3 등 저장소 타입
+    local:
+      root-path: ./storage/binary-contents  # 로컬 디스크 저장 경로
+
+# 4. SQL 로그 상세 설정
 logging:
   level:
     # 실행되는 SQL 쿼리를 콘솔에 출력합니다.

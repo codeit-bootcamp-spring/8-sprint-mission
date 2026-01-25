@@ -17,7 +17,7 @@ public class BinaryContentMapper {
                 .fileName(binaryContent.getFileName())
                 .size(binaryContent.getSize())
                 .contentType(binaryContent.getContentType())
-                .bytes(binaryContent.getBytes())
+                .bytes(null) // bytes는 별도 저장소에서 조회해야 함
                 .build();
     }
 }

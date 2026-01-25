@@ -1,9 +1,12 @@
 package com.sprint.mission.discodeit.controller;
 
+import com.sprint.mission.discodeit.dto.BinaryContentDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
@@ -13,7 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +26,8 @@ import java.util.UUID;
 public class BinaryContentController {
 
     private final BinaryContentService binaryContentService;
+    private final BinaryContentStorage binaryContentStorage;
+    private final BinaryContentMapper binaryContentMapper;
     private final UserRepository userRepository;
     
     @Data
@@ -60,14 +64,38 @@ public class BinaryContentController {
         response.setFileName(content.getFileName());
         response.setContentType(content.getContentType());
         response.setFileSize(content.getFileSize());
-        // byte 배열을 Base64 문자열로 변환
-        if (content.getBytes() != null) {
-            response.setBytes(Base64.getEncoder().encodeToString(content.getBytes()));
-        } else {
+        
+        // 바이너리 데이터는 별도 저장소에서 조회
+        try {
+            java.io.InputStream inputStream = binaryContentStorage.get(content.getId());
+            if (inputStream != null) {
+                byte[] bytes = inputStream.readAllBytes();
+                response.setBytes(Base64.getEncoder().encodeToString(bytes));
+                inputStream.close();
+            } else {
+                response.setBytes("");
+            }
+        } catch (Exception e) {
             response.setBytes("");
         }
         
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 파일 다운로드
+     * GET /api/binaryContents/{binaryContentId}/download
+     */
+    @RequestMapping(value = "/{binaryContentId}/download", method = RequestMethod.GET)
+    public ResponseEntity<?> download(@PathVariable UUID binaryContentId) {
+        BinaryContent content = binaryContentService.findById(binaryContentId)
+                .orElseThrow(() -> new IllegalArgumentException("파일 정보를 찾을 수 없습니다."));
+
+        // BinaryContentDto 생성
+        BinaryContentDto dto = binaryContentMapper.toDto(content);
+        
+        // BinaryContentStorage에 다운로드 로직 위임
+        return binaryContentStorage.download(dto);
     }
 
     /**

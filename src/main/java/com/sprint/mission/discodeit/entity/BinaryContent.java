@@ -20,23 +20,18 @@ public class BinaryContent extends BaseEntity {
   @Column(name = "content_type", nullable = false, length = 100)
   private String contentType;
 
-  @Column(nullable = false)
-  private byte[] bytes;
-
-  // 생성자
-  public BinaryContent(String fileName, String contentType, Long size, String bytes) {
+  // 생성자 (메타 정보만 저장)
+  public BinaryContent(String fileName, String contentType, Long size) {
     this.fileName = fileName;
     this.contentType = contentType;
     this.size = size;
-    this.bytes = bytes != null ? bytes.getBytes() : new byte[0];
   }
 
-  // update 메소드
-  public void update(String fileName, String contentType, Long size, String bytes) {
+  // update 메소드 (메타 정보만 업데이트)
+  public void update(String fileName, String contentType, Long size) {
     this.fileName = fileName;
     this.contentType = contentType;
     this.size = size;
-    this.bytes = bytes != null ? bytes.getBytes() : new byte[0];
   }
 
   public Long getFileSize() {
