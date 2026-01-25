@@ -50,7 +50,7 @@ public class JCFUserRepository implements UserRepository {
 
     @Override
     public boolean existsByName(String name) {
-        return list.stream().anyMatch(u -> u.getName().equals(name));
+        return list.stream().anyMatch(u -> u.getUsername().equals(name));
     }
 
     @Override

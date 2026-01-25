@@ -1,74 +1,55 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
 import jakarta.persistence.*;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import java.time.Instant;
-import java.util.UUID;
 
 @Entity
 @Table(name = "users")
 @Getter
-@Setter
 @NoArgsConstructor
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-    
-    @Column(name = "username", nullable = false, unique = true, length = 50)
-    private String name;
-    
-    @Column(name = "email", nullable = false, unique = true, length = 100)
-    private String email;
-    
-    @Column(name = "password", nullable = false, length = 60)
-    private String password;
-    
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-    
-    @Column(name = "updated_at")
-    private Instant updatedAt;
-    
-    @Column(name = "profile_id", unique = true)
-    private UUID profileId;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "profile_id", insertable = false, updatable = false)
-    private BinaryContent profile;
+public class User extends BaseUpdatableEntity {
 
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = Instant.now();
-        }
-    }
+  @Column(nullable = false, unique = true, length = 50)
+  private String username;
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = Instant.now();
-    }
+  @Column(nullable = false, unique = true, length = 100)
+  private String email;
 
-    public User(String name, String email, String password, UUID profileId) {
-        this.id = UUID.randomUUID();
-        this.name = name;
-        this.email = email;
-        this.password = password;
-        this.profileId = profileId;
-        this.createdAt = Instant.now();
-    }
+  @Column(nullable = false, length = 60)
+  private String password;
 
-    public void update(String name, String email, String password) {
-        if (name != null) this.name = name;
-        if (email != null) this.email = email;
-        if (password != null) this.password = password;
-        this.updatedAt = Instant.now();
-    }
+  // BinaryContent(profile)와의 One-to-One 관계 (0..1, optional)
+  // schema.sql: ON DELETE SET NULL
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "profile_id", unique = true)
+  private BinaryContent profile;
 
-    public void updateProfileId(UUID profileId) {
-        this.profileId = profileId;
-        this.updatedAt = Instant.now();
-    }
+  // UserStatus와의 One-to-One 양방향 관계
+  // schema.sql: ON DELETE CASCADE
+  // User가 삭제되면 UserStatus도 삭제되어야 하므로 cascade = ALL, orphanRemoval = true
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private UserStatus status;
+
+  // 생성자
+  public User(String username, String email, String password) {
+    this.setId(UUID.randomUUID());
+    this.username = username;
+    this.email = email;
+    this.password = password;
+  }
+
+  // update 메소드
+  public void update(String username, String email, String password) {
+    this.username = username;
+    this.email = email;
+    this.password = password;
+  }
+
+  // profileId 업데이트 메소드 (BinaryContent를 직접 설정)
+  public void updateProfile(BinaryContent profile) {
+    this.profile = profile;
+  }
 }

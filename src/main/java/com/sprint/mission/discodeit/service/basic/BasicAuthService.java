@@ -26,7 +26,7 @@ public class BasicAuthService implements AuthService {
                 .orElseGet(() -> {
                     // 이메일로 찾지 못하면 이름으로 시도 (프론트엔드 호환성)
                     return userRepository.findAll().stream()
-                            .filter(u -> u.getName() != null && u.getName().equals(email))
+                            .filter(u -> u.getUsername() != null && u.getUsername().equals(email))
                             .findFirst()
                             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일 또는 사용자명입니다."));
                 });
@@ -38,7 +38,7 @@ public class BasicAuthService implements AuthService {
 
         // 3. [상태 관리] 온라인 상태 업데이트
         UserStatus status = userStatusRepository.findByUserId(user.getId())
-                .orElseGet(() -> userStatusRepository.save(new UserStatus(user.getId())));
+                .orElseGet(() -> userStatusRepository.save(new UserStatus(user)));
 
         status.updateLastAccessAt();
         userStatusRepository.save(status);
@@ -71,12 +71,12 @@ public class BasicAuthService implements AuthService {
     private UserResponse convertToResponse(User user, UserStatus status) {
         return new UserResponse(
                 user.getId(),
-                user.getName(),
+                user.getUsername(),
                 user.getEmail(),
                 status != null ? status.getId() : null,
                 user.getId(),
                 status != null && status.isOnline(),
-                user.getProfileId()
+                user.getProfile() != null ? user.getProfile().getId() : null
         );
     }
 }

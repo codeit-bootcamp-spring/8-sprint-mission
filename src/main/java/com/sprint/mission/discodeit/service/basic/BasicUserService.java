@@ -63,19 +63,26 @@ public class BasicUserService implements UserService {
     User user = new User(
         request.getUsername() != null ? request.getUsername() : request.getName(),
         request.getEmail(),
-        request.getPassword(),
-        profileId
+        request.getPassword()
     );
+    // 프로필 이미지 설정
+    if (profileId != null) {
+      BinaryContent profile = binaryContentRepository.findById(profileId)
+          .orElse(null);
+      if (profile != null) {
+        user.updateProfile(profile);
+      }
+    }
     User savedUser = userRepository.save(user); //  중요: 리포지토리가 반환하는 객체 사용
 
     // 4. 상태 저장
-    userStatusRepository.save(new UserStatus(savedUser.getId()));
+    userStatusRepository.save(new UserStatus(savedUser));
 
     // 5. 프로필 이미지가 없는 경우 이름에 맞는 이미지 할당
     if (request.getProfileImage() == null || request.getProfileImage().isEmpty()) {
       try {
         // DataInitializer의 로직을 재사용하여 이름에 맞는 프로필 이미지 할당
-        assignProfileImageToNewUser(savedUser.getId(), savedUser.getName());
+        assignProfileImageToNewUser(savedUser.getId(), savedUser.getUsername());
       } catch (Exception e) {
         // 프로필 이미지 할당 실패는 치명적이지 않으므로 로그만 출력
         log.warn("프로필 이미지 자동 할당 실패: {}", e.getMessage(), e);
@@ -119,7 +126,7 @@ public class BasicUserService implements UserService {
       // 사용자 프로필 이미지 업데이트
       User user = userRepository.findById(userId)
           .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-      user.updateProfileId(binaryContent.getId());
+      user.updateProfile(binaryContent);
       userRepository.save(user);
     } catch (Exception e) {
       throw new RuntimeException("프로필 이미지 할당 실패: " + e.getMessage(), e);
@@ -170,7 +177,7 @@ public class BasicUserService implements UserService {
     String newPassword = request.getNewPassword() != null ? request.getNewPassword() : request.getPassword();
 
     // 이름이 변경되는 경우에만 중복 검사
-    if (newName != null && !newName.equals(user.getName())) {
+    if (newName != null && !newName.equals(user.getUsername())) {
       if (userRepository.existsByName(newName)) {
         throw new IllegalArgumentException("이미 사용 중인 이름입니다.");
       }
@@ -186,9 +193,11 @@ public class BasicUserService implements UserService {
     // 3. 업데이트할 필드들을 한 번에 처리
     user.update(newName, newEmail, newPassword);
 
-    // 4. 프로필 이미지 ID 업데이트 (profileId가 제공된 경우)
+    // 4. 프로필 이미지 업데이트 (profileId가 제공된 경우)
     if (request.getProfileId() != null) {
-      user.updateProfileId(request.getProfileId());
+      BinaryContent profile = binaryContentRepository.findById(request.getProfileId())
+          .orElseThrow(() -> new IllegalArgumentException("프로필 이미지를 찾을 수 없습니다."));
+      user.updateProfile(profile);
     }
 
     // 5. 사용자 저장
@@ -238,17 +247,17 @@ public class BasicUserService implements UserService {
 
   private UserResponse convertToResponse(User user) {
     UserStatus status = userStatusRepository.findByUserId(user.getId())
-        .orElse(new UserStatus(user.getId()));
+        .orElse(new UserStatus(user));
 
     //  User 엔티티의 Getter를 통해 값을 DTO로 복사
     return new UserResponse(
         user.getId(),
-        user.getName(),
+        user.getUsername(),
         user.getEmail(),
         status.getId(),
         user.getId(),
         status.isOnline(),
-        user.getProfileId()
+        user.getProfile() != null ? user.getProfile().getId() : null
     );
   }
 

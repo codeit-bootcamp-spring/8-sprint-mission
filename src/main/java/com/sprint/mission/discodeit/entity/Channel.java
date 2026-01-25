@@ -1,78 +1,50 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
 @Table(name = "channels")
 @Getter
-@Setter
 @NoArgsConstructor
-public class Channel implements Serializable {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-    
-    @Column(name = "name", nullable = false, length = 100)
-    private String name;
-    
-    @Column(name = "description", length = 500)
-    private String description;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false, columnDefinition = "channel_type")
-    private ChannelType type;
-    
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-    
-    @Column(name = "updated_at")
-    private Instant updatedAt;
-    
-    // ownerId와 memberIds는 DB 스키마에 없으므로 @Transient로 표시
-    // 실제로는 ReadStatus를 통해 참여자 정보를 관리
-    @Transient
-    private UUID ownerId;
-    
-    @Transient
-    private Set<UUID> memberIds;
+public class Channel extends BaseUpdatableEntity {
 
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = Instant.now();
-        }
-        if (memberIds == null) {
-            memberIds = new HashSet<>();
-        }
-    }
+  @Column(nullable = false, length = 100)
+  private String name;
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = Instant.now();
-    }
+  @Column(length = 500)
+  private String description;
 
-    public Channel(String name, String description, ChannelType type, UUID ownerId) {
-        this.id = UUID.randomUUID();
-        this.name = name;
-        this.description = description;
-        this.type = type;
-        this.ownerId = ownerId;
-        this.memberIds = new HashSet<>();
-        this.createdAt = Instant.now();
-    }
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private ChannelType type;
 
-    // Service가 호출하는 상태 변경 메서드
-    public void update(String newName, String newDescription) {
-        if (newName != null) this.name = newName;
-        if (newDescription != null) this.description = newDescription;
-        this.updatedAt = Instant.now();
-    }
+  // User(owner/creator)와의 Many-to-One 관계
+  // 다이어그램에 있지만 schema.sql에는 owner_id 컬럼이 없음
+  // 다이어그램을 우선하여 추가 (nullable = true로 설정)
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "owner_id")
+  private User owner;
+
+  // 생성자
+  public Channel(String name, String description, ChannelType type, User owner) {
+    this.name = name;
+    this.description = description;
+    this.type = type;
+    this.owner = owner;
+  }
+
+  // update 메소드
+  public void update(String name, String description) {
+    this.name = name;
+    this.description = description;
+  }
+
+  // 헬퍼 메서드
+  public UUID getOwnerId() {
+    return owner != null ? owner.getId() : null;
+  }
 }

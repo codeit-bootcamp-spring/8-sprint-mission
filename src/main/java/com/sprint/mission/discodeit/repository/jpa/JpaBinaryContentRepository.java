@@ -6,17 +6,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
-
-public interface JpaBinaryContentRepositoryInterface extends JpaRepository<BinaryContent, UUID> {
-}
 
 @Repository
 @ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "jpa")
 public class JpaBinaryContentRepository implements BinaryContentRepository {
-    private final JpaBinaryContentRepositoryInterface jpaRepository;
+    private final JpaRepositoryInterface jpaRepository;
 
-    public JpaBinaryContentRepository(JpaBinaryContentRepositoryInterface jpaRepository) {
+    public JpaBinaryContentRepository(JpaRepositoryInterface jpaRepository) {
         this.jpaRepository = jpaRepository;
     }
 
@@ -26,7 +24,7 @@ public class JpaBinaryContentRepository implements BinaryContentRepository {
     }
 
     @Override
-    public java.util.Optional<BinaryContent> findById(UUID id) {
+    public Optional<BinaryContent> findById(UUID id) {
         return jpaRepository.findById(id);
     }
 
@@ -38,5 +36,8 @@ public class JpaBinaryContentRepository implements BinaryContentRepository {
     @Override
     public void delete(UUID id) {
         jpaRepository.deleteById(id);
+    }
+
+    public static interface JpaRepositoryInterface extends JpaRepository<BinaryContent, UUID> {
     }
 }

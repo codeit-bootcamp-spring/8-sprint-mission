@@ -1,22 +1,20 @@
 package com.sprint.mission.discodeit.repository.jpa;
 
-import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
+import com.sprint.mission.discodeit.entity.Channel;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
-
-public interface JpaChannelRepositoryInterface extends JpaRepository<Channel, UUID> {
-}
 
 @Repository
 @ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "jpa")
 public class JpaChannelRepository implements ChannelRepository {
-    private final JpaChannelRepositoryInterface jpaRepository;
+    private final JpaRepositoryInterface jpaRepository;
 
-    public JpaChannelRepository(JpaChannelRepositoryInterface jpaRepository) {
+    public JpaChannelRepository(JpaRepositoryInterface jpaRepository) {
         this.jpaRepository = jpaRepository;
     }
 
@@ -26,7 +24,7 @@ public class JpaChannelRepository implements ChannelRepository {
     }
 
     @Override
-    public java.util.Optional<Channel> findById(UUID id) {
+    public Optional<Channel> findById(UUID id) {
         return jpaRepository.findById(id);
     }
 
@@ -38,5 +36,8 @@ public class JpaChannelRepository implements ChannelRepository {
     @Override
     public void delete(UUID id) {
         jpaRepository.deleteById(id);
+    }
+
+    public static interface JpaRepositoryInterface extends JpaRepository<Channel, UUID> {
     }
 }

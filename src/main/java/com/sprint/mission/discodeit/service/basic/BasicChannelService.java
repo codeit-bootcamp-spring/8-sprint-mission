@@ -9,6 +9,7 @@ import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
+import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class BasicChannelService implements ChannelService {
     private final ChannelRepository channelRepository;
     private final MessageRepository messageRepository; // 연관 데이터 삭제를 위해 주입
     private final ReadStatusRepository readStatusRepository; // 사용자별 채널 조회를 위해 주입
+    private final UserRepository userRepository; // Owner 조회를 위해 주입
 
     @Override
     public ChannelResponse create(String name, String description) {
@@ -52,7 +54,8 @@ public class BasicChannelService implements ChannelService {
 
         // 2. 해당 사용자가 ReadStatus에 등록된 PRIVATE 채널 ID 조회
         Set<UUID> privateChannelIds = readStatusRepository.findAllByUserId(userId).stream()
-                .map(readStatus -> readStatus.getChannelId())
+                .map(ReadStatus::getChannelId)
+                .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toSet());
 
         // 3. 해당 사용자가 접근 가능한 PRIVATE 채널 조회
@@ -77,11 +80,18 @@ public class BasicChannelService implements ChannelService {
 
     @Override
     public ChannelResponse createPublic(ChannelCreateRequest request) {
+        // Owner 조회
+        com.sprint.mission.discodeit.entity.User owner = null;
+        if (request.getOwnerId() != null) {
+            owner = userRepository.findById(request.getOwnerId())
+                    .orElse(null);
+        }
+        
         Channel channel = new Channel(
                 request.getName(),
                 request.getDescription(),
                 com.sprint.mission.discodeit.entity.ChannelType.PUBLIC,
-                request.getOwnerId()
+                owner
         );
         Channel savedChannel = channelRepository.save(channel);
         return convertToResponse(savedChannel);
@@ -101,11 +111,18 @@ public class BasicChannelService implements ChannelService {
             channelName = "개인 메시지";
         }
         
+        // Owner 조회
+        com.sprint.mission.discodeit.entity.User owner = null;
+        if (request.getOwnerId() != null) {
+            owner = userRepository.findById(request.getOwnerId())
+                    .orElse(null);
+        }
+        
         Channel channel = new Channel(
                 channelName,
                 request.getDescription(),
                 com.sprint.mission.discodeit.entity.ChannelType.PRIVATE,
-                request.getOwnerId()
+                owner
         );
         Channel savedChannel = channelRepository.save(channel);
         
@@ -124,7 +141,11 @@ public class BasicChannelService implements ChannelService {
         
         // 각 참여자에 대해 ReadStatus 생성 (채널 생성 시간을 lastReadAt으로 설정)
         allParticipantIds.stream()
-                .map(userId -> new ReadStatus(userId, savedChannel.getId(), savedChannel.getCreatedAt()))
+                .map(userId -> {
+                    com.sprint.mission.discodeit.entity.User user = userRepository.findById(userId)
+                            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+                    return new ReadStatus(user, savedChannel, savedChannel.getCreatedAt());
+                })
                 .forEach(readStatusRepository::save);
         
         return convertToResponse(savedChannel);
@@ -187,10 +208,11 @@ public class BasicChannelService implements ChannelService {
         if (channel.getType() == ChannelType.PRIVATE) {
             memberIds = readStatusRepository.findAllByChannelId(channel.getId()).stream()
                     .map(ReadStatus::getUserId)
+                    .filter(java.util.Objects::nonNull)
                     .collect(Collectors.toSet());
         } else {
             // PUBLIC 채널은 memberIds가 없거나 빈 Set
-            memberIds = channel.getMemberIds() != null ? channel.getMemberIds() : new HashSet<>();
+            memberIds = new HashSet<>();
         }
         
         return new ChannelResponse(

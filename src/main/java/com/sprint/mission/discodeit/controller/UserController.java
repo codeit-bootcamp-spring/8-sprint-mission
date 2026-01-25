@@ -51,7 +51,7 @@ public class UserController {
                 profileDto = new com.sprint.mission.discodeit.dto.BinaryContentDto(
                     binaryContent.getId(),
                     binaryContent.getFileName(),
-                    binaryContent.getFileSize(),
+                    binaryContent.getSize(),
                     binaryContent.getContentType()
                 );
               }

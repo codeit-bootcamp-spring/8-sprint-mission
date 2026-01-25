@@ -38,7 +38,10 @@ CREATE TABLE channels
     description VARCHAR(500),
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMPTZ,
-    type        channel_type NOT NULL
+    type        channel_type NOT NULL,
+    owner_id    UUID,
+    CONSTRAINT fk_channels_owner FOREIGN KEY (owner_id)
+        REFERENCES users (id) ON DELETE SET NULL
 );
 
 CREATE TABLE messages

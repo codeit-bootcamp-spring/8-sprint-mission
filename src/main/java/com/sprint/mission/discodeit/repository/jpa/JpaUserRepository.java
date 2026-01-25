@@ -9,18 +9,12 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface JpaUserRepositoryInterface extends JpaRepository<User, UUID> {
-    Optional<User> findByEmail(String email);
-    boolean existsByName(String name);
-    boolean existsByEmail(String email);
-}
-
 @Repository
 @ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "jpa")
 public class JpaUserRepository implements UserRepository {
-    private final JpaUserRepositoryInterface jpaRepository;
+    private final JpaRepositoryInterface jpaRepository;
 
-    public JpaUserRepository(JpaUserRepositoryInterface jpaRepository) {
+    public JpaUserRepository(JpaRepositoryInterface jpaRepository) {
         this.jpaRepository = jpaRepository;
     }
 
@@ -51,11 +45,17 @@ public class JpaUserRepository implements UserRepository {
 
     @Override
     public boolean existsByName(String name) {
-        return jpaRepository.existsByName(name);
+        return jpaRepository.existsByUsername(name);
     }
 
     @Override
     public boolean existsByEmail(String email) {
         return jpaRepository.existsByEmail(email);
+    }
+
+    public static interface JpaRepositoryInterface extends JpaRepository<User, UUID> {
+        Optional<User> findByEmail(String email);
+        boolean existsByUsername(String username);
+        boolean existsByEmail(String email);
     }
 }

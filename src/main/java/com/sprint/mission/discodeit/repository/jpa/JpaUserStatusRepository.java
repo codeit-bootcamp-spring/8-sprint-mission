@@ -1,24 +1,22 @@
 package com.sprint.mission.discodeit.repository.jpa;
 
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
+import com.sprint.mission.discodeit.entity.UserStatus;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
 
-public interface JpaUserStatusRepositoryInterface extends JpaRepository<UserStatus, UUID> {
-    Optional<UserStatus> findByUserId(UUID userId);
-}
-
 @Repository
 @ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "jpa")
 public class JpaUserStatusRepository implements UserStatusRepository {
-    private final JpaUserStatusRepositoryInterface jpaRepository;
+    private final JpaRepositoryInterface jpaRepository;
 
-    public JpaUserStatusRepository(JpaUserStatusRepositoryInterface jpaRepository) {
+    public JpaUserStatusRepository(JpaRepositoryInterface jpaRepository) {
         this.jpaRepository = jpaRepository;
     }
 
@@ -45,5 +43,10 @@ public class JpaUserStatusRepository implements UserStatusRepository {
     @Override
     public Optional<UserStatus> findByUserId(UUID userId) {
         return jpaRepository.findByUserId(userId);
+    }
+
+    public static interface JpaRepositoryInterface extends JpaRepository<UserStatus, UUID> {
+        @Query("SELECT us FROM UserStatus us WHERE us.user.id = :userId")
+        Optional<UserStatus> findByUserId(@Param("userId") UUID userId);
     }
 }

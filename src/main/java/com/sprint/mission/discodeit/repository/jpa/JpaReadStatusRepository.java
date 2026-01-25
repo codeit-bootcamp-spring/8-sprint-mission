@@ -12,20 +12,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface JpaReadStatusRepositoryInterface extends JpaRepository<ReadStatus, UUID> {
-    List<ReadStatus> findAllByUserId(UUID userId);
-    List<ReadStatus> findAllByChannelId(UUID channelId);
-    
-    @Query("SELECT rs FROM ReadStatus rs WHERE rs.userId = :userId AND rs.channelId = :channelId")
-    Optional<ReadStatus> findByUserIdAndChannelId(@Param("userId") UUID userId, @Param("channelId") UUID channelId);
-}
-
 @Repository
 @ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "jpa")
 public class JpaReadStatusRepository implements ReadStatusRepository {
-    private final JpaReadStatusRepositoryInterface jpaRepository;
+    private final JpaRepositoryInterface jpaRepository;
 
-    public JpaReadStatusRepository(JpaReadStatusRepositoryInterface jpaRepository) {
+    public JpaReadStatusRepository(JpaRepositoryInterface jpaRepository) {
         this.jpaRepository = jpaRepository;
     }
 
@@ -57,5 +49,16 @@ public class JpaReadStatusRepository implements ReadStatusRepository {
     @Override
     public List<ReadStatus> findAllByChannelId(UUID channelId) {
         return jpaRepository.findAllByChannelId(channelId);
+    }
+
+    public static interface JpaRepositoryInterface extends JpaRepository<ReadStatus, UUID> {
+        @Query("SELECT rs FROM ReadStatus rs WHERE rs.user.id = :userId")
+        List<ReadStatus> findAllByUserId(@Param("userId") UUID userId);
+        
+        @Query("SELECT rs FROM ReadStatus rs WHERE rs.channel.id = :channelId")
+        List<ReadStatus> findAllByChannelId(@Param("channelId") UUID channelId);
+        
+        @Query("SELECT rs FROM ReadStatus rs WHERE rs.user.id = :userId AND rs.channel.id = :channelId")
+        Optional<ReadStatus> findByUserIdAndChannelId(@Param("userId") UUID userId, @Param("channelId") UUID channelId);
     }
 }

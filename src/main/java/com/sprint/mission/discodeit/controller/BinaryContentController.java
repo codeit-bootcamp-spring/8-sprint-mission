@@ -78,12 +78,12 @@ public class BinaryContentController {
     public ResponseEntity<Resource> getProfileImage(@PathVariable UUID binaryContentId) {
         // profileId로 사용자 찾기
         User user = userRepository.findAll().stream()
-                .filter(u -> u.getProfileId() != null && u.getProfileId().equals(binaryContentId))
+                .filter(u -> u.getProfile() != null && u.getProfile().getId().equals(binaryContentId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("프로필 이미지를 찾을 수 없습니다."));
 
         // 사용자 이름에 맞는 이미지 파일 선택
-        String imageFileName = getImageFileNameForUser(user.getName());
+        String imageFileName = getImageFileNameForUser(user.getUsername());
         
         // static/images 폴더에서 이미지 파일 로드
         Resource resource = new ClassPathResource("static/images/" + imageFileName);
