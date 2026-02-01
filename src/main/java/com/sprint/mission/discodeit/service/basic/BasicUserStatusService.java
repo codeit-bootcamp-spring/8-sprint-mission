@@ -80,8 +80,12 @@ public class BasicUserStatusService implements UserStatusService {
   @Override
   @Transactional
   public UserStatusDto updateByUserId(UUID userId, Instant lastConnAt) {
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + userId));
+
     UserStatus status = userStatusRepository.findByUser_Id(userId)
-        .orElseThrow(() -> new NoSuchElementException("UserStatus를 찾을 수 없습니다: " + userId));
+        .orElseGet(() -> new UserStatus(user, Instant.now()));
 
     status.update(lastConnAt != null ? lastConnAt : Instant.now());
 
