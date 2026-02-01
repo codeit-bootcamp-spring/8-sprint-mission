@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MessageRepository extends JpaRepository<Message, UUID> {
@@ -13,6 +14,11 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
   Optional<Message> findFirstByChannel_IdOrderByCreatedAtDesc(UUID channelId);
 
   // 페이징
+  @EntityGraph(attributePaths = {
+      "author",
+      "author.profile",
+      "author.status"
+  })
   Slice<Message> findAllByChannel_Id(UUID channelId, Pageable pageable);
 
   List<Message> findAllByChannel_Id(UUID channelId);
