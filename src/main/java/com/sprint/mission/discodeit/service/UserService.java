@@ -3,7 +3,7 @@ package com.sprint.mission.discodeit.service;
 import com.sprint.mission.discodeit.DTO.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.DTO.request.UserCreateRequest;
 import com.sprint.mission.discodeit.DTO.request.UserUpdateRequest;
-import com.sprint.mission.discodeit.DTO.response.UserDto;
+import com.sprint.mission.discodeit.DTO.dto.UserDto;
 import com.sprint.mission.discodeit.entity.User;
 import java.util.List;
 import java.util.Optional;
@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public interface UserService {
 
-  User create(UserCreateRequest request,
+  UserDto create(UserCreateRequest request,
       Optional<BinaryContentCreateRequest> profileCreateRequest);
 
   // 단건 조회
@@ -21,7 +21,7 @@ public interface UserService {
   //- 전체 조회
   List<UserDto> findAll();
 
-  User update(UUID id, UserUpdateRequest request,
+  UserDto update(UUID id, UserUpdateRequest request,
       Optional<BinaryContentCreateRequest> profileCreateRequest);
 
   //유저 삭제
