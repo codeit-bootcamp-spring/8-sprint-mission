@@ -1,18 +1,21 @@
--- 1. ENUM 타입 생성 (channels 테이블의 type 컬럼용)
-CREATE TYPE channel_type AS ENUM ('PUBLIC', 'PRIVATE');
+-- 1. 기존 스카마와 그 안의 모든 객체(TABLE, TYPE 등)를 완전히 삭제 (CASCADE)
+DROP SCHEMA IF EXISTS discodeit_schema CASCADE;
 
--- 2. binary_contents 테이블 (참조하는 테이블이 없으므로 먼저 생성)
+-- 2. 스키마를 새로 생성하고 경로 설정
+CREATE SCHEMA discodeit_schema;
+SET search_path TO discodeit_schema;
+
+-- 3. binary_contents 테이블
 CREATE TABLE binary_contents
 (
     id           UUID PRIMARY KEY,
     created_at   TIMESTAMPTZ  NOT NULL,
     file_name    VARCHAR(255) NOT NULL,
     size         BIGINT       NOT NULL,
-    content_type VARCHAR(100) NOT NULL,
-    bytes        BYTEA        NOT NULL
+    content_type VARCHAR(100) NOT NULL
 );
 
--- 3. users 테이블 (binary_contents를 참조)
+-- 4. users 테이블
 CREATE TABLE users
 (
     id         UUID PRIMARY KEY,
@@ -26,18 +29,18 @@ CREATE TABLE users
         REFERENCES binary_contents (id) ON DELETE SET NULL
 );
 
--- 4. channels 테이블 (ENUM 적용)
+-- 5. channels 테이블
 CREATE TABLE channels
 (
     id          UUID PRIMARY KEY,
-    created_at  TIMESTAMPTZ  NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL,
     updated_at  TIMESTAMPTZ,
     name        VARCHAR(100),
     description VARCHAR(500),
-    type        channel_type NOT NULL
+    type        VARCHAR(10) NOT NULL CHECK (type IN ('PUBLIC', 'PRIVATE'))
 );
 
--- 5. user_statuses 테이블 (users를 참조)
+-- 6. user_statuses 테이블
 CREATE TABLE user_statuses
 (
     id             UUID PRIMARY KEY,
@@ -49,7 +52,7 @@ CREATE TABLE user_statuses
         REFERENCES users (id) ON DELETE CASCADE
 );
 
--- 6. read_statuses 테이블 (users, channels를 참조)
+-- 7. read_statuses 테이블
 CREATE TABLE read_statuses
 (
     id           UUID PRIMARY KEY,
@@ -65,7 +68,7 @@ CREATE TABLE read_statuses
         REFERENCES channels (id) ON DELETE CASCADE
 );
 
--- 7. messages 테이블 (users, channels를 참조)
+-- 8. messages 테이블
 CREATE TABLE messages
 (
     id         UUID PRIMARY KEY,
@@ -80,8 +83,7 @@ CREATE TABLE messages
         REFERENCES users (id) ON DELETE SET NULL
 );
 
--- 8. message_attachments 테이블
--- (messages, binary_contents를 참조하는 다대다 연결 테이블)
+-- 9. message_attachments 테이블
 CREATE TABLE message_attachments
 (
     message_id    UUID NOT NULL,
@@ -92,8 +94,3 @@ CREATE TABLE message_attachments
     CONSTRAINT fk_attachments_binary FOREIGN KEY (attachment_id)
         REFERENCES binary_contents (id) ON DELETE CASCADE
 );
-
-
--- 9. BinaryContent에서 bytes 제거 -> DB에서도 제거
-ALTER TABLE binary_contents
-    DROP COLUMN bytes;

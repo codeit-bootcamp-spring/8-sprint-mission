@@ -16,6 +16,7 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 
 /*
     Message
@@ -45,6 +46,7 @@ public class Message extends BaseUpdatableEntity {
   private User author;
 
   // 메시지에 첨부된 BinaryContent 객체들
+  @BatchSize(size = 100)
   @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinTable(
       name = "message_attachments",
