@@ -8,69 +8,72 @@ package com.sprint.mission.discodeit.entity;
     • name           : 유저의 이름
     • email          : 유저의 이메일 주소
     • password       : 유저의 패스워드 (실제는 Hashing 해줘야 하지만, 학습용이라 평문 문자열로 설정하였다.)
-    • profileId      : 프로필 이미지(BinaryContent)의 id
-
-    [메서드]
-    • update(User user)   : User 객체의 값을 현재 객체에 반영 및 updateCall()로 updatedAt 수정.
-
+    • profile        : 프로필 이미지 객체
  */
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.util.UUID;
-
+@Entity
+@Table(name = "users")
 @Getter
-public class User extends BaseEntity implements Serializable {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class User extends BaseUpdatableEntity {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
+  @Column(name = "username", nullable = false, unique = true, length = 50)
+  private String username;
 
-  private String name;
+  @Column(name = "email", nullable = false, unique = true, length = 100)
   private String email;
-  private String password;
-  private UUID profileId;
 
-  // 프로필 이미지 들어왔을 때
-  public User(String name, String email, String password, UUID profileId) {
-    this.name = name;
+  @Column(name = "password", nullable = false, length = 60)
+  private String password;
+
+  // 프로필 이미지 1:1 단방향
+  @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+  @JoinColumn(name = "profile_id", unique = true)
+  private BinaryContent profile;
+
+  // UserStatus와의 1:1 관계 반영
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  private UserStatus status;
+
+  public void attachStatus(UserStatus status) {
+    this.status = status;
+  }
+
+  public User(String username, String email, String password, BinaryContent profile) {
+    this.username = username;
     this.email = email;
     this.password = password;
-    this.profileId = profileId;
+    this.profile = profile;
   }
 
-  // 프로필 이미지 안 들어왔을 때
-  public User(String name, String email, String password) {
-    this(name, email, password, null);
-  }
+  public void update(String username, String email, String password, BinaryContent profile) {
 
-  public void update(String newName, String newEmail, String newPassword, UUID newProfileId) {
-
-    boolean changeCheck = false;
-
-    if (newName != null && !newName.equals(this.name)) {
-      this.name = newName;
-      changeCheck = true;
+    if (username != null) {
+      this.username = username;
     }
 
-    if (newEmail != null && !newEmail.equals(this.email)) {
-      this.email = newEmail;
-      changeCheck = true;
+    if (email != null) {
+      this.email = email;
     }
 
-    if (newPassword != null && !newPassword.equals(this.password)) {
-      this.password = newPassword;
-      changeCheck = true;
+    if (password != null) {
+      this.password = password;
     }
 
-    if (newProfileId != null && !newProfileId.equals(this.profileId)) {
-      this.profileId = newProfileId;
-      changeCheck = true;
-    }
-
-    if (changeCheck) {
-      updateCall();
+    if (profile != this.profile) {
+      this.profile = profile;
     }
   }
 }

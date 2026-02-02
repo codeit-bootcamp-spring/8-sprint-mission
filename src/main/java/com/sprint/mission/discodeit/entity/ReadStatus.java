@@ -1,42 +1,57 @@
 package com.sprint.mission.discodeit.entity;
 
 
-import lombok.Getter;
-
-import java.io.Serial;
-import java.io.Serializable;
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
-import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /*
     사용자가 채널 별 마지막으로 메시지를 읽은 시간을 표현하는 도메인 모델입니다.
 
      [필드 설명]
-    • userId                 : 유저의 id
-    • channelId              : 채널의 id
+    • user                   : 유저 객체
+    • channel                : 채널 객체
     • lastReadAt             : 마지막으로 메시지를 읽은 시간
 
  */
+@Entity
+@Table(name = "read_statuses", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_read_statuses_user_channel", columnNames = {"user_id",
+        "channel_id"})
+})
 @Getter
-public class ReadStatus extends BaseEntity implements Serializable {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class ReadStatus extends BaseUpdatableEntity {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
 
-  private UUID userId;
-  private UUID channelId;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "channel_id", nullable = false)
+  private Channel channel;
+
+  @Column(name = "last_read_at", nullable = false)
   private Instant lastReadAt;
 
-  public ReadStatus(UUID userId, UUID channelId, Instant lastReadAt) {
-    this.userId = userId;
-    this.channelId = channelId;
+  public ReadStatus(User user, Channel channel, Instant lastReadAt) {
+    this.user = user;
+    this.channel = channel;
     this.lastReadAt = lastReadAt;
   }
 
   public void update(Instant newLastReadAt) {
-    if (newLastReadAt != null && !newLastReadAt.equals(this.lastReadAt)) {
+    if (newLastReadAt != null) {
       this.lastReadAt = newLastReadAt;
-      updateCall();
     }
   }
 }

@@ -1,100 +1,95 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.readstatus.ReadStatusCreateRequest;
-import com.sprint.mission.discodeit.dto.readstatus.ReadStatusResponse;
+import com.sprint.mission.discodeit.dto.readstatus.ReadStatusDto;
 import com.sprint.mission.discodeit.dto.readstatus.ReadStatusUpdateRequest;
+import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.mapper.ReadStatusMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ReadStatusService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BasicReadStatusService implements ReadStatusService {
 
   private final ReadStatusRepository readStatusRepository;
   private final UserRepository userRepository;
   private final ChannelRepository channelRepository;
+  private final ReadStatusMapper readStatusMapper;
 
   @Override
-  public ReadStatusResponse create(ReadStatusCreateRequest request) {
-    // 1) User 존재 여부 확인
-    if (!userRepository.existsById(request.userId())) {
-      throw new NoSuchElementException("User 를 찾을 수 없습니다: " + request.userId());
-    }
+  @Transactional
+  public ReadStatusDto create(ReadStatusCreateRequest request) {
 
-    // 2) Channel 존재 여부 확인
-    if (!channelRepository.existsById(request.channelId())) {
-      throw new NoSuchElementException("Channel 을 찾을 수 없습니다: " + request.channelId());
-    }
+    // 1) User 엔티티 조회
+    User user = userRepository.findById(request.userId())
+        .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다: " + request.userId()));
+
+    // 2) Channel 엔티티 조회
+    Channel channel = channelRepository.findById(request.channelId())
+        .orElseThrow(
+            () -> new NoSuchElementException("Channel 을 찾을 수 없습니다: " + request.channelId()));
 
     // 3) (userId, channelId) 조합 중복 체크
-    readStatusRepository.findByUserIdAndChannelId(request.userId(), request.channelId())
+    readStatusRepository.findByUser_IdAndChannel_Id(request.userId(), request.channelId())
         .ifPresent(rs -> {
           throw new IllegalStateException("이미 존재하는 ReadStatus 입니다.");
         });
 
-    Instant lastReadAt = (request.lastReadAt() != null)
-        ? request.lastReadAt()
-        : Instant.EPOCH; // 기본값: 아주 옛날 시각
+    Instant lastReadAt =
+        (request.lastReadAt() != null) ? request.lastReadAt() : Instant.EPOCH; // 기본값: 아주 옛날 시각
 
-    ReadStatus readStatus = new ReadStatus(
-        request.userId(),
-        request.channelId(),
-        lastReadAt
-    );
+    ReadStatus readStatus = new ReadStatus(user, channel, lastReadAt);
 
-    readStatusRepository.save(readStatus);
+    ReadStatus savedStatus = readStatusRepository.save(readStatus);
 
-    return convertDto(readStatus);
+    return readStatusMapper.toDto(savedStatus);
   }
 
   @Override
-  public ReadStatusResponse findById(UUID id) {
-    ReadStatus readStatus = readStatusRepository.findById(id)
+  public ReadStatusDto findById(UUID id) {
+    return readStatusRepository.findById(id)
+        .map(readStatusMapper::toDto)
         .orElseThrow(() -> new NoSuchElementException("ReadStatus를 찾을 수 없습니다. " + id));
-
-    return convertDto(readStatus);
   }
 
   @Override
-  public List<ReadStatusResponse> findAllByUserId(UUID userId) {
-    return readStatusRepository.findAllByUserId(userId).stream()
-        .map(this::convertDto)
-        .collect(Collectors.toList());
+  public List<ReadStatusDto> findAllByUserId(UUID userId) {
+    return readStatusRepository.findAllByUser_Id(userId).stream()
+        .map(readStatusMapper::toDto)
+        .toList();
   }
 
   @Override
-  public ReadStatusResponse update(UUID readStatusId, ReadStatusUpdateRequest request) {
+  @Transactional
+  public ReadStatusDto update(UUID readStatusId, ReadStatusUpdateRequest request) {
     ReadStatus readStatus = readStatusRepository.findById(readStatusId)
         .orElseThrow(() -> new NoSuchElementException("ReadStatus를 찾을 수 없습니다: " + readStatusId));
 
     readStatus.update(request.newLastReadAt());
-    readStatusRepository.save(readStatus);
 
-    return convertDto(readStatus);
+    return readStatusMapper.toDto(readStatus);
   }
 
   @Override
+  @Transactional
   public void delete(UUID id) {
-    readStatusRepository.deleteById(id);
-  }
 
-  private ReadStatusResponse convertDto(ReadStatus entity) {
-    return new ReadStatusResponse(
-        entity.getId(),
-        entity.getUserId(),
-        entity.getChannelId(),
-        entity.getLastReadAt()
-    );
+    if (!readStatusRepository.existsById(id)) {
+      throw new NoSuchElementException("ReadStatus를 찾을 수 없습니다: " + id);
+    }
+    readStatusRepository.deleteById(id);
   }
 }

@@ -1,88 +1,67 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateRequest;
-import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentResponse;
+import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BasicBinaryContentService implements BinaryContentService {
 
   private final BinaryContentRepository binaryContentRepository;
+  private final BinaryContentMapper binaryContentMapper;
+  private final BinaryContentStorage binaryContentStorage;
 
   @Override
-  public BinaryContentResponse create(BinaryContentCreateRequest request) {
+  @Transactional
+  public BinaryContentDto create(BinaryContentCreateRequest request) {
+
+    // 메타데이터
     BinaryContent binaryContent = new BinaryContent(
         request.fileName(),
-        request.contentType(),
-        request.bytes()
+        request.size(),
+        request.contentType()
     );
-    binaryContentRepository.save(binaryContent);
-    return convertDto(binaryContent);
+
+    BinaryContent savedContent = binaryContentRepository.save(binaryContent);
+
+    // 실제 bytes 저장
+    binaryContentStorage.put(savedContent.getId(), request.bytes());
+    
+    return binaryContentMapper.toDto(savedContent);
   }
 
   @Override
-  public BinaryContentResponse findById(UUID id) {
-    BinaryContent binaryContent = binaryContentRepository.findById(id)
+  public BinaryContentDto findById(UUID id) {
+    return binaryContentRepository.findById(id)
+        .map(binaryContentMapper::toDto)
         .orElseThrow(() -> new NoSuchElementException("BinaryContent를 찾을 수 없습니다." + id));
-    return convertDto(binaryContent);
   }
 
   @Override
-  public List<BinaryContentResponse> findAllByIdIn(List<UUID> ids) {
-    return binaryContentRepository.findAllByIdIn(ids).stream()
-        .map(binaryContent -> this.convertDto(binaryContent))
-        .collect(Collectors.toList());
+  public List<BinaryContentDto> findAllByIdIn(List<UUID> ids) {
+    return binaryContentRepository.findAllById(ids).stream()
+        .map(binaryContentMapper::toDto)
+        .toList();
   }
 
   @Override
+  @Transactional
   public void delete(UUID id) {
+    if (!binaryContentRepository.existsById(id)) {
+      throw new NoSuchElementException("BinaryContent를 찾을 수 없습니다. " + id);
+    }
     binaryContentRepository.deleteById(id);
-  }
-
-  private BinaryContentResponse convertDto(BinaryContent binaryContent) {
-
-    // 파일 저장소에서 옛날 데이터 읽어온 경우 contentType이 null일 수 있음 → 안전 처리
-    String contentType = binaryContent.getContentType();
-    if (contentType == null || contentType.isBlank()) {
-      contentType = guessContentType(binaryContent.getFileName());
-    }
-    return new BinaryContentResponse(
-        binaryContent.getId(),
-        binaryContent.getFileName(),
-        contentType,
-        binaryContent.getBytes(),
-        binaryContent.getCreatedAt(),
-        binaryContent.getOptionalHostUserId().orElse(null),
-        binaryContent.getOptionalHostMessageId().orElse(null)
-    );
-  }
-
-  private String guessContentType(String fileName) {
-    if (fileName == null) {
-      return "application/octet-stream";
-    }
-    String lower = fileName.toLowerCase();
-    if (lower.endsWith(".png")) {
-      return "image/png";
-    }
-    if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
-      return "image/jpeg";
-    }
-    if (lower.endsWith(".gif")) {
-      return "image/gif";
-    }
-    if (lower.endsWith(".webp")) {
-      return "image/webp";
-    }
-    return "application/octet-stream";
   }
 }

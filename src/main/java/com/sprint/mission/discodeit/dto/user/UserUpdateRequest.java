@@ -1,6 +1,6 @@
 package com.sprint.mission.discodeit.dto.user;
 
-import java.util.UUID;
+import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateRequest;
 
 /*
     UserUpdateRequest
@@ -11,15 +11,13 @@ import java.util.UUID;
     • newUsername                  : 유저 이름
     • newEmail                     : 유저 이메일 주소
     • newPassword                  : 유저 패스워드
-    • profileImageFilename         : 프로필 이미지 파일 명 (이미지(파일)는 id를 가져와서 수정하는게 아닌 새로 생성)
-    • profileImageData             : 프로필 이미지 파일 데이터
+    • profile                      : 프로필 이미지 파일 데이터
  */
 public record UserUpdateRequest(
     String newUsername,
     String newEmail,
     String newPassword,
-    String profileImageFilename,
-    byte[] profileImageData
+    BinaryContentCreateRequest profile
 ) {
 
 }
