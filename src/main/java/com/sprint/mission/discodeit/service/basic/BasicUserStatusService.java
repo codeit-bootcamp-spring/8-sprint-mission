@@ -2,7 +2,9 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.UserStatusRequest;
 import com.sprint.mission.discodeit.dto.UserStatusResponse;
+import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserStatusService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import java.util.UUID;
 public class BasicUserStatusService implements UserStatusService {
 
     private final UserStatusRepository userStatusRepository;
+    private final UserRepository userRepository;
 
     @Override
     public UserStatusResponse update(UserStatusRequest request) {
@@ -30,7 +33,9 @@ public class BasicUserStatusService implements UserStatusService {
 
     @Override
     public UserStatus create(UUID userId) {
-        return userStatusRepository.save(new UserStatus(userId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        return userStatusRepository.save(new UserStatus(user));
     }
 
     @Override
@@ -47,9 +52,9 @@ public class BasicUserStatusService implements UserStatusService {
 
     private UserStatusResponse convertToResponse(UserStatus userStatus) {
         return UserStatusResponse.builder()
-                .userId(userStatus.getUserId())
+                .userId(userStatus.getUser().getId())
                 .isOnline(userStatus.isOnline())
-                .lastAccessAt(userStatus.getLastAccessAt())
+                .lastAccessAt(userStatus.getLastActiveAt())
                 .build();
     }
 }

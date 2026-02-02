@@ -56,7 +56,7 @@ public class FileUserRepository implements UserRepository {
     @Override
     public boolean existsByName(String name) {
         return findAll().stream()
-                .anyMatch(e -> e.getName() != null && e.getName().equals(name));
+                .anyMatch(e -> e.getUsername() != null && e.getUsername().equals(name));
     }
 
     @Override

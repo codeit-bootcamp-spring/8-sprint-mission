@@ -1,27 +1,40 @@
 package com.sprint.mission.discodeit.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.sprint.mission.discodeit.entity.base.BaseEntity;
+import jakarta.persistence.*;
 import lombok.Getter;
-import java.util.UUID;
+import lombok.NoArgsConstructor;
 
+@Entity
+@Table(name = "binary_contents")
 @Getter
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class BinaryContent {
-    private UUID id;
-    private String fileName;
-    private String contentType;
-    private Long fileSize;
-    private String bytes; // Base64 encoded file data
+@NoArgsConstructor
+public class BinaryContent extends BaseEntity {
 
-    public BinaryContent() {
-        this.id = UUID.randomUUID();
-    }
+  @Column(name = "file_name", nullable = false)
+  private String fileName;
 
-    public BinaryContent(String fileName, String contentType, Long fileSize, String bytes) {
-        this.id = UUID.randomUUID();
-        this.fileName = fileName;
-        this.contentType = contentType;
-        this.fileSize = fileSize;
-        this.bytes = bytes;
-    }
+  @Column(nullable = false)
+  private Long size;
+
+  @Column(name = "content_type", nullable = false, length = 100)
+  private String contentType;
+
+  // 생성자 (메타 정보만 저장)
+  public BinaryContent(String fileName, String contentType, Long size) {
+    this.fileName = fileName;
+    this.contentType = contentType;
+    this.size = size;
+  }
+
+  // update 메소드 (메타 정보만 업데이트)
+  public void update(String fileName, String contentType, Long size) {
+    this.fileName = fileName;
+    this.contentType = contentType;
+    this.size = size;
+  }
+
+  public Long getFileSize() {
+    return size;
+  }
 }

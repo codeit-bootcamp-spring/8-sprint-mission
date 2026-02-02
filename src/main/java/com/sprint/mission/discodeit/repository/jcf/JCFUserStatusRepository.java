@@ -21,7 +21,9 @@ public class JCFUserStatusRepository implements UserStatusRepository {
 
     @Override
     public UserStatus save(UserStatus userStatus) {
-        list.removeIf(e -> e.getId().equals(userStatus.getId()));
+        if (userStatus.getId() != null) {
+            list.removeIf(e -> e.getId() != null && e.getId().equals(userStatus.getId()));
+        }
         list.add(userStatus);
         return userStatus;
     }

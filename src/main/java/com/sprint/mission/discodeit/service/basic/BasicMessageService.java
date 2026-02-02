@@ -56,18 +56,27 @@ public class BasicMessageService implements MessageService {
             }
         }
 
-        // 메시지 생성 시 채널 ID 명시적 확인
-        UUID channelId = request.getChannelId();
-        Message message = new Message(
-                request.getAuthorId(),
-                channelId,
-                request.getContent(),
-                request.getAttachmentIds()
-        );
+        // User와 Channel 객체 조회
+        com.sprint.mission.discodeit.entity.User author = userRepository.findById(request.getAuthorId())
+                .orElseThrow(() -> new IllegalArgumentException("작성자를 찾을 수 없습니다."));
+
+        // 메시지 생성
+        Message message = new Message(request.getContent(), channel, author);
+        
+        // 첨부파일 설정
+        if (request.getAttachmentIds() != null && !request.getAttachmentIds().isEmpty()) {
+            List<com.sprint.mission.discodeit.entity.BinaryContent> attachments = request.getAttachmentIds().stream()
+                    .map(binaryContentRepository::findById)
+                    .filter(java.util.Optional::isPresent)
+                    .map(java.util.Optional::get)
+                    .collect(java.util.stream.Collectors.toList());
+            message.getAttachments().clear();
+            message.getAttachments().addAll(attachments);
+        }
         
         // 저장 후 채널 ID 검증
         Message savedMessage = messageRepository.save(message);
-        if (!savedMessage.getChannelId().equals(channelId)) {
+        if (!savedMessage.getChannelId().equals(request.getChannelId())) {
             throw new IllegalStateException("메시지 저장 시 채널 ID가 올바르게 설정되지 않았습니다.");
         }
         
@@ -103,7 +112,21 @@ public class BasicMessageService implements MessageService {
         Message message = messageRepository.findById(request.getId())
                 .orElseThrow(() -> new IllegalArgumentException("메시지를 찾을 수 없습니다."));
 
-        message.update(request.getContent(), request.getAttachmentIds());
+        // 첨부파일 조회
+        List<com.sprint.mission.discodeit.entity.BinaryContent> attachments = null;
+        if (request.getAttachmentIds() != null && !request.getAttachmentIds().isEmpty()) {
+            attachments = request.getAttachmentIds().stream()
+                    .map(binaryContentRepository::findById)
+                    .filter(java.util.Optional::isPresent)
+                    .map(java.util.Optional::get)
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        
+        if (attachments != null) {
+            message.update(request.getContent(), attachments);
+        } else {
+            message.update(request.getContent());
+        }
         return messageRepository.save(message);
     }
 
