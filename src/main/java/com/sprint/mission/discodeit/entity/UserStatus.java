@@ -1,33 +1,63 @@
 package com.sprint.mission.discodeit.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.time.Instant;
 import java.util.UUID;
 
-@Getter //  필수: getId(), getUserId() 등을 생성합니다.
+@Entity
+@Table(name = "user_statuses")
+@Getter
 @NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class UserStatus {
-    private UUID id;
-    private UUID userId;
-    private Instant lastAccessAt;
+public class UserStatus extends BaseUpdatableEntity {
 
-    public UserStatus(UUID userId) {
-        this.id = UUID.randomUUID();
-        this.userId = userId;
-        this.lastAccessAt = Instant.now();
-    }
+  // User와의 One-to-One 양방향 관계
+  // schema.sql: ON DELETE CASCADE, UNIQUE 제약조건
+  // User가 삭제되면 UserStatus도 삭제되어야 함
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", nullable = false, unique = true)
+  private User user;
 
-    @JsonIgnore // JSON 직렬화/역직렬화 시 제외 (계산된 값이므로 저장 불필요)
-    public boolean isOnline() {
-        return lastAccessAt != null &&
-                lastAccessAt.isAfter(Instant.now().minusSeconds(300));
-    }
+  @Column(name = "last_active_at", nullable = false)
+  private Instant lastActiveAt;
 
-    public void updateLastAccessAt() {
-        this.lastAccessAt = Instant.now();
+  // 생성자
+  public UserStatus(User user, Instant lastActiveAt) {
+    this.setId(UUID.randomUUID());
+    this.user = user;
+    this.lastActiveAt = lastActiveAt;
+  }
+
+  // User만 받는 생성자 (lastActiveAt은 현재 시간으로 설정)
+  public UserStatus(User user) {
+    this.setId(UUID.randomUUID());
+    this.user = user;
+    this.lastActiveAt = Instant.now();
+  }
+
+  // update 메소드
+  public void update(Instant lastActiveAt) {
+    this.lastActiveAt = lastActiveAt;
+  }
+
+  // lastActiveAt 업데이트 메소드 (현재 시간으로)
+  public void updateLastAccessAt() {
+    this.lastActiveAt = Instant.now();
+  }
+
+  // 온라인 상태 확인 메소드 (5분 이내 활동이면 온라인)
+  public boolean isOnline() {
+    if (lastActiveAt == null) {
+      return false;
     }
+    Instant fiveMinutesAgo = Instant.now().minusSeconds(300);
+    return lastActiveAt.isAfter(fiveMinutesAgo);
+  }
+
+  // 헬퍼 메서드
+  public UUID getUserId() {
+    return user != null ? user.getId() : null;
+  }
 }

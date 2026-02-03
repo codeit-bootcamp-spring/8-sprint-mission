@@ -1,9 +1,12 @@
 package com.sprint.mission.discodeit.controller;
 
+import com.sprint.mission.discodeit.dto.BinaryContentDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
@@ -13,7 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +26,8 @@ import java.util.UUID;
 public class BinaryContentController {
 
     private final BinaryContentService binaryContentService;
+    private final BinaryContentStorage binaryContentStorage;
+    private final BinaryContentMapper binaryContentMapper;
     private final UserRepository userRepository;
     
     @Data
@@ -60,9 +64,38 @@ public class BinaryContentController {
         response.setFileName(content.getFileName());
         response.setContentType(content.getContentType());
         response.setFileSize(content.getFileSize());
-        response.setBytes(content.getBytes());
+        
+        // 바이너리 데이터는 별도 저장소에서 조회
+        try {
+            java.io.InputStream inputStream = binaryContentStorage.get(content.getId());
+            if (inputStream != null) {
+                byte[] bytes = inputStream.readAllBytes();
+                response.setBytes(Base64.getEncoder().encodeToString(bytes));
+                inputStream.close();
+            } else {
+                response.setBytes("");
+            }
+        } catch (Exception e) {
+            response.setBytes("");
+        }
         
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 파일 다운로드
+     * GET /api/binaryContents/{binaryContentId}/download
+     */
+    @RequestMapping(value = "/{binaryContentId}/download", method = RequestMethod.GET)
+    public ResponseEntity<?> download(@PathVariable UUID binaryContentId) {
+        BinaryContent content = binaryContentService.findById(binaryContentId)
+                .orElseThrow(() -> new IllegalArgumentException("파일 정보를 찾을 수 없습니다."));
+
+        // BinaryContentDto 생성
+        BinaryContentDto dto = binaryContentMapper.toDto(content);
+        
+        // BinaryContentStorage에 다운로드 로직 위임
+        return binaryContentStorage.download(dto);
     }
 
     /**
@@ -73,12 +106,12 @@ public class BinaryContentController {
     public ResponseEntity<Resource> getProfileImage(@PathVariable UUID binaryContentId) {
         // profileId로 사용자 찾기
         User user = userRepository.findAll().stream()
-                .filter(u -> u.getProfileId() != null && u.getProfileId().equals(binaryContentId))
+                .filter(u -> u.getProfile() != null && u.getProfile().getId().equals(binaryContentId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("프로필 이미지를 찾을 수 없습니다."));
 
         // 사용자 이름에 맞는 이미지 파일 선택
-        String imageFileName = getImageFileNameForUser(user.getName());
+        String imageFileName = getImageFileNameForUser(user.getUsername());
         
         // static/images 폴더에서 이미지 파일 로드
         Resource resource = new ClassPathResource("static/images/" + imageFileName);

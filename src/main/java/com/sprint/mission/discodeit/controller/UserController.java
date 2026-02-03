@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.dto.BinaryContentCreateRequest;
+import com.sprint.mission.discodeit.dto.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.UserResponse;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserController {
 
+  private static final BinaryContentDto T = null;
   private final UserService userService;
   private final UserStatusService userStatusService;
   private final BinaryContentService binaryContentService;
@@ -37,15 +39,35 @@ public class UserController {
   public ResponseEntity<List<UserDto>> findAll() {
     try {
       List<UserDto> userDtos = userService.findAll().stream()
-          .map(response -> new UserDto(
-              response.getId(),
-              // 화면 소스가 'username'을 기대하므로 response.getName()을 매핑
-              response.getName() != null ? response.getName() : "Unknown",
-              response.getEmail() != null ? response.getEmail() : "",
-              // Postman에서 확인된 profileId UUID 전달
-              response.getProfileId(),
-              response.isOnline()
-          ))
+          .map(response -> {
+            // profileId로 BinaryContent 조회하여 BinaryContentDto 생성
+            com.sprint.mission.discodeit.dto.BinaryContentDto profileDto = null;
+            if (response.getProfileId() != null) {
+              binaryContentService.findById(response.getProfileId())
+                  .ifPresent(binaryContent -> {
+                    // BinaryContentDto는 별도로 생성해야 함
+                  });
+              // 간단히 변환
+              var binaryContent = binaryContentService.findById(response.getProfileId())
+                  .orElse(null);
+              if (binaryContent != null) {
+                profileDto = new com.sprint.mission.discodeit.dto.BinaryContentDto(
+                    binaryContent.getId(),
+                    binaryContent.getFileName(),
+                    binaryContent.getSize(),
+                    binaryContent.getContentType()
+                );
+              }
+            }
+
+            return UserDto.builder()
+                .id(response.getId())
+                .username(response.getName() != null ? response.getName() : "Unknown")
+                .email(response.getEmail() != null ? response.getEmail() : "")
+                .profile(profileDto)
+                .online(response.isOnline())
+                .build();
+          })
           .collect(Collectors.toList());
 
       return ResponseEntity.ok(userDtos);
@@ -81,7 +103,8 @@ public class UserController {
       }
     }
 
-    return ResponseEntity.ok(userService.create(userCreateRequest));
+    return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
+        .body(userService.create(userCreateRequest));
   }
 
   /**
@@ -89,7 +112,8 @@ public class UserController {
    */
   @RequestMapping(method = RequestMethod.POST, consumes = "application/json")
   public ResponseEntity<UserResponse> createJson(@RequestBody UserCreateRequest request) {
-    return ResponseEntity.ok(userService.create(request));
+    return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
+        .body(userService.create(request));
   }
 
   /**
@@ -102,8 +126,14 @@ public class UserController {
       @RequestPart(value = "profile", required = false) MultipartFile profile) {
 
     // userUpdateRequest가 없으면 기본 객체 생성
-    UserUpdateRequest actualRequest =
-        requestPart != null ? requestPart : new UserUpdateRequest(userId, null, null, null, null);
+    UserUpdateRequest actualRequest;
+    if (requestPart != null) {
+      actualRequest = requestPart;
+      actualRequest.setId(userId);
+    } else {
+      actualRequest = new UserUpdateRequest();
+      actualRequest.setId(userId);
+    }
 
     UUID profileId = actualRequest.getProfileId();
 
@@ -127,13 +157,18 @@ public class UserController {
     }
 
     // 경로 파라미터의 userId를 사용하여 UserUpdateRequest 생성
-    UserUpdateRequest updateRequest = new UserUpdateRequest(
-        userId,
-        actualRequest.getName(),
-        actualRequest.getPassword(),
-        actualRequest.getProfileImage(),
-        profileId != null ? profileId : actualRequest.getProfileId()
-    );
+    UserUpdateRequest updateRequest = new UserUpdateRequest();
+    updateRequest.setId(userId);
+    updateRequest.setNewUsername(
+        actualRequest.getNewUsername() != null ? actualRequest.getNewUsername()
+            : actualRequest.getName());
+    updateRequest.setNewEmail(actualRequest.getNewEmail());
+    updateRequest.setNewPassword(
+        actualRequest.getNewPassword() != null ? actualRequest.getNewPassword()
+            : actualRequest.getPassword());
+    updateRequest.setProfileImage(actualRequest.getProfileImage());
+    updateRequest.setProfileId(profileId != null ? profileId : actualRequest.getProfileId());
+
     return ResponseEntity.ok(userService.update(updateRequest));
   }
 
@@ -146,13 +181,16 @@ public class UserController {
       @RequestBody UserUpdateRequest requestBody) {
 
     // 경로 파라미터의 userId를 사용하여 UserUpdateRequest 생성
-    UserUpdateRequest updateRequest = new UserUpdateRequest(
-        userId,
-        requestBody.getName(),
-        requestBody.getPassword(),
-        requestBody.getProfileImage(),
-        requestBody.getProfileId()
-    );
+    UserUpdateRequest updateRequest = new UserUpdateRequest();
+    updateRequest.setId(userId);
+    updateRequest.setNewUsername(requestBody.getNewUsername() != null ? requestBody.getNewUsername()
+        : requestBody.getName());
+    updateRequest.setNewEmail(requestBody.getNewEmail());
+    updateRequest.setNewPassword(requestBody.getNewPassword() != null ? requestBody.getNewPassword()
+        : requestBody.getPassword());
+    updateRequest.setProfileImage(requestBody.getProfileImage());
+    updateRequest.setProfileId(requestBody.getProfileId());
+
     return ResponseEntity.ok(userService.update(updateRequest));
   }
 
