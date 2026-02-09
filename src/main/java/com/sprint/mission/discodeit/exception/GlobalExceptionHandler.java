@@ -1,9 +1,11 @@
 package com.sprint.mission.discodeit.exception;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -51,5 +53,25 @@ public class GlobalExceptionHandler {
         500
     );
     return ResponseEntity.status(500).body(body);
+  }
+
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException e) {
+
+    Map<String, Object> details = new LinkedHashMap<>();
+    e.getBindingResult().getFieldErrors().forEach(err -> {
+      details.put(err.getField(), err.getDefaultMessage());
+    });
+
+    ErrorResponse body = new ErrorResponse(
+        Instant.now(),
+        ErrorCode.VALIDATION_ERROR.name(),
+        ErrorCode.VALIDATION_ERROR.getMessage(),
+        details,
+        e.getClass().getSimpleName(),
+        400
+    );
+
+    return ResponseEntity.status(400).body(body);
   }
 }

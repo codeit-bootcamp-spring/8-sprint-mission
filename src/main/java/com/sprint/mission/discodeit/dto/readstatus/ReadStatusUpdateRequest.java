@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.dto.readstatus;
 
 
+import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 
 /*
@@ -12,6 +13,8 @@ import java.time.Instant;
     • newLastReadAt        : 변경할 읽을 시각
  */
 public record ReadStatusUpdateRequest(
+
+    @NotNull
     Instant newLastReadAt
 ) {
 

@@ -1,6 +1,9 @@
 package com.sprint.mission.discodeit.dto.user;
 
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 /*
     AuthLoginRequest
     -------------------------
@@ -11,7 +14,12 @@ package com.sprint.mission.discodeit.dto.user;
     • password          : 유저 패스워드
  */
 public record LoginRequest(
+    @NotBlank
+    @Size(max = 50)
     String username,
+
+    @NotBlank
+    @Size(min = 1, max = 60)
     String password
 ) {
 

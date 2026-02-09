@@ -41,7 +41,7 @@ dependencies {
 
     // 테스트용 인메모리 DB
     testImplementation 'com.h2database:h2'
-    
+
     runtimeOnly 'org.postgresql:postgresql'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
@@ -58,6 +58,9 @@ dependencies {
     // Lombok과 MapStruct의 연동을 도와주는 바인딩
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
+    // 유효성 검사
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 }
 
 tasks.named('test') {
