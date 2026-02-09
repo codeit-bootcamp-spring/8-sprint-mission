@@ -8,6 +8,9 @@ import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
+import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
+import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
@@ -63,7 +66,7 @@ public class BasicUserService implements UserService {
   public UserDto findUser(UUID id) {
     return userRepository.findById(id)
         .map(userMapper::toDto)
-        .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + id));
+        .orElseThrow(() -> new UserNotFoundException(id));
   }
 
   @Override
@@ -82,7 +85,7 @@ public class BasicUserService implements UserService {
         request.newEmail());
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + userId));
+        .orElseThrow(() -> new UserNotFoundException(userId));
 
     // 수정 정보 중복 체크
     validateUpdateUser(user, request);
@@ -103,7 +106,7 @@ public class BasicUserService implements UserService {
     log.info("[USER] delete start userId={}", id);
 
     if (!userRepository.existsById(id)) {
-      throw new NoSuchElementException("User를 찾을 수 없습니다. " + id);
+      throw new UserNotFoundException(id);
     }
 
     log.info("[User] delete success userId={}", id);
@@ -113,7 +116,7 @@ public class BasicUserService implements UserService {
   // 비즈니스 로직 헬퍼 메서드
   private void validateNewUser(String username, String email) {
     if (userRepository.existsByUsernameOrEmail(username, email)) {
-      throw new IllegalArgumentException("이미 사용 중인 newUsername 또는 newEmail 입니다. 다시 입력 부탁드립니다.");
+      throw new UserAlreadyExistsException(username, email);
     }
   }
 
@@ -122,7 +125,7 @@ public class BasicUserService implements UserService {
       userRepository.findByUsername(request.newUsername())
           .filter(u -> !u.getId().equals(user.getId()))
           .ifPresent(other -> {
-            throw new IllegalArgumentException("이미 사용 중인 Username 입니다." + request.newUsername());
+            throw new UserAlreadyExistsException(request.newUsername(), request.newEmail());
           });
     }
 
@@ -130,7 +133,7 @@ public class BasicUserService implements UserService {
       userRepository.findByEmail(request.newEmail())
           .filter(u -> !u.getId().equals(user.getId()))
           .ifPresent(u -> {
-            throw new IllegalArgumentException("이미 사용 중인 Email 입니다." + request.newEmail());
+            throw new UserAlreadyExistsException(request.newUsername(), request.newEmail());
           });
     }
   }
@@ -145,6 +148,6 @@ public class BasicUserService implements UserService {
 
     return binaryContentRepository.findById(dto.id())
         .orElseThrow(
-            () -> new IllegalStateException("방금 저장된 BinaryContent가 DB에 없습니다: " + dto.id()));
+            () -> new BinaryContentNotFoundException(dto.id()));
   }
 }
