@@ -11,9 +11,11 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -27,6 +29,8 @@ public class BasicBinaryContentService implements BinaryContentService {
   @Transactional
   public BinaryContentDto create(BinaryContentCreateRequest request) {
 
+    log.info("[BINARY_CONTENT] create start fileName={}", request.fileName());
+
     // 메타데이터
     BinaryContent binaryContent = new BinaryContent(
         request.fileName(),
@@ -38,7 +42,9 @@ public class BasicBinaryContentService implements BinaryContentService {
 
     // 실제 bytes 저장
     binaryContentStorage.put(savedContent.getId(), request.bytes());
-    
+
+    log.info("[BINARY_CONTENT] create success binaryContentId={}", savedContent.getId());
+
     return binaryContentMapper.toDto(savedContent);
   }
 

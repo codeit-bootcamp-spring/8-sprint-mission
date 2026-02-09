@@ -19,9 +19,11 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -36,14 +38,22 @@ public class BasicChannelService implements ChannelService {
   @Override
   @Transactional
   public ChannelDto createPublicChannel(ChannelCreatePublicRequest request) {
+    log.info("[Channel] create public channel start name={}, description={}", request.name(),
+        request.description());
+
     Channel channel = new Channel(ChannelType.PUBLIC, request.name(), request.description());
     Channel savedChannel = channelRepository.save(channel);
+
+    log.info("[Channel] create public channel success channelId={}", savedChannel.getId());
     return channelMapper.toDto(savedChannel);
   }
 
   @Override
   @Transactional
   public ChannelDto createPrivateChannel(ChannelCreatePrivateRequest request) {
+
+    log.info("[Channel] create private channel start");
+
     Channel channel = new Channel(ChannelType.PRIVATE, null, null);
     Channel savedChannel = channelRepository.save(channel);
 
@@ -57,6 +67,8 @@ public class BasicChannelService implements ChannelService {
         readStatusRepository.save(rs);
       }
     }
+
+    log.info("[Channel] create private channel success channelId={}", savedChannel.getId());
     return channelMapper.toDto(savedChannel);
   }
 
@@ -77,6 +89,10 @@ public class BasicChannelService implements ChannelService {
   @Override
   @Transactional
   public ChannelDto updateChannel(UUID channelId, ChannelUpdateRequest request) {
+
+    log.info("[Channel] update channel start name={}, description={}", request.newName(),
+        request.newDescription());
+
     Channel channel = channelRepository.findById(channelId)
         .orElseThrow(() -> new NoSuchElementException("Channel을 찾을 수 없습니다. " + channelId));
 
@@ -86,12 +102,17 @@ public class BasicChannelService implements ChannelService {
 
     channel.update(request.newName(), request.newDescription());
 
+    log.info("[Channel] update channel success channelId={}", channel.getId());
+
     return channelMapper.toDto(channel);
   }
 
   @Override
   @Transactional
   public void deleteChannel(UUID id) {
+
+    log.info("[Channel] delete channel start channelId={}", id);
+
     if (!channelRepository.existsById(id)) {
       throw new NoSuchElementException("Channel을 찾을 수 없습니다. " + id);
     }
@@ -106,5 +127,7 @@ public class BasicChannelService implements ChannelService {
 
     // 채널 삭제
     channelRepository.deleteById(id);
+
+    log.info("[Channel] delete channel success channelId={}", id);
   }
 }

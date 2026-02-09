@@ -22,12 +22,14 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -45,6 +47,8 @@ public class BasicMessageService implements MessageService {
   @Override
   @Transactional
   public MessageDto createMessage(MessageCreateRequest request) {
+
+    log.info("[MESSAGE] create start message={}", request.content());
 
     // 채널, 유저 존재 검사
     Channel channel = channelRepository.findById(request.channelId()).orElseThrow(
@@ -65,6 +69,8 @@ public class BasicMessageService implements MessageService {
     // Message 엔티티 생성 및 저장
     Message message = new Message(author, channel, request.content(), attachments);
     Message savedMessage = messageRepository.save(message);
+
+    log.info("[MESSAGE] create success messageId={}", savedMessage.getId());
 
     return messageMapper.toDto(savedMessage);
   }
@@ -94,10 +100,15 @@ public class BasicMessageService implements MessageService {
   @Override
   @Transactional
   public MessageDto updateMessage(UUID messageId, MessageUpdateRequest request) {
+
+    log.info("[MESSAGE] update start message={}", request.newContent());
+
     Message message = messageRepository.findById(messageId)
         .orElseThrow(() -> new NoSuchElementException("Message를 찾을 수 없습니다. " + messageId));
 
     message.update(request.newContent());
+
+    log.info("[MESSAGE] update success messageId={}", messageId);
 
     return messageMapper.toDto(message);
   }
@@ -105,6 +116,9 @@ public class BasicMessageService implements MessageService {
   @Override
   @Transactional
   public void deleteMessage(UUID id) {
+
+    log.info("[MESSAGE] delete start messageId={}", id);
+
     if (!messageRepository.existsById(id)) {
       throw new NoSuchElementException("Message를 찾을 수 없습니다. " + id);
     }
@@ -112,5 +126,7 @@ public class BasicMessageService implements MessageService {
     //  CascadeType.ALL 및 orphanRemoval=true 설정
     // 연관된 BinaryContent도 DB에서 자동으로 삭제됨
     messageRepository.deleteById(id);
+
+    log.info("[MESSAGE] delete success messageId={}", id);
   }
 }

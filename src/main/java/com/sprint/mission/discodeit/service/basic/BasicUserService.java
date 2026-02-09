@@ -18,9 +18,11 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -34,6 +36,8 @@ public class BasicUserService implements UserService {
   @Override
   @Transactional
   public UserDto create(UserCreateRequest request, BinaryContentCreateRequest profileRequest) {
+
+    log.info("[USER] create start username={}, email={}", request.username(), request.email());
 
     // 중복 검사
     validateNewUser(request.username(), request.email());
@@ -51,6 +55,7 @@ public class BasicUserService implements UserService {
 
     User savedUser = userRepository.save(user);
 
+    log.info("[User] create success userId={}", savedUser.getId());
     return userMapper.toDto(savedUser);
   }
 
@@ -73,6 +78,9 @@ public class BasicUserService implements UserService {
   public UserDto update(UUID userId, UserUpdateRequest request,
       BinaryContentCreateRequest profileRequest) {
 
+    log.info("[USER] update start username={}, email={}", request.newUsername(),
+        request.newEmail());
+
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다. " + userId));
 
@@ -85,15 +93,20 @@ public class BasicUserService implements UserService {
     // 필드 업데이트 및 저장
     user.update(request.newUsername(), request.newEmail(), request.newPassword(), newProfile);
 
+    log.info("[User] update success userId={}", user.getId());
     return userMapper.toDto(user);
   }
 
   @Override
   @Transactional
   public void delete(UUID id) {
+    log.info("[USER] delete start userId={}", id);
+
     if (!userRepository.existsById(id)) {
       throw new NoSuchElementException("User를 찾을 수 없습니다. " + id);
     }
+
+    log.info("[User] delete success userId={}", id);
     userRepository.deleteById(id);
   }
 
