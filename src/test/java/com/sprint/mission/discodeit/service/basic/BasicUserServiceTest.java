@@ -124,6 +124,47 @@ public class BasicUserServiceTest {
   }
 
   @Test
+  @DisplayName("update 실패: 존재하지 않으면 예외 발생")
+  void update_fail_notFound() {
+    UUID userId = UUID.randomUUID();
+    UserUpdateRequest request = new UserUpdateRequest("newName", "new@test.com", "newPw", null);
+
+    when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+    assertThrows(UserNotFoundException.class, () -> userService.update(userId, request, null));
+
+    verify(userRepository).findById(userId);
+    verifyNoMoreInteractions(userRepository);
+    verifyNoInteractions(userMapper, binaryContentService, binaryContentRepository);
+  }
+
+  @Test
+  @DisplayName("update 실패: 이메일 중복이면 예외 발생")
+  void update_fail_duplicateEmail() {
+
+    UUID userId = UUID.randomUUID();
+    UserUpdateRequest request = new UserUpdateRequest("newName", "new@test.com", "newPw", null);
+
+    User me = new User("oldName", "old@test.com", "oldPw", null);
+    ReflectionTestUtils.setField(me, "id", userId);
+
+    User other = new User("other", "new@test.com", "pw", null);
+    ReflectionTestUtils.setField(other, "id", UUID.randomUUID());
+
+    when(userRepository.findById(userId)).thenReturn(Optional.of(me));
+
+    // email 중복 발생
+    when(userRepository.findByEmail("new@test.com")).thenReturn(Optional.of(other));
+
+    assertThrows(UserAlreadyExistsException.class, () -> userService.update(userId, request, null));
+
+    verify(userRepository).findById(userId);
+    verify(userRepository).findByEmail("new@test.com");
+    verify(userRepository, never()).save(any(User.class));
+    verifyNoInteractions(userMapper);
+  }
+
+  @Test
   @DisplayName("update 실패: username이 다른 사용자에게 이미 존재하면 예외 발생")
   void update_fail_duplicateUsername() {
 

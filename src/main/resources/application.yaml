@@ -2,6 +2,12 @@ spring:
   application:
     name: discodeit
 
+  boot:
+    admin:
+      client:
+        instance:
+          name: discodeit
+
   servlet:
     multipart:
       max-file-size: 10MB       # 파일 1개 최대

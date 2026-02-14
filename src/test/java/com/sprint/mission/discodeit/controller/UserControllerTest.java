@@ -86,6 +86,7 @@ class UserControllerTest {
                 .contentType(MediaType.MULTIPART_FORM_DATA)
         )
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+        .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+        .andExpect(jsonPath("$.details.username").exists());
   }
 }
