@@ -4,7 +4,7 @@
   <!-- 로그 폴더: {프로젝트 루트}/.logs -->
   <property name="LOG_DIR" value=".logs"/>
   <property name="LOG_PATTERN"
-    value="%d{yy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+    value="%d{yy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{requestId} | %X{method} | %X{url}] - %msg%n"/>
 
   <!-- 콘솔 -->
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
