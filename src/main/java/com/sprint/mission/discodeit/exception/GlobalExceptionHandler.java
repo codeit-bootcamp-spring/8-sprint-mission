@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.exception;
 import com.sprint.mission.discodeit.exception.global.DiscodeitException;
 import com.sprint.mission.discodeit.exception.global.ErrorCode;
 import com.sprint.mission.discodeit.response.ErrorResponse;
+import java.util.NoSuchElementException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
@@ -80,6 +81,19 @@ public class GlobalExceptionHandler {
         HttpStatus.BAD_REQUEST.value()
     );
     return ResponseEntity.badRequest().body(body);
+  }
+
+  @ExceptionHandler(NoSuchElementException.class)
+  public ResponseEntity<ErrorResponse> handleNoSuchElement(NoSuchElementException e) {
+    ErrorResponse body = toErrorResponse(
+        Instant.now(),
+        "NOT_FOUND",
+        e.getMessage() != null ? e.getMessage() : "리소스를 찾을 수 없습니다.",
+        Collections.emptyMap(),
+        e.getClass().getName(),
+        HttpStatus.NOT_FOUND.value()
+    );
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
   }
 
   @ExceptionHandler(IllegalArgumentException.class)

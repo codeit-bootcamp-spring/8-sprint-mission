@@ -1,0 +1,6 @@
+# 테스트 실행 시 test 프로파일 활성화 → application-test.yaml 로드
+spring:
+  profiles:
+    active: test
+  main:
+    allow-bean-definition-overriding: true
