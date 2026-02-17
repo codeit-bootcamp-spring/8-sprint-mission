@@ -1,19 +1,22 @@
 package com.sprint.mission.discodeit.service;
 
-import com.sprint.mission.discodeit.dto.UserStatusRequest;
-import com.sprint.mission.discodeit.dto.UserStatusResponse;
-import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.dto.data.UserStatusDto;
+import com.sprint.mission.discodeit.dto.request.UserStatusCreateRequest;
+import com.sprint.mission.discodeit.dto.request.UserStatusUpdateRequest;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public interface UserStatusService {
-    //  추상 메서드 하나만 남깁니다.
-    UserStatusResponse update(UserStatusRequest request);
 
-    UserStatus create(UUID userId);
-    Optional<UserStatus> findById(UUID id);
-    List<UserStatus> findAll();
-    Optional<UserStatus> findByUserId(UUID userId);
-    void delete(UUID id);
+  UserStatusDto create(UserStatusCreateRequest request);
+
+  UserStatusDto find(UUID userStatusId);
+
+  List<UserStatusDto> findAll();
+
+  UserStatusDto update(UUID userStatusId, UserStatusUpdateRequest request);
+
+  UserStatusDto updateByUserId(UUID userId, UserStatusUpdateRequest request);
+
+  void delete(UUID userStatusId);
 }

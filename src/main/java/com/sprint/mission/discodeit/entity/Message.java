@@ -1,38 +1,38 @@
 package com.sprint.mission.discodeit.entity;
 
 import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Table(name = "messages")
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Message extends BaseUpdatableEntity {
 
-  @Column(columnDefinition = "TEXT", nullable = false)
+  @Column(columnDefinition = "text", nullable = false)
   private String content;
-
-  // Channel과의 Many-to-One 관계
-  // schema.sql: ON DELETE CASCADE
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "channel_id", nullable = false)
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "channel_id", columnDefinition = "uuid")
   private Channel channel;
-
-  // User(author)와의 Many-to-One 관계
-  // schema.sql: ON DELETE SET NULL
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "author_id")
+  @JoinColumn(name = "author_id", columnDefinition = "uuid")
   private User author;
-
-  // BinaryContent와의 Many-to-Many 관계 (attachments)
-  // schema.sql의 message_attachments 조인 테이블 사용
-  // ON DELETE CASCADE이므로 cascade = CascadeType.REMOVE
-  @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+  @BatchSize(size = 100)
+  @OneToMany(fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.ALL)
   @JoinTable(
       name = "message_attachments",
       joinColumns = @JoinColumn(name = "message_id"),
@@ -40,39 +40,16 @@ public class Message extends BaseUpdatableEntity {
   )
   private List<BinaryContent> attachments = new ArrayList<>();
 
-  // 생성자
-  public Message(String content, Channel channel, User author) {
-    this.content = content;
+  public Message(String content, Channel channel, User author, List<BinaryContent> attachments) {
     this.channel = channel;
+    this.content = content;
     this.author = author;
+    this.attachments = attachments;
   }
 
-  // update 메소드
-  public void update(String content) {
-    this.content = content;
-  }
-
-  // update 메소드 (attachments 포함)
-  public void update(String content, List<BinaryContent> attachments) {
-    this.content = content;
-    this.attachments.clear();
-    if (attachments != null) {
-      this.attachments.addAll(attachments);
+  public void update(String newContent) {
+    if (newContent != null && !newContent.equals(this.content)) {
+      this.content = newContent;
     }
-  }
-
-  // 헬퍼 메서드들
-  public UUID getChannelId() {
-    return channel != null ? channel.getId() : null;
-  }
-
-  public UUID getAuthorId() {
-    return author != null ? author.getId() : null;
-  }
-
-  public List<UUID> getAttachmentIds() {
-    return attachments.stream()
-        .map(BinaryContent::getId)
-        .collect(java.util.stream.Collectors.toList());
   }
 }

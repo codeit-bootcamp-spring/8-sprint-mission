@@ -1,55 +1,59 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
-import jakarta.persistence.*;
-import java.util.UUID;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "users")
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)  // JPA를 위한 기본 생성자
 public class User extends BaseUpdatableEntity {
 
-  @Column(nullable = false, unique = true, length = 50)
+  @Column(length = 50, nullable = false, unique = true)
   private String username;
-
-  @Column(nullable = false, unique = true, length = 100)
+  @Column(length = 100, nullable = false, unique = true)
   private String email;
-
-  @Column(nullable = false, length = 60)
+  @Column(length = 60, nullable = false)
   private String password;
-
-  // BinaryContent(profile)와의 One-to-One 관계 (0..1, optional)
-  // schema.sql: ON DELETE SET NULL
-  @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "profile_id", unique = true)
+  @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  @JoinColumn(name = "profile_id", columnDefinition = "uuid")
   private BinaryContent profile;
-
-  // UserStatus와의 One-to-One 양방향 관계
-  // schema.sql: ON DELETE CASCADE
-  // User가 삭제되면 UserStatus도 삭제되어야 하므로 cascade = ALL, orphanRemoval = true
-  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  @JsonManagedReference
+  @Setter(AccessLevel.PROTECTED)
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private UserStatus status;
 
-  // 생성자
-  public User(String username, String email, String password) {
-    this.setId(UUID.randomUUID());
+  public User(String username, String email, String password, BinaryContent profile) {
     this.username = username;
     this.email = email;
     this.password = password;
-  }
-
-  // update 메소드
-  public void update(String username, String email, String password) {
-    this.username = username;
-    this.email = email;
-    this.password = password;
-  }
-
-  // profileId 업데이트 메소드 (BinaryContent를 직접 설정)
-  public void updateProfile(BinaryContent profile) {
     this.profile = profile;
+  }
+
+  public void update(String newUsername, String newEmail, String newPassword,
+      BinaryContent newProfile) {
+    if (newUsername != null && !newUsername.equals(this.username)) {
+      this.username = newUsername;
+    }
+    if (newEmail != null && !newEmail.equals(this.email)) {
+      this.email = newEmail;
+    }
+    if (newPassword != null && !newPassword.equals(this.password)) {
+      this.password = newPassword;
+    }
+    if (newProfile != null) {
+      this.profile = newProfile;
+    }
   }
 }

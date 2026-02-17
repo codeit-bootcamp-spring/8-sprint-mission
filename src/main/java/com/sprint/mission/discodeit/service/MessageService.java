@@ -1,27 +1,27 @@
 package com.sprint.mission.discodeit.service;
 
-import com.sprint.mission.discodeit.dto.MessageCreateRequest;
-import com.sprint.mission.discodeit.dto.MessageResponse;
-import com.sprint.mission.discodeit.dto.MessageUpdateRequest;
-import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.dto.data.MessageDto;
+import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
+import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
+import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
+import com.sprint.mission.discodeit.dto.response.PageResponse;
+import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
 
 public interface MessageService {
 
-    // DTO 기반 생성
-    Message create(MessageCreateRequest request);
+  MessageDto create(MessageCreateRequest messageCreateRequest,
+      List<BinaryContentCreateRequest> binaryContentCreateRequests);
 
-    // DTO 기반 수정
-    Message update(MessageUpdateRequest request);
+  MessageDto find(UUID messageId);
 
-    Optional<Message> findById(UUID id);
-    List<Message> findAll();
-    List<Message> findAllByChannelId(UUID channelId);
-    
-    // Response DTO 반환 메서드
-    List<MessageResponse> findByChannelId(UUID channelId);
-    
-    void delete(UUID id);
+  PageResponse<MessageDto> findAllByChannelId(UUID channelId, Instant createdAt, Pageable pageable);
+
+  List<MessageDto> findAllByChannelIdAsList(UUID channelId);
+
+  MessageDto update(UUID messageId, MessageUpdateRequest request);
+
+  void delete(UUID messageId);
 }

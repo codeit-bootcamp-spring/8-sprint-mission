@@ -1,64 +1,47 @@
 package com.sprint.mission.discodeit.entity;
 
 import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import java.time.Instant;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import java.time.Instant;
-import java.util.UUID;
 
 @Entity
-@Table(name = "read_statuses", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_read_statuses_user_channel", columnNames = {"user_id", "channel_id"})
-})
+@Table(
+    name = "read_statuses",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"user_id", "channel_id"})
+    }
+)
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReadStatus extends BaseUpdatableEntity {
 
-  // User와의 Many-to-One 관계
-  // schema.sql: ON DELETE CASCADE
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", nullable = false)
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "user_id", columnDefinition = "uuid")
   private User user;
-
-  // Channel과의 Many-to-One 관계
-  // schema.sql: ON DELETE CASCADE
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "channel_id", nullable = false)
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "channel_id", columnDefinition = "uuid")
   private Channel channel;
-
-  @Column(name = "last_read_at", nullable = false)
+  @Column(columnDefinition = "timestamp with time zone", nullable = false)
   private Instant lastReadAt;
 
-  // 생성자
   public ReadStatus(User user, Channel channel, Instant lastReadAt) {
     this.user = user;
     this.channel = channel;
     this.lastReadAt = lastReadAt;
   }
 
-  // update 메소드
-  public void update(Instant lastReadAt) {
-    this.lastReadAt = lastReadAt;
-  }
-
-  // updateLastReadAt 메소드 (별칭)
-  public void updateLastReadAt(Instant lastReadAt) {
-    this.lastReadAt = lastReadAt;
-  }
-
-  // updateLastReadMessage 메소드 (하위 호환성 - 메시지 ID는 무시)
-  public void updateLastReadMessage(UUID messageId) {
-    // 메시지 ID는 사용하지 않음, 현재 시간으로 업데이트
-    this.lastReadAt = java.time.Instant.now();
-  }
-
-  // 헬퍼 메서드들
-  public UUID getUserId() {
-    return user != null ? user.getId() : null;
-  }
-
-  public UUID getChannelId() {
-    return channel != null ? channel.getId() : null;
+  public void update(Instant newLastReadAt) {
+    if (newLastReadAt != null && !newLastReadAt.equals(this.lastReadAt)) {
+      this.lastReadAt = newLastReadAt;
+    }
   }
 }
