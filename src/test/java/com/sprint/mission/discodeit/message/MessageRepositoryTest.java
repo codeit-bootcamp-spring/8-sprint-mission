@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.message;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.sprint.mission.discodeit.DiscodeitApplication;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
@@ -28,9 +29,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 
 @DataJpaTest
 @ActiveProfiles("test")
+@ContextConfiguration(classes = DiscodeitApplication.class)
 @EnableJpaAuditing
 @EntityScan(basePackages = "com.sprint.mission.discodeit.entity")
 @EnableJpaRepositories(basePackages = "com.sprint.mission.discodeit.repository")
