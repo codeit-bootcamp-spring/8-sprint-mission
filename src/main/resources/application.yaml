@@ -41,3 +41,38 @@ logging:
     org.hibernate.SQL: debug
     # 쿼리에 들어가는 파라미터 값(? 자리에 들어갈 값)을 출력합니다.
     org.hibernate.orm.jdbc.bind: trace
+
+# 5. Actuator 엔드포인트 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,loggers
+  endpoint:
+    health:
+      show-details: always
+    info:
+      enabled: true
+    metrics:
+      enabled: true
+    loggers:
+      enabled: true
+
+# 6. Actuator /info 노출 정보 (애플리케이션 정보)
+info:
+  app:
+    name: Discodeit
+    version: 1.7.0
+    java-version: "17"
+    spring-boot-version: 3.4.0
+  datasource:
+    url: ${spring.datasource.url:unknown}
+    driver-class-name: ${spring.datasource.driver-class-name:unknown}
+  jpa:
+    ddl-auto: ${spring.jpa.hibernate.ddl-auto:unknown}
+  storage:
+    type: ${discodeit.storage.type:local}
+    path: ${discodeit.storage.local.root-path:unknown}
+  multipart:
+    max-file-size: ${spring.servlet.multipart.maxFileSize:unknown}
+    max-request-size: ${spring.servlet.multipart.maxRequestSize:unknown}
