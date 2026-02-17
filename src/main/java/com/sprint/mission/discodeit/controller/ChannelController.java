@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/channels")
@@ -40,8 +41,8 @@ public class ChannelController {
    */
   @PostMapping(value = "/public", consumes = {"application/json", "multipart/form-data"})
   public ChannelDto createPublic(
-      @RequestPart(value = "channelCreateRequest", required = false) PublicChannelCreateRequest requestPart,
-      @RequestBody(required = false) PublicChannelCreateRequest requestBody) {
+      @RequestPart(value = "channelCreateRequest", required = false) @Valid PublicChannelCreateRequest requestPart,
+      @RequestBody(required = false) @Valid PublicChannelCreateRequest requestBody) {
     PublicChannelCreateRequest request = requestPart != null ? requestPart : requestBody;
     if (request == null) {
       throw new IllegalArgumentException("PublicChannelCreateRequest가 필요합니다.");
@@ -54,8 +55,8 @@ public class ChannelController {
    */
   @PostMapping(value = "/private", consumes = {"application/json", "multipart/form-data"})
   public ChannelDto createPrivate(
-      @RequestPart(value = "channelCreateRequest", required = false) PrivateChannelCreateRequest requestPart,
-      @RequestBody(required = false) PrivateChannelCreateRequest requestBody) {
+      @RequestPart(value = "channelCreateRequest", required = false) @Valid PrivateChannelCreateRequest requestPart,
+      @RequestBody(required = false) @Valid PrivateChannelCreateRequest requestBody) {
     PrivateChannelCreateRequest request = requestPart != null ? requestPart : requestBody;
     if (request == null) {
       throw new IllegalArgumentException("PrivateChannelCreateRequest가 필요합니다.");
@@ -69,7 +70,7 @@ public class ChannelController {
   @PatchMapping("/{channelId}")
   public ChannelDto update(
       @PathVariable UUID channelId,
-      @RequestBody PublicChannelUpdateRequest request) {
+      @RequestBody @Valid PublicChannelUpdateRequest request) {
     return channelService.update(channelId, request);
   }
 

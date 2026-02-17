@@ -39,6 +39,10 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(status).body(body);
   }
 
+  /**
+   * 유효성 검증 실패 시 필드별 오류 메시지를 담은 ErrorResponse 반환.
+   * details에는 필드명 -> 검증 실패 메시지가 포함된다.
+   */
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
       MethodArgumentNotValidException e) {
@@ -48,10 +52,14 @@ public class GlobalExceptionHandler {
             err -> err.getDefaultMessage() != null ? err.getDefaultMessage() : "",
             (a, b) -> a
         ));
+    int errorCount = details.size();
+    String message = errorCount == 0
+        ? "요청 검증에 실패했습니다."
+        : "요청 검증에 실패했습니다. (" + errorCount + "개 필드: " + String.join(", ", details.keySet()) + ")";
     ErrorResponse body = toErrorResponse(
         Instant.now(),
         "VALIDATION_ERROR",
-        "요청 검증에 실패했습니다.",
+        message,
         details,
         e.getClass().getName(),
         HttpStatus.BAD_REQUEST.value()

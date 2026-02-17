@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.Valid;
 
 @Slf4j
 @RestController
@@ -54,7 +55,7 @@ public class UserController {
    */
   @PostMapping(consumes = "multipart/form-data")
   public ResponseEntity<UserDto> createMultipart(
-      @RequestPart("userCreateRequest") UserCreateRequest userCreateRequest,
+      @RequestPart("userCreateRequest") @Valid UserCreateRequest userCreateRequest,
       @RequestPart(value = "profile", required = false) MultipartFile profile) {
 
     Optional<BinaryContentCreateRequest> profileRequest = Optional.empty();
@@ -79,7 +80,7 @@ public class UserController {
    * User 등록 POST /api/users (application/json)
    */
   @PostMapping(consumes = "application/json")
-  public ResponseEntity<UserDto> createJson(@RequestBody UserCreateRequest request) {
+  public ResponseEntity<UserDto> createJson(@RequestBody @Valid UserCreateRequest request) {
     UserDto created = userService.create(request, Optional.empty());
     return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
@@ -90,7 +91,7 @@ public class UserController {
   @PatchMapping(value = "/{userId}", consumes = "multipart/form-data")
   public ResponseEntity<UserDto> updateMultipart(
       @PathVariable UUID userId,
-      @RequestPart(value = "userUpdateRequest", required = false) UserUpdateRequest requestPart,
+      @RequestPart(value = "userUpdateRequest", required = false) @Valid UserUpdateRequest requestPart,
       @RequestPart(value = "profile", required = false) MultipartFile profile) {
 
     UserUpdateRequest actualRequest = requestPart != null
@@ -121,7 +122,7 @@ public class UserController {
   @PatchMapping(value = "/{userId}", consumes = "application/json")
   public ResponseEntity<UserDto> updateJson(
       @PathVariable UUID userId,
-      @RequestBody UserUpdateRequest requestBody) {
+      @RequestBody @Valid UserUpdateRequest requestBody) {
     UserDto updated = userService.update(userId, requestBody, Optional.empty());
     return ResponseEntity.ok(updated);
   }

@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.Valid;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -44,7 +45,7 @@ public class MessageController implements MessageApi {
   /** 메시지 생성 요청 처리 (첨부 파일 선택). */
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<MessageDto> create(
-      @RequestPart("messageCreateRequest") MessageCreateRequest messageCreateRequest,
+      @RequestPart("messageCreateRequest") @Valid MessageCreateRequest messageCreateRequest,
       @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments
   ) {
     List<BinaryContentCreateRequest> attachmentRequests = Optional.ofNullable(attachments)
@@ -73,7 +74,7 @@ public class MessageController implements MessageApi {
   /** 메시지 수정 요청 처리. */
   @PatchMapping(path = "{messageId}")
   public ResponseEntity<MessageDto> update(@PathVariable("messageId") UUID messageId,
-      @RequestBody MessageUpdateRequest request) {
+      @RequestBody @Valid MessageUpdateRequest request) {
     log.debug("메시지 수정 요청, messageId={}", messageId);
     MessageDto updatedMessage = messageService.update(messageId, request);
     return ResponseEntity
