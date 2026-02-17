@@ -21,11 +21,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
@@ -33,7 +34,7 @@ import org.springframework.test.context.ActiveProfiles;
 @EnableJpaAuditing
 @EntityScan(basePackages = "com.sprint.mission.discodeit.entity")
 @EnableJpaRepositories(basePackages = "com.sprint.mission.discodeit.repository")
-@DisplayName("MessageRepository 테스트")
+@DisplayName("MessageRepository 슬라이스 테스트")
 class MessageRepositoryTest {
 
   @Autowired
@@ -46,54 +47,97 @@ class MessageRepositoryTest {
   private UserStatusRepository userStatusRepository;
 
   @Nested
-  @DisplayName("save / findById")
-  class SaveAndFind {
+  @DisplayName("findById (JpaRepository)")
+  class FindById {
 
     @Test
-    @DisplayName("저장 후 조회 시 동일 엔티티 반환")
-    void saveAndFindById() {
+    @DisplayName("성공: 존재하는 ID로 조회 시 Message 반환")
+    void success() {
       Channel channel = channelRepository.save(new Channel(ChannelType.PUBLIC, "채널", null));
       User author = userRepository.save(new User("author", "a@b.com", "p", null));
       userStatusRepository.save(new UserStatus(author, Instant.now()));
-      Message message = new Message("내용", channel, author, List.of());
-      Message saved = messageRepository.save(message);
+      Message message = messageRepository.save(new Message("내용", channel, author, List.of()));
 
-      assertThat(saved.getId()).isNotNull();
-      Optional<Message> found = messageRepository.findById(saved.getId());
+      Optional<Message> found = messageRepository.findById(message.getId());
       assertThat(found).isPresent();
       assertThat(found.get().getContent()).isEqualTo("내용");
+    }
+
+    @Test
+    @DisplayName("실패: 존재하지 않는 ID로 조회 시 Optional.empty")
+    void fail_notFound() {
+      Optional<Message> found = messageRepository.findById(UUID.randomUUID());
+      assertThat(found).isEmpty();
     }
   }
 
   @Nested
-  @DisplayName("findAllByChannelIdWithAuthor")
+  @DisplayName("findAllByChannelIdWithAuthor (커스텀 쿼리 + 페이징/정렬)")
   class FindAllByChannelIdWithAuthor {
 
     @Test
-    @DisplayName("채널 ID와 커서로 페이지 조회")
-    void findAllByChannelIdWithAuthor() {
+    @DisplayName("성공: 채널 ID·커서·Pageable로 슬라이스 조회")
+    void success() {
       Channel channel = channelRepository.save(new Channel(ChannelType.PUBLIC, "채널", null));
       User author = userRepository.save(new User("u", "e@e.com", "p", null));
       userStatusRepository.save(new UserStatus(author, Instant.now()));
       messageRepository.save(new Message("메시지1", channel, author, List.of()));
       messageRepository.save(new Message("메시지2", channel, author, List.of()));
 
-      Pageable pageable = PageRequest.of(0, 10);
+      Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
       Instant cursor = Instant.now().plusSeconds(60);
       Slice<Message> slice = messageRepository.findAllByChannelIdWithAuthor(
           channel.getId(), cursor, pageable);
 
       assertThat(slice.getContent()).hasSize(2);
+      assertThat(slice.hasNext()).isFalse();
+    }
+
+    @Test
+    @DisplayName("실패: 해당 채널에 메시지가 없으면 빈 Slice")
+    void fail_empty() {
+      Channel channel = channelRepository.save(new Channel(ChannelType.PUBLIC, "빈채널", null));
+      Pageable pageable = PageRequest.of(0, 10);
+      Slice<Message> slice = messageRepository.findAllByChannelIdWithAuthor(
+          channel.getId(), Instant.now().plusSeconds(60), pageable);
+
+      assertThat(slice.getContent()).isEmpty();
     }
   }
 
   @Nested
-  @DisplayName("deleteAllByChannelId")
+  @DisplayName("findLastMessageAtByChannelId (커스텀 쿼리)")
+  class FindLastMessageAtByChannelId {
+
+    @Test
+    @DisplayName("성공: 채널의 마지막 메시지 createdAt 반환")
+    void success() {
+      Channel channel = channelRepository.save(new Channel(ChannelType.PUBLIC, "채널", null));
+      User author = userRepository.save(new User("u", "e@e.com", "p", null));
+      userStatusRepository.save(new UserStatus(author, Instant.now()));
+      messageRepository.save(new Message("m1", channel, author, List.of()));
+
+      Optional<Instant> lastAt = messageRepository.findLastMessageAtByChannelId(channel.getId());
+      assertThat(lastAt).isPresent();
+    }
+
+    @Test
+    @DisplayName("실패: 채널에 메시지가 없으면 Optional.empty")
+    void fail_noMessage() {
+      Channel channel = channelRepository.save(new Channel(ChannelType.PUBLIC, "빈채널", null));
+
+      Optional<Instant> lastAt = messageRepository.findLastMessageAtByChannelId(channel.getId());
+      assertThat(lastAt).isEmpty();
+    }
+  }
+
+  @Nested
+  @DisplayName("deleteAllByChannelId (커스텀 메소드)")
   class DeleteAllByChannelId {
 
     @Test
-    @DisplayName("채널별 메시지 일괄 삭제")
-    void deleteAllByChannelId() {
+    @DisplayName("성공: 해당 채널 메시지 일괄 삭제")
+    void success() {
       Channel channel = channelRepository.save(new Channel(ChannelType.PUBLIC, "채널", null));
       User author = userRepository.save(new User("u", "e@e.com", "p", null));
       userStatusRepository.save(new UserStatus(author, Instant.now()));
