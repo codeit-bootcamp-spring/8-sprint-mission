@@ -4,13 +4,21 @@ import com.sprint.mission.discodeit.entity.User;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
-public interface UserRepository {
-    User save(User user);
-    Optional<User> findById(UUID id);
-    Optional<User> findByEmail(String email);  //  추가: 이메일로 유저를 조회하는 메서드
-    List<User> findAll();
-    void delete(UUID id);
-    boolean existsByName(String name);
-    boolean existsByEmail(String email);
+@Repository
+public interface UserRepository extends JpaRepository<User, UUID> {
+
+  Optional<User> findByUsername(String username);
+
+  boolean existsByEmail(String email);
+
+  boolean existsByUsername(String username);
+
+  @Query("SELECT u FROM User u "
+      + "LEFT JOIN FETCH u.profile "
+      + "JOIN FETCH u.status")
+  List<User> findAllWithProfileAndStatus();
 }

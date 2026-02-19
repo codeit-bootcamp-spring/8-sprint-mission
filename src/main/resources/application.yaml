@@ -1,6 +1,21 @@
 spring:
+  application:
+    name: discodeit
+
+  # Admin 서버 연결 설정 (이 부분이 정확해야 대시보드에 뜹니다)
+  boot:
+    admin:
+      client:
+        url: http://localhost:9090
+        instance:
+          prefer-ip: true # IP(39.117.32.46)를 자동으로 감지해서 등록합니다
+
+  servlet:
+    multipart:
+      maxFileSize: 10MB
+      maxRequestSize: 30MB
+
   datasource:
-    # PostgreSQL 연결 정보
     url: jdbc:postgresql://localhost:5432/discodeit?currentSchema=discodeit
     username: discodeit_user
     password: discodeit1234
@@ -8,30 +23,43 @@ spring:
 
   jpa:
     hibernate:
-      # 엔티티를 기반으로 테이블을 자동 생성/업데이트합니다.
       ddl-auto: update
     properties:
       hibernate:
-        # PostgreSQL 문법에 맞게 SQL을 생성합니다.
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        # 기본 스키마 설정
         default_schema: discodeit
-        # SQL을 보기 좋게 정렬합니다. (디버깅용)
         format_sql: true
-        # 주석을 통해 어떤 쿼리인지 설명합니다. (디버깅용)
         use_sql_comments: true
 
 # 3. BinaryContent 저장소 설정
 discodeit:
   storage:
-    type: local  # local, s3 등 저장소 타입
+    type: local
     local:
-      root-path: ./storage/binary-contents  # 로컬 디스크 저장 경로
+      root-path: ./storage/binary-contents
 
 # 4. SQL 로그 상세 설정
 logging:
   level:
-    # 실행되는 SQL 쿼리를 콘솔에 출력합니다.
     org.hibernate.SQL: debug
-    # 쿼리에 들어가는 파라미터 값(? 자리에 들어갈 값)을 출력합니다.
     org.hibernate.orm.jdbc.bind: trace
+
+# 5. Actuator 엔드포인트 설정 (Admin 서버가 데이터를 가져가는 통로)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*" # 모든 정보를 노출해서 Admin 서버가 잘 보이게 합니다
+  endpoint:
+    health:
+      show-details: always
+    info:
+      enabled: true
+
+# 6. Actuator /info 노출 정보
+info:
+  app:
+    name: Discodeit
+    version: 1.7.0
+    java-version: "17"
+    spring-boot-version: 3.5.9 # 실제 실행 중인 버전으로 수정

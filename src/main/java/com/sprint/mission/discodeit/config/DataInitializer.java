@@ -1,189 +1,156 @@
 package com.sprint.mission.discodeit.config;
 
-import com.sprint.mission.discodeit.dto.BinaryContentCreateRequest;
-import com.sprint.mission.discodeit.dto.UserCreateRequest;
-import com.sprint.mission.discodeit.dto.UserStatusRequest;
-import com.sprint.mission.discodeit.dto.UserUpdateRequest;
-import com.sprint.mission.discodeit.service.BinaryContentService;
+import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
+import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
+import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
+import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.entity.ChannelType;
+import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.repository.ChannelRepository;
+import com.sprint.mission.discodeit.repository.ReadStatusRepository;
+import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.service.UserStatusService;
 import jakarta.annotation.PostConstruct;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Instant;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Random;
-
-// TODO: 개발 단계에서 데이터 생성 결과를 확인하기 위한 임시 컴포넌트입니다.
-// 개발 완료 후 삭제 가능합니다.
 @Slf4j
-@Component
 @RequiredArgsConstructor
+@Component
+@Profile("!test")
 public class DataInitializer {
 
-  private final UserService userService;
-  private final UserStatusService userStatusService;
-  private final BinaryContentService binaryContentService;
-  private final Random random = new Random();
-
-  private static final String[] IMAGE_FILES = {
-      "aliens.png", "buzz.png", "hamm.png", "jessie.png",
-      "mrpotato.png", "mrspotato.png", "rex.png", "woody.png"
+  private static final String DEFAULT_PASSWORD = "password";
+  private static final String[][] SEED_USERS = {
+      {"buzz", "buzz@codeit.com"},
+      {"jessie", "jessie@codeit.com"},
+      {"rex", "rex@codeit.com"},
+      {"woody", "woody@codeit.com"}
   };
+
+  private final UserService userService;
+  private final UserRepository userRepository;
+  private final ChannelRepository channelRepository;
+  private final ReadStatusRepository readStatusRepository;
+  private final Environment environment;
 
   @PostConstruct
   public void init() {
-    boolean isNewUsers = userService.findAll().isEmpty();
-
-    if (isNewUsers) {
-      // 초기 사용자 데이터 생성
-      String[] usernames = {"jessie", "rex", "buzz", "woody"};
-      String[] emails = {"jessie@codeit.com", "rex@codeit.com", "buzz@codeit.com",
-          "woody@codeit.com"};
-
-      for (int i = 0; i < usernames.length; i++) {
-        // UserService를 사용하여 사용자 생성 (UserStatus도 자동 생성됨)
-        UserCreateRequest createRequest = new UserCreateRequest(
-            usernames[i],
-            emails[i],
-            "password", // 기본 비밀번호
-            null, // fileName
-            null, // fileType
-            null, // fileSize
-            null  // profileImage
-        );
-        var userResponse = userService.create(createRequest);
-
-        // UserStatusService를 사용하여 온라인 상태로 설정
-        UserStatusRequest statusRequest = new UserStatusRequest(userResponse.getId());
-        userStatusService.update(statusRequest);
-      }
+    if (environment.getProperty("discodeit.init.skip-data", Boolean.class, false)) {
+      return;
     }
-
-    // 모든 사용자에게 이름에 맞는 프로필 이미지 할당 (기존 이미지가 있어도 재할당)
-    assignProfileImagesToAllUsers();
+    createSeedUsers();
+    ensureSeedUserProfiles();
+    createDefaultChannelAndReadStatuses();
   }
 
-  /**
-   * 특정 사용자에게 이름에 맞는 프로필 이미지 할당
-   */
-  private void assignProfileImageToUser(java.util.UUID userId, String userName) {
-    // 사용자 이름에 맞는 이미지 파일 선택
-    String imageFileName = getImageFileNameForUser(userName);
-
-    try {
-      // static/images 폴더에서 이미지 파일 읽기
-      org.springframework.core.io.ClassPathResource resource =
-          new org.springframework.core.io.ClassPathResource("static/images/" + imageFileName);
-
-      if (!resource.exists()) {
-        resource = new org.springframework.core.io.ClassPathResource(
-            "static/images/default-avatar.png");
-      }
-
-      byte[] imageBytes = resource.getInputStream().readAllBytes();
-      String base64Bytes = java.util.Base64.getEncoder().encodeToString(imageBytes);
-
-      // BinaryContent 생성
-      BinaryContentCreateRequest binaryRequest = new BinaryContentCreateRequest(
-          imageFileName,
-          "image/png",
-          (long) imageBytes.length,
-          base64Bytes
-      );
-
-      var binaryContent = binaryContentService.create(binaryRequest);
-
-      // 사용자 프로필 이미지 업데이트
-      UserUpdateRequest updateRequest = new UserUpdateRequest(
-          userId,
-          null, // name 변경 없음
-          null, // password 변경 없음
-          null, // profileImage (사용 안 함)
-          binaryContent.getId() // profileId 설정
-      );
-
-      userService.update(updateRequest);
-    } catch (Exception e) {
-      throw new RuntimeException("프로필 이미지 할당 실패: " + e.getMessage(), e);
-    }
-  }
-
-  /**
-   * 모든 사용자에게 이름에 맞는 프로필 이미지 할당 (강제 재할당)
-   */
-  private void assignProfileImagesToAllUsers() {
-    List<com.sprint.mission.discodeit.dto.UserResponse> users = userService.findAll();
-
-    for (var user : users) {
-      try {
-        // 사용자 이름에 맞는 이미지 파일 선택
-        String imageFileName = getImageFileNameForUser(user.getName());
-
-        // static/images 폴더에서 이미지 파일 읽기
-        org.springframework.core.io.ClassPathResource resource =
-            new org.springframework.core.io.ClassPathResource("static/images/" + imageFileName);
-
-        if (!resource.exists()) {
-          resource = new org.springframework.core.io.ClassPathResource(
-              "static/images/default-avatar.png");
+  private void ensureSeedUserProfiles() {
+    for (String[] u : SEED_USERS) {
+      String username = u[0];
+      userRepository.findByUsername(username).ifPresent(user -> {
+        if (user.getProfile() == null) {
+          loadSeedProfileImage(username).ifPresent(profileRequest -> {
+            try {
+              userService.update(user.getId(),
+                  new UserUpdateRequest(user.getUsername(), user.getEmail(), null),
+                  Optional.of(profileRequest));
+              log.info("Set profile for existing seed user: {}", username);
+            } catch (Exception e) {
+              log.warn("Could not set profile for {}: {}", username, e.getMessage());
+            }
+          });
         }
+      });
+    }
+  }
 
-        byte[] imageBytes = resource.getInputStream().readAllBytes();
-        String base64Bytes = java.util.Base64.getEncoder().encodeToString(imageBytes);
-
-        // BinaryContent 생성
-        BinaryContentCreateRequest binaryRequest = new BinaryContentCreateRequest(
-            imageFileName,
-            "image/png",
-            (long) imageBytes.length,
-            base64Bytes
+  private void createSeedUsers() {
+    for (String[] u : SEED_USERS) {
+      String username = u[0];
+      String email = u[1];
+      if (userRepository.existsByUsername(username)) {
+        log.debug("Seed user already exists: {}", username);
+        continue;
+      }
+      try {
+        Optional<BinaryContentCreateRequest> profileImage = loadSeedProfileImage(username);
+        userService.create(
+            new UserCreateRequest(username, email, DEFAULT_PASSWORD),
+            profileImage
         );
-
-        var binaryContent = binaryContentService.create(binaryRequest);
-
-        // 사용자 프로필 이미지 업데이트 (기존 이미지가 있어도 재할당)
-        UserUpdateRequest updateRequest = new UserUpdateRequest(
-            user.getId(),
-            null, // name 변경 없음
-            null, // password 변경 없음
-            null, // profileImage (사용 안 함)
-            binaryContent.getId() // profileId 설정
-        );
-
-        userService.update(updateRequest);
-        //  System.out.println과 printStackTrace() 대신 로깅 사용
-        log.info("프로필 이미지 배정 완료 (사용자: {}, 이미지: {})", user.getName(), imageFileName);
+        log.info("Created seed user: {} (profile: {})", username, profileImage.isPresent() ? "yes" : "no");
       } catch (Exception e) {
-        //  System.err.println과 printStackTrace() 대신 로깅 사용
-        log.error("프로필 이미지 배정 실패 (사용자 ID: {}, 이름: {})", user.getId(), user.getName(), e);
+        log.warn("Could not create seed user {}: {}", username, e.getMessage());
       }
     }
   }
 
-  private String getImageFileNameForUser(String userName) {
-    if (userName == null) {
-      return IMAGE_FILES[random.nextInt(IMAGE_FILES.length)];
+  /** Minimal 1x1 transparent PNG (fallback when seed-profiles/{username}.png not found). */
+  private static final byte[] MINIMAL_PNG = new byte[]{
+      (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+      0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+      0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+      0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, (byte) 0xC4, (byte) 0x89,
+      0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41, 0x54,
+      0x78, (byte) 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00, 0x05,
+      0x00, 0x01, 0x0D, 0x0A, 0x2D, (byte) 0xB4, 0x00, 0x00,
+      0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, (byte) 0xAE, 0x42, 0x60, (byte) 0x82
+  };
+
+  private Optional<BinaryContentCreateRequest> loadSeedProfileImage(String username) {
+    String path = "seed-profiles/" + username + ".png";
+    try {
+      ClassPathResource resource = new ClassPathResource(path);
+      byte[] bytes;
+      if (resource.exists()) {
+        try (InputStream is = resource.getInputStream()) {
+          bytes = is.readAllBytes();
+        }
+        if (bytes.length == 0) {
+          bytes = MINIMAL_PNG;
+        }
+      } else {
+        bytes = MINIMAL_PNG;
+      }
+      return Optional.of(new BinaryContentCreateRequest(
+          username + ".png",
+          "image/png",
+          bytes
+      ));
+    } catch (IOException e) {
+      log.debug("Seed profile image for {}: {}", username, e.getMessage());
+      return Optional.of(new BinaryContentCreateRequest(
+          username + ".png",
+          "image/png",
+          MINIMAL_PNG
+      ));
     }
+  }
 
-    String lowerName = userName.toLowerCase();
-
-    // 이름에 맞는 이미지 파일 매핑
-    if (lowerName.contains("buzz")) {
-      return "buzz.png";
-    } else if (lowerName.contains("jessie") || lowerName.contains("제시")) {
-      return "jessie.png";
-    } else if (lowerName.contains("rex") || lowerName.contains("렉스")) {
-      return "rex.png";
-    } else if (lowerName.contains("woody") || lowerName.contains("우디")) {
-      return "woody.png";
-    } else if (lowerName.contains("현승원")) {
-      return "aliens.png";
+  private void createDefaultChannelAndReadStatuses() {
+    if (channelRepository.count() > 0) {
+      return;
     }
+    Channel defaultChannel = new Channel(ChannelType.PUBLIC, "일반", "일반 채팅");
+    channelRepository.save(defaultChannel);
+    log.info("Created default channel: {}", defaultChannel.getName());
 
-    // 매칭되지 않으면 랜덤 선택
-    return IMAGE_FILES[random.nextInt(IMAGE_FILES.length)];
+    Instant now = Instant.now();
+    for (String[] u : SEED_USERS) {
+      userRepository.findByUsername(u[0]).ifPresent(user -> {
+        if (readStatusRepository.findByUserIdAndChannelId(user.getId(), defaultChannel.getId()).isEmpty()) {
+          readStatusRepository.save(new ReadStatus(user, defaultChannel, now));
+          log.debug("Created ReadStatus for user {} in default channel", user.getUsername());
+        }
+      });
+    }
   }
 }
-

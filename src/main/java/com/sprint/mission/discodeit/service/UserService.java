@@ -1,28 +1,24 @@
 package com.sprint.mission.discodeit.service;
 
-import com.sprint.mission.discodeit.dto.UserCreateRequest;
-import com.sprint.mission.discodeit.dto.UserResponse;
-import com.sprint.mission.discodeit.dto.UserUpdateRequest;
-
+import com.sprint.mission.discodeit.dto.data.UserDto;
+import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
+import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
+import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface UserService {
-    UserResponse create(UserCreateRequest request);
 
-    UserResponse update(UserUpdateRequest request);
+  UserDto create(UserCreateRequest userCreateRequest,
+      Optional<BinaryContentCreateRequest> profileCreateRequest);
 
-    //  유저 생성 (profileImage 포함)
-    UserResponse create(String name, String email, String password, String profileImage);
+  UserDto find(UUID userId);
 
-    //  로그인 및 비밀번호 검증
-    UserResponse login(String email, String password);
+  List<UserDto> findAll();
 
-    List<UserResponse> findAll();
-    UserResponse findById(UUID id);
+  UserDto update(UUID userId, UserUpdateRequest userUpdateRequest,
+      Optional<BinaryContentCreateRequest> profileCreateRequest);
 
-    //  유저 정보 수정 (프로필 이미지 반영)
-    UserResponse update(UUID id, String name, String password, String profileImage);
-
-    void delete(UUID id);
+  void delete(UUID userId);
 }
