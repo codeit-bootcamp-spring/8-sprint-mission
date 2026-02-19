@@ -6,14 +6,18 @@ import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
-import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.service.MessageService;
+import jakarta.validation.Valid;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,62 +40,63 @@ public class MessageController implements MessageApi {
 
   private final MessageService messageService;
 
-  //메세지 생성
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<MessageDto> create(
-      @RequestPart("messageCreateRequest") MessageCreateRequest messageCreateRequest,
+      @RequestPart("messageCreateRequest") @Valid MessageCreateRequest messageCreateRequest,
       @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments
   ) {
-    List<BinaryContentCreateRequest> attachmentRequests =
-        Optional.ofNullable(attachments)
-            .map(files -> files.stream()
-                .map(file -> {
-                  try {
-                    return new BinaryContentCreateRequest(
-                        file.getOriginalFilename(),
-                        file.getContentType(),
-                        file.getInputStream(),
-                        file.getSize()
-                    );
-                  } catch (IOException e) {
-                    throw new RuntimeException(e);
-                  }
-                })
-                .toList())
-            .orElse(new ArrayList<>());
+    List<BinaryContentCreateRequest> attachmentRequests = Optional.ofNullable(attachments)
+        .map(files -> files.stream()
+            .map(file -> {
+              try {
+                return new BinaryContentCreateRequest(
+                    file.getOriginalFilename(),
+                    file.getContentType(),
+                    file.getBytes()
+                );
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            })
+            .toList())
+        .orElse(new ArrayList<>());
     MessageDto createdMessage = messageService.create(messageCreateRequest, attachmentRequests);
     return ResponseEntity
         .status(HttpStatus.CREATED)
         .body(createdMessage);
   }
 
-  //메세지 수정
-  @PatchMapping(path = "/{messageId}")
-  public ResponseEntity<MessageDto> update(
-      @PathVariable("messageId") UUID messageId,
-      @RequestBody MessageUpdateRequest request) {
+  @PatchMapping(path = "{messageId}")
+  public ResponseEntity<MessageDto> update(@PathVariable("messageId") UUID messageId,
+      @RequestBody @Valid MessageUpdateRequest request) {
     MessageDto updatedMessage = messageService.update(messageId, request);
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(updatedMessage);
   }
 
-  //메세지 삭제
-  @DeleteMapping(path = "/{messageId}")
-  public ResponseEntity<Void> delete(
-      @PathVariable("messageId") UUID messageId) {
+  @DeleteMapping(path = "{messageId}")
+  public ResponseEntity<Void> delete(@PathVariable("messageId") UUID messageId) {
     messageService.delete(messageId);
     return ResponseEntity
         .status(HttpStatus.NO_CONTENT)
         .build();
   }
 
-  // 채널별 메시지 페이징 조회 (50개씩 최근순)
   @GetMapping
   public ResponseEntity<PageResponse<MessageDto>> findAllByChannelId(
-      @RequestParam UUID channelId,
-      @RequestParam(defaultValue = "0") int page) { // 페이지 번호를 받고, 기본값은 0으로 설정!
-
-    return ResponseEntity.ok(messageService.findAllByChannelId(channelId, page));
+      @RequestParam("channelId") UUID channelId,
+      @RequestParam(value = "cursor", required = false) Instant cursor,
+      @PageableDefault(
+          size = 50,
+          page = 0,
+          sort = "createdAt",
+          direction = Direction.DESC
+      ) Pageable pageable) {
+    PageResponse<MessageDto> messages = messageService.findAllByChannelId(channelId, cursor,
+        pageable);
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .body(messages);
   }
 }

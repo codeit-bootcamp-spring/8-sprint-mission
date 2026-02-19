@@ -40,9 +40,19 @@ dependencies {
     //postgresql 의존성 추가
     runtimeOnly 'org.postgresql:postgresql'
 
+    //mapstruct 의존성 추가
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+    //actuator 의존성 추가
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    //H2 데이터베이스 의존성 추가
+    testImplementation 'com.h2database:h2'
 }
 
 
 tasks.named('test') {
     useJUnitPlatform()
+    systemProperty 'spring.profiles.active', 'test'
 }

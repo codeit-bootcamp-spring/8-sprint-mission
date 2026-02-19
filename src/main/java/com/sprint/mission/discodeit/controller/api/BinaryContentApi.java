@@ -10,11 +10,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
+
 import java.util.List;
 import java.util.UUID;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "BinaryContent", description = "첨부 파일 API")
 public interface BinaryContentApi {
@@ -45,10 +45,14 @@ public interface BinaryContentApi {
       @Parameter(description = "조회할 첨부 파일 ID 목록") List<UUID> binaryContentIds
   );
 
-  @Operation(summary = "실제 파일 다운로드")
-  @GetMapping("/download")
-  ResponseEntity<?> download( // <Resource> 대신 <?> 사용
-      @Parameter(description = "다운로드할 파일 ID")
-      @RequestParam("binaryContentId") UUID binaryContentId // Query Parameter 방식
+  @Operation(summary = "파일 다운로드")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "200", description = "파일 다운로드 성공",
+          content = @Content(schema = @Schema(implementation = Resource.class))
+      )
+  })
+  ResponseEntity<?> download(
+      @Parameter(description = "다운로드할 파일 ID") UUID binaryContentId
   );
-}
+} 

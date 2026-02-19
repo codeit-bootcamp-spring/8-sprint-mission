@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    # H2 인메모리, PostgreSQL 호환 모드 설정
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;CASE_INSENSITIVE_IDENTIFIERS=TRUE;INIT=CREATE TYPE IF NOT EXISTS TIMESTAMPTZ AS TIMESTAMP WITH TIME ZONE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  h2:
+    console:
+      enabled: true
+
+logging:
+  level:
+    org.hibernate.SQL: debug # SQL 로그 출력
+    org.hibernate.type.descriptor.sql.BasicBinder: trace # 쿼리 파라미터 확인용

@@ -1,55 +1,63 @@
-# 1. server port
-server:
-  port: 8080
-
-# 2. spring config
 spring:
+  profiles:
+    active: dev
   application:
     name: discodeit
-    servlet:
-      multipart:
-        maxFileSize: 10MB # 파일 하나의 최대 크기
-        maxRequestSize: 30MB  # 한 번에 최대 업로드 가능 용량
-
-
-  # 2-1. database connection info config
+  servlet:
+    multipart:
+      max-file-size: 10MB # 파일 하나의 최대 크기
+      max-request-size: 30MB  # 한 번에 최대 업로드 가능 용량
   datasource:
+    driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/discodeit
     username: discodeit_user
     password: discodeit1234
-    driver-class-name: org.postgresql.Driver
-  sql:
-    init:
-      mode: always
-
-  # 2-2. jpa config
   jpa:
-    database: postgresql
-    generate-ddl: true
     hibernate:
-      ddl-auto: update
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+      ddl-auto: validate
     properties:
       hibernate:
         format_sql: true
-        highlight_sql: true
-        use_sql_comments: true
+    #        default_batch_fetch_size: 100
+    open-in-view: false
 
-  # 2-3. servlet config
-  servlet:
+#Actuator 노출 설정 추가
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics,loggers" # 미션 요구사항
+  info:
+    env:
+      enabled: true
+
+#Actuator info 상세 정보 추가 (변수를 활용해 자동 동기화)
+info:
+  app:
+    name: Discodeit
+    version: 1.7.0
+    java-version: 17
+    spring-boot-version: 3.4.0
+  settings:
+    datasource:
+      url: ${spring.datasource.url}
+      driver-class-name: ${spring.datasource.driver-class-name}
+    jpa:
+      ddl-auto: ${spring.jpa.hibernate.ddl-auto}
+    storage:
+      type: ${discodeit.storage.type}
+      path: ${discodeit.storage.local.root-path}
     multipart:
-      maxFileSize: 10MB # 파일 하나의 최대 크기
-      maxRequestSize: 30MB  # 한 번에 최대 업로드 가능 용량
+      max-file-size: ${spring.servlet.multipart.max-file-size}
+      max-request-size: ${spring.servlet.multipart.max-request-size}
 
-# 3. logging config
 logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
 
-# 4. custom config (discodeit 전용 설정)
 discodeit:
   storage:
-    type: local        #
+    type: local
     local:
-      root-path: ./storage_data  # 실제 파일이 저장될 폴더 경로입니다.
+      root-path: .discodeit/storage
