@@ -8,19 +8,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import java.io.Serializable;
 import java.time.Instant;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @Entity
 @Table(
     name = "read_statuses",
-    schema = "discodeit_user",
     uniqueConstraints = {
         @UniqueConstraint(
             name = "uk_read_status_user_channel",
@@ -28,9 +24,7 @@ import lombok.Setter;
         )
     }
 )
-public class ReadStatus extends BaseUpdatableEntity implements Serializable {
-
-  private static final long serialVersionUID = 1L;
+public class ReadStatus extends BaseUpdatableEntity {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(

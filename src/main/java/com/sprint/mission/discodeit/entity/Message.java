@@ -10,20 +10,16 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
 @NoArgsConstructor
 @Entity
-@Table(name = "messages", schema = "discodeit_user")
-public class Message extends BaseUpdatableEntity implements Serializable {
-
-  private static final long serialVersionUID = 1L;
+@Table(name = "messages")
+public class Message extends BaseUpdatableEntity {
 
   @Column(
       name = "content",
@@ -32,11 +28,17 @@ public class Message extends BaseUpdatableEntity implements Serializable {
   private String content;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "channel_id")
+  @JoinColumn(
+      name = "channel_id",
+      nullable = false
+  )
   private Channel channel;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "author_id")
+  @JoinColumn(
+      name = "author_id",
+      nullable = false
+  )
   private User author;
 
   @OneToMany(
@@ -46,7 +48,6 @@ public class Message extends BaseUpdatableEntity implements Serializable {
   )
   @JoinTable(
       name = "message_attachments",
-      schema = "discodeit_user",
       joinColumns = @JoinColumn(name = "message_id"),
       inverseJoinColumns = @JoinColumn(name = "attachment_id")
   )

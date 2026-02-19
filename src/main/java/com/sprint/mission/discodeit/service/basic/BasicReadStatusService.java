@@ -6,6 +6,10 @@ import com.sprint.mission.discodeit.DTO.request.ReadStatusUpdateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.exception.ChannelExcption.ChannelNotFoundException;
+import com.sprint.mission.discodeit.exception.ReadStatusException.ReadStatusAlreadyExists;
+import com.sprint.mission.discodeit.exception.ReadStatusException.ReadStatusNotFoundException;
+import com.sprint.mission.discodeit.exception.UserException.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.ReadStatusMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
@@ -13,7 +17,6 @@ import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ReadStatusService;
 import java.time.Instant;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,12 +40,12 @@ public class BasicReadStatusService implements ReadStatusService {
     UUID channelId = request.channelId();
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new NoSuchElementException(userId + " 해당하는 ReadStatus가 존재하지 않습니다."));
+        .orElseThrow(() -> new UserNotFoundException(userId));
     Channel channel = channelRepository.findById(channelId)
-        .orElseThrow(() -> new NoSuchElementException(channelId + " 해당하는 ReadStatus가 존재하지 않습니다."));
+        .orElseThrow(() -> new ChannelNotFoundException(channelId));
 
     if (readStatusRepository.existsByUserIdAndChannelId(userId, channelId)) {
-      throw new IllegalStateException(userId + " 와 " + channelId + " 해당하는 ReadStatus가 존재합니다.");
+      throw new ReadStatusAlreadyExists(userId, channelId);
     }
 
     Instant now = Instant.now();
@@ -60,7 +63,7 @@ public class BasicReadStatusService implements ReadStatusService {
   public ReadStatusDto find(UUID readStatusId) {
     return readStatusRepository.findById(readStatusId)
         .map(readStatusMapper::toDto)
-        .orElseThrow(() -> new NoSuchElementException(readStatusId + " 해당하는 readSatus 존재하지 않습니다."));
+        .orElseThrow(() -> new ReadStatusNotFoundException(readStatusId));
   }
 
   //N+1 문제 발생할 수 있음
@@ -77,7 +80,7 @@ public class BasicReadStatusService implements ReadStatusService {
     Instant newLastReadAt = request.newLastReadAt();
     ReadStatus readStatus = readStatusRepository.findById(readStatusId)
         .orElseThrow(
-            () -> new NoSuchElementException(readStatusId + " 해당하는 readStatus가 존재하지 않습니다."));
+            () -> new ReadStatusNotFoundException(readStatusId));
 
     readStatus.update(newLastReadAt);
 
@@ -89,7 +92,7 @@ public class BasicReadStatusService implements ReadStatusService {
   public void delete(UUID readStatusId) {
     ReadStatus readStatus = readStatusRepository.findById(readStatusId)
         .orElseThrow(
-            () -> new NoSuchElementException(readStatusId + " 해당하는 readStatus가 존재하지 않습니다."));
+            () -> new ReadStatusNotFoundException(readStatusId));
 
     readStatusRepository.delete(readStatus);
   }

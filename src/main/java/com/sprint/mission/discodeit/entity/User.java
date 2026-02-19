@@ -1,24 +1,25 @@
 package com.sprint.mission.discodeit.entity;
 
 import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import java.io.Serializable;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
 @Entity
-@Table(name = "users", schema = "discodeit_user")
-public class User extends BaseUpdatableEntity implements Serializable {
+@Table(name = "users")
+public class User extends BaseUpdatableEntity {
 
-  private static final long serialVersionUID = 1L;
-
+  @Size(max = 50, message = "유저 이름은 50자를 초과할 수 없습니다.")
   @Column(
       name = "username",
       length = 50,
@@ -27,6 +28,8 @@ public class User extends BaseUpdatableEntity implements Serializable {
   )
   private String username;
 
+  @Email(message = "올바른 이메일 형식이 아닙니다.")
+  @Size(max = 100, message = "이메일은 100자를 초과할 수 없습니다.")
   @Column(
       name = "email",
       length = 100,
@@ -35,6 +38,7 @@ public class User extends BaseUpdatableEntity implements Serializable {
   )
   private String email;
 
+  @Size(max = 60, message = "비밀번호는 60자를 초과할 수 없습니다.")
   @Column(
       name = "password",
       length = 60,
@@ -42,7 +46,7 @@ public class User extends BaseUpdatableEntity implements Serializable {
   )
   private String password;
 
-  @OneToOne(fetch = FetchType.LAZY)
+  @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   @JoinColumn(
       name = "profile_id",
       unique = true

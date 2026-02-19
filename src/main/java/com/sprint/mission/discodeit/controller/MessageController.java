@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.DTO.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.DTO.response.PageResponse;
 import com.sprint.mission.discodeit.controller.api.MessageApi;
 import com.sprint.mission.discodeit.service.MessageService;
+import jakarta.validation.Valid;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -32,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/messages")
@@ -41,9 +44,11 @@ public class MessageController implements MessageApi {
 
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   public ResponseEntity<MessageDto> create(
-      @RequestPart(value = "messageCreateRequest") MessageCreateRequest messageCreateRequest,
+      @Valid @RequestPart(value = "messageCreateRequest") MessageCreateRequest messageCreateRequest,
       @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments
   ) {
+    log.info("Controller: 메시지 생성 요청 - channelId: {}, authorId: {}",
+        messageCreateRequest.channelId(), messageCreateRequest.authorId());
     List<BinaryContentCreateRequest> attachmentRequests = Optional.ofNullable(attachments)
         .map(files -> files.stream()
             .map(file -> {
@@ -54,14 +59,18 @@ public class MessageController implements MessageApi {
                     file.getBytes()
                 );
               } catch (IOException e) {
+                log.error("Controller: 첨부파일 처리 중 오류 발생 - error: {}", e.getMessage());
                 throw new RuntimeException(e);
               }
             })
             .toList())
         .orElse(new ArrayList<>());
+
+    MessageDto messageDto = messageService.create(messageCreateRequest, attachmentRequests);
+    log.info("Controller: 메시지 생성 완료 - ID: {}", messageDto.id());
     return ResponseEntity
         .status(HttpStatus.CREATED)
-        .body(messageService.create(messageCreateRequest, attachmentRequests));
+        .body(messageDto);
   }
 
   @GetMapping
@@ -82,9 +91,10 @@ public class MessageController implements MessageApi {
   @PatchMapping(path = "{messageId}")
   public ResponseEntity<MessageDto> update(
       @PathVariable(value = "messageId") UUID messageId,
-      @RequestBody MessageUpdateRequest messageUpdateRequest) {
-    System.out.println(messageUpdateRequest.newContent());
+      @Valid @RequestBody MessageUpdateRequest messageUpdateRequest) {
+    log.info("Controller: 메시지 수정 요청 - ID: {}", messageId);
     MessageDto messageResponse = messageService.update(messageId, messageUpdateRequest);
+    log.info("Controller: 메시지 수정 완료 - ID: {}", messageId);
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(messageResponse);
@@ -93,7 +103,9 @@ public class MessageController implements MessageApi {
   @DeleteMapping(path = "{messageId}")
   public ResponseEntity<Void> delete(
       @PathVariable(value = "messageId") UUID messageId) {
+    log.info("Controller: 메시지 삭제 요청 - ID: {}", messageId);
     messageService.delete(messageId);
+    log.info("Controller: 메시지 삭제 완료 - ID: {}", messageId);
     return ResponseEntity
         .status(HttpStatus.NO_CONTENT)
         .build();
