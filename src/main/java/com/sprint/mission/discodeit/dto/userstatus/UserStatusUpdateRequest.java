@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.dto.userstatus;
 
 
+import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 
 /*
@@ -12,6 +13,8 @@ import java.time.Instant;
     • newLastActiveAt     : 유저의 마지막 접속 시간
  */
 public record UserStatusUpdateRequest(
+
+    @NotNull
     Instant newLastActiveAt
 ) {
 

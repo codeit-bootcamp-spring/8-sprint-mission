@@ -1,6 +1,9 @@
 package com.sprint.mission.discodeit.dto.channel;
 
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 /*
     ChannelCreatePublicRequest
     -------------------------
@@ -11,7 +14,13 @@ package com.sprint.mission.discodeit.dto.channel;
     • description       : 채널 설명
  */
 public record ChannelCreatePublicRequest(
+
+    @NotBlank
+    @Size(max = 100)
     String name,
+
+    @NotBlank
+    @Size(max = 500)
     String description
 ) {
 

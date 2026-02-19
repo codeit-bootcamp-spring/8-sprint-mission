@@ -1,6 +1,13 @@
 spring:
   application:
     name: discodeit
+
+  boot:
+    admin:
+      client:
+        instance:
+          name: discodeit
+
   servlet:
     multipart:
       max-file-size: 10MB       # 파일 1개 최대
@@ -14,6 +21,10 @@ spring:
     init:
       mode: always
 
+  sql:
+    init:
+      mode: always
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -22,6 +33,42 @@ spring:
       hibernate:
         format_sql: true
         default_schema: discodeit_schema
+
+logging:
+  level:
+    root: info
+
+# Actuator 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        # 외부로 노출할 엔드포인트 지정
+        include: health,info,metrics,loggers
+  info:
+    env:
+      enabled: true  # 해당 설정으로 ${...} 변수를 info에서 읽을 수 있다.
+
+# 애플리케이션 및 주요 설정 정보
+info:
+  app:
+    name: Discodeit
+    version: 1.7.0
+    java: 17
+    spring-boot: 3.5.8
+
+  # 주요 설정 정보
+  config:
+    datasource:
+      url: ${spring.datasource.url:unknown}
+    jpa:
+      ddl-auto: ${spring.jpa.hibernate.ddl-auto:unknown}
+    storage:
+      type: ${discodeit.storage.type:unknown}
+      path: ${discodeit.storage.local.root-path:unknown}
+    multipart:
+      max-file-size: ${spring.servlet.multipart.max-file-size:unknown}
+      max-request-size: ${spring.servlet.multipart.max-request-size:unknown}
 
 discodeit:
   storage:

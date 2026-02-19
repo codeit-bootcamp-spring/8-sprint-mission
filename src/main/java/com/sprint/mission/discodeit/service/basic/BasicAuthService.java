@@ -4,6 +4,7 @@ import com.sprint.mission.discodeit.dto.user.LoginRequest;
 import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.exception.auth.AuthInvalidCredentialsException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.AuthService;
@@ -27,7 +28,8 @@ public class BasicAuthService implements AuthService {
     // 보안상 아이디/비번 중 무엇이 틀렸는지에 대한 정보 X (추측 방지)
     User user = userRepository.findByUsername(request.username())
         .filter(u -> u.getPassword().equals(request.password()))
-        .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다."));
+        .orElseThrow(
+            () -> new AuthInvalidCredentialsException(request.username(), request.password()));
 
     // 로그인 성공 시 유저 상태(마지막 접속 시간) 업데이트
     UserStatus status = user.getStatus();

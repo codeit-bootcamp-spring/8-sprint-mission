@@ -1,6 +1,8 @@
 package com.sprint.mission.discodeit.dto.message;
 
 
+import jakarta.validation.constraints.NotBlank;
+
 /*
     MessageUpdateRequest
     -------------------------
@@ -10,6 +12,8 @@ package com.sprint.mission.discodeit.dto.message;
     • newContent          : 메시지 내용
  */
 public record MessageUpdateRequest(
+    
+    @NotBlank
     String newContent
 ) {
 

@@ -6,6 +6,9 @@ import com.sprint.mission.discodeit.dto.readstatus.ReadStatusUpdateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
+import com.sprint.mission.discodeit.exception.readstatus.ReadStatusNotFoundException;
+import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.ReadStatusMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
@@ -13,7 +16,6 @@ import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ReadStatusService;
 import java.time.Instant;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,17 +37,17 @@ public class BasicReadStatusService implements ReadStatusService {
 
     // 1) User 엔티티 조회
     User user = userRepository.findById(request.userId())
-        .orElseThrow(() -> new NoSuchElementException("User를 찾을 수 없습니다: " + request.userId()));
+        .orElseThrow(() -> new UserNotFoundException(request.userId()));
 
     // 2) Channel 엔티티 조회
     Channel channel = channelRepository.findById(request.channelId())
         .orElseThrow(
-            () -> new NoSuchElementException("Channel 을 찾을 수 없습니다: " + request.channelId()));
+            () -> new ChannelNotFoundException(request.channelId()));
 
     // 3) (userId, channelId) 조합 중복 체크
     readStatusRepository.findByUser_IdAndChannel_Id(request.userId(), request.channelId())
         .ifPresent(rs -> {
-          throw new IllegalStateException("이미 존재하는 ReadStatus 입니다.");
+          throw new ReadStatusNotFoundException(rs.getId());
         });
 
     Instant lastReadAt =
@@ -62,7 +64,7 @@ public class BasicReadStatusService implements ReadStatusService {
   public ReadStatusDto findById(UUID id) {
     return readStatusRepository.findById(id)
         .map(readStatusMapper::toDto)
-        .orElseThrow(() -> new NoSuchElementException("ReadStatus를 찾을 수 없습니다. " + id));
+        .orElseThrow(() -> new ReadStatusNotFoundException(id));
   }
 
   @Override
@@ -76,7 +78,7 @@ public class BasicReadStatusService implements ReadStatusService {
   @Transactional
   public ReadStatusDto update(UUID readStatusId, ReadStatusUpdateRequest request) {
     ReadStatus readStatus = readStatusRepository.findById(readStatusId)
-        .orElseThrow(() -> new NoSuchElementException("ReadStatus를 찾을 수 없습니다: " + readStatusId));
+        .orElseThrow(() -> new ReadStatusNotFoundException(readStatusId));
 
     readStatus.update(request.newLastReadAt());
 
@@ -88,7 +90,7 @@ public class BasicReadStatusService implements ReadStatusService {
   public void delete(UUID id) {
 
     if (!readStatusRepository.existsById(id)) {
-      throw new NoSuchElementException("ReadStatus를 찾을 수 없습니다: " + id);
+      throw new ReadStatusNotFoundException(id);
     }
     readStatusRepository.deleteById(id);
   }

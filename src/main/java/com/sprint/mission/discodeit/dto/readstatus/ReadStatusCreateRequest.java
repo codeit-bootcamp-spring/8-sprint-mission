@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.dto.readstatus;
 
 
+import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -15,8 +16,14 @@ import java.util.UUID;
     • lastReadAt        : 마지막 읽은 시각
  */
 public record ReadStatusCreateRequest(
+
+    @NotNull
     UUID userId,
+
+    @NotNull
     UUID channelId,
+
+    @NotNull
     Instant lastReadAt
 ) {
 
