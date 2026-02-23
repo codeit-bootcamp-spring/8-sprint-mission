@@ -5,11 +5,6 @@ spring:
   application:
     name: discodeit
 
-  boot:
-    admin:
-      client:
-        url: ${SPRING_BOOT_ADMIN_CLIENT_URL}
-
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
