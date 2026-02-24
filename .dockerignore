@@ -14,6 +14,10 @@ bin/
 .DS_Store
 .git/
 .gitignore
+.env
+.env.*
+discodeit.env
+*.pem
 
 # 도커 관련 파일
 Dockerfile

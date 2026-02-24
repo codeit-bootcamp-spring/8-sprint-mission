@@ -4,16 +4,24 @@ FROM amazoncorretto:17 AS junyoung-builder
 # 작업 디렉토리 설정
 WORKDIR /app
 
-# 프로젝트 파일 복사
-# 명시적으로 적어줘도 되긴 하지만 .dockerignore에 파일 들 정의 할것
-# ignore에 명시된 파일 제외한 모든 것들이 /app으로 복사 된다.
-COPY . .
+# Gradle 설정 파일만 먼저 복사
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY settings.gradle .
 
 # Gradle Wrapper 실행 권한 부여
 RUN chmod +x ./gradlew
 
+# 소스 코드가 없어도 의존성(라이브러리)은 미리 받을 수 있다.
+# 미리 라이브러리만 땡겨 온다.
+RUN ./gradlew dependencies --no-daemon
+
+# 소스코드 실제 복사
+COPY src src
+
 # 도커 이미지는 실행에 필요한 .jar만 있으면 되기에 bootJar 사용
-RUN ./gradlew clean bootJar -x test
+RUN ./gradlew bootJar -x test --no-daemon
 
 # 실행 환경 (실제 운영 이미지)
 FROM amazoncorretto:17-alpine
