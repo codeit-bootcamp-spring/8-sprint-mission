@@ -29,6 +29,11 @@ services:
       - "8081:80"
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE}
+      STORAGE_TYPE: ${STORAGE_TYPE}
+      AWS_S3_ACCESS_KEY: ${AWS_S3_ACCESS_KEY}
+      AWS_S3_SECRET_KEY: ${AWS_S3_SECRET_KEY}
+      AWS_S3_REGION: ${AWS_S3_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
       # schema.sql에서 정의한 스키마(discodeit_schema)를 지정
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}?currentSchema=discodeit_schema
       SPRING_DATASOURCE_USERNAME: ${DB_USER}

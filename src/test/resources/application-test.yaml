@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: "optional:file:.env[.properties]" # .env 파일을 프로퍼티처럼 읽어오기
   datasource:
     url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
@@ -27,6 +29,12 @@ logging:
 
 discodeit:
   storage:
-    type: local
+    type: ${STORAGE_TYPE:s3}
+    s3:
+      access-key: ${AWS_S3_ACCESS_KEY}
+      secret-key: ${AWS_S3_SECRET_KEY}
+      region: ${AWS_S3_REGION}
+      bucket: ${AWS_S3_BUCKET}
+      presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600}
     local:
       root-path: build/test-storage
