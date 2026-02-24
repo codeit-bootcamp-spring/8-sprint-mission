@@ -31858,3 +31858,1120 @@ Caused by: java.nio.channels.ClosedChannelException: null
 26-02-14 22:20:30.528 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean [ |  | ] - Closing JPA EntityManagerFactory for persistence unit 'default'
 26-02-14 22:20:30.528 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource [ |  | ] - HikariPool-1 - Shutdown initiated...
 26-02-14 22:20:30.531 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource [ |  | ] - HikariPool-1 - Shutdown completed.
+26-02-23 20:54:03.757 [background-preinit] INFO  o.h.validator.internal.util.Version [ |  | ] - HV000001: Hibernate Validator 8.0.3.Final
+26-02-23 20:54:03.807 [main] INFO  c.s.m.discodeit.DiscodeitApplication [ |  | ] - Starting DiscodeitApplication using Java 17.0.16 with PID 2776 (C:\myWs\codeit-sprint-mission\8-sprint-mission\build\classes\java\main started by eet5g in C:\myWs\codeit-sprint-mission\8-sprint-mission)
+26-02-23 20:54:03.808 [main] DEBUG c.s.m.discodeit.DiscodeitApplication [ |  | ] - Running with Spring Boot v3.5.8, Spring v6.2.14
+26-02-23 20:54:03.808 [main] INFO  c.s.m.discodeit.DiscodeitApplication [ |  | ] - The following 1 profile is active: "dev"
+26-02-23 20:54:04.857 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [ |  | ] - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+26-02-23 20:54:04.925 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [ |  | ] - Finished Spring Data repository scanning in 61 ms. Found 6 JPA repository interfaces.
+26-02-23 20:54:05.423 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer [ |  | ] - Tomcat initialized with port 8080 (http)
+26-02-23 20:54:05.434 [main] INFO  o.a.coyote.http11.Http11NioProtocol [ |  | ] - Initializing ProtocolHandler ["http-nio-8080"]
+26-02-23 20:54:05.435 [main] INFO  o.a.catalina.core.StandardService [ |  | ] - Starting service [Tomcat]
+26-02-23 20:54:05.435 [main] INFO  o.a.catalina.core.StandardEngine [ |  | ] - Starting Servlet engine: [Apache Tomcat/10.1.49]
+26-02-23 20:54:05.485 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] [ |  | ] - Initializing Spring embedded WebApplicationContext
+26-02-23 20:54:05.485 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext [ |  | ] - Root WebApplicationContext: initialization completed in 1640 ms
+26-02-23 20:54:05.631 [main] INFO  com.zaxxer.hikari.HikariDataSource [ |  | ] - HikariPool-1 - Starting...
+26-02-23 20:54:05.911 [main] INFO  com.zaxxer.hikari.pool.HikariPool [ |  | ] - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@7d685f4e
+26-02-23 20:54:05.912 [main] INFO  com.zaxxer.hikari.HikariDataSource [ |  | ] - HikariPool-1 - Start completed.
+26-02-23 20:54:06.083 [main] INFO  o.h.jpa.internal.util.LogHelper [ |  | ] - HHH000204: Processing PersistenceUnitInfo [name: default]
+26-02-23 20:54:06.142 [main] INFO  org.hibernate.Version [ |  | ] - HHH000412: Hibernate ORM core version 6.6.36.Final
+26-02-23 20:54:06.174 [main] INFO  o.h.c.i.RegionFactoryInitiator [ |  | ] - HHH000026: Second-level cache disabled
+26-02-23 20:54:06.431 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo [ |  | ] - No LoadTimeWeaver setup: ignoring JPA class transformer
+26-02-23 20:54:06.566 [main] INFO  o.hibernate.orm.connections.pooling [ |  | ] - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 17.7
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+26-02-23 20:54:07.418 [main] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator [ |  | ] - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+26-02-23 20:54:07.546 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean [ |  | ] - Initialized JPA EntityManagerFactory for persistence unit 'default'
+26-02-23 20:54:07.797 [main] INFO  c.s.m.d.s.LocalBinaryContentStorage [ |  | ] - LocalBinaryContentStorage 초기화 작업 root = C:\myWs\uploadedFiles
+26-02-23 20:54:07.828 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory [ |  | ] - Hibernate is in classpath; If applicable, HQL parser will be used.
+26-02-23 20:54:08.278 [main] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration [ |  | ] - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+26-02-23 20:54:08.297 [main] INFO  o.s.b.a.w.s.WelcomePageHandlerMapping [ |  | ] - Adding welcome page: class path resource [static/index.html]
+26-02-23 20:54:08.812 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver [ |  | ] - Exposing 4 endpoints beneath base path '/actuator'
+26-02-23 20:54:08.861 [main] INFO  o.a.coyote.http11.Http11NioProtocol [ |  | ] - Starting ProtocolHandler ["http-nio-8080"]
+26-02-23 20:54:08.876 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer [ |  | ] - Tomcat started on port 8080 (http) with context path '/'
+26-02-23 20:54:08.886 [main] INFO  c.s.m.discodeit.DiscodeitApplication [ |  | ] - Started DiscodeitApplication in 5.631 seconds (process running for 6.222)
+26-02-23 20:54:09.209 [RMI TCP Connection(1)-192.168.1.8] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] [ |  | ] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+26-02-23 20:54:09.209 [RMI TCP Connection(1)-192.168.1.8] INFO  o.s.web.servlet.DispatcherServlet [ |  | ] - Initializing Servlet 'dispatcherServlet'
+26-02-23 20:54:09.209 [RMI TCP Connection(1)-192.168.1.8] INFO  o.s.web.servlet.DispatcherServlet [ |  | ] - Completed initialization in 0 ms
+26-02-23 20:54:30.737 [http-nio-8080-exec-7] INFO  c.s.m.d.s.basic.BasicUserService [0b1aeb97-0dee-40e1-ac40-5a35c11f0ae9 | POST | /api/users] - [USER] create start username=test, email=test@test.com
+26-02-23 20:54:30.816 [http-nio-8080-exec-7] INFO  c.s.m.d.s.b.BasicBinaryContentService [0b1aeb97-0dee-40e1-ac40-5a35c11f0ae9 | POST | /api/users] - [BINARY_CONTENT] create start fileName=Gemini_Generated_Image_41i8th41i8th41i8.png
+26-02-23 20:54:30.862 [http-nio-8080-exec-7] INFO  c.s.m.d.s.b.BasicBinaryContentService [0b1aeb97-0dee-40e1-ac40-5a35c11f0ae9 | POST | /api/users] - [BINARY_CONTENT] create success binaryContentId=d4566b2d-d7bd-4bcb-a743-51f374e30589
+26-02-23 20:54:30.872 [http-nio-8080-exec-7] INFO  c.s.m.d.s.basic.BasicUserService [0b1aeb97-0dee-40e1-ac40-5a35c11f0ae9 | POST | /api/users] - [User] create success userId=98649792-d298-41cb-9c1b-4619b119565f
+26-02-23 20:54:31.032 [http-nio-8080-exec-7] INFO  c.s.m.d.c.BinaryContentController [b3b35355-62a5-4a03-870e-0f80ef790246 | GET | /api/binaryContents/d4566b2d-d7bd-4bcb-a743-51f374e30589/download] - [BINARY_CONTENT] download start binaryContentId=d4566b2d-d7bd-4bcb-a743-51f374e30589
+26-02-23 20:54:31.033 [http-nio-8080-exec-7] INFO  c.s.m.d.c.BinaryContentController [b3b35355-62a5-4a03-870e-0f80ef790246 | GET | /api/binaryContents/d4566b2d-d7bd-4bcb-a743-51f374e30589/download] - [BINARY_CONTENT] download success binaryContentId=d4566b2d-d7bd-4bcb-a743-51f374e30589
+26-02-23 20:54:40.930 [SpringApplicationShutdownHook] INFO  o.s.b.w.e.tomcat.GracefulShutdown [ |  | ] - Commencing graceful shutdown. Waiting for active requests to complete
+26-02-23 20:54:41.177 [tomcat-shutdown] INFO  o.s.b.w.e.tomcat.GracefulShutdown [ |  | ] - Graceful shutdown complete
+26-02-23 20:54:41.181 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean [ |  | ] - Closing JPA EntityManagerFactory for persistence unit 'default'
+26-02-23 20:54:41.184 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource [ |  | ] - HikariPool-1 - Shutdown initiated...
+26-02-23 20:54:41.186 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource [ |  | ] - HikariPool-1 - Shutdown completed.
+26-02-23 22:33:21.095 [background-preinit] INFO  o.h.validator.internal.util.Version [ |  | ] - HV000001: Hibernate Validator 8.0.3.Final
+26-02-23 22:33:21.173 [Test worker] INFO  c.s.m.d.c.ChannelControllerTest [ |  | ] - Starting ChannelControllerTest using Java 17.0.16 with PID 360 (started by eet5g in C:\myWs\codeit-sprint-mission\8-sprint-mission)
+26-02-23 22:33:21.174 [Test worker] INFO  c.s.m.d.c.ChannelControllerTest [ |  | ] - The following 1 profile is active: "test"
+26-02-23 22:33:23.685 [Test worker] INFO  o.s.b.a.w.s.WelcomePageHandlerMapping [ |  | ] - Adding welcome page: class path resource [static/index.html]
+26-02-23 22:33:24.357 [Test worker] INFO  o.s.b.t.m.w.SpringBootMockServletContext [ |  | ] - Initializing Spring TestDispatcherServlet ''
+26-02-23 22:33:24.357 [Test worker] INFO  o.s.t.w.s.TestDispatcherServlet [ |  | ] - Initializing Servlet ''
+26-02-23 22:33:24.360 [Test worker] INFO  o.s.t.w.s.TestDispatcherServlet [ |  | ] - Completed initialization in 2 ms
+26-02-23 22:33:24.424 [Test worker] INFO  c.s.m.d.c.ChannelControllerTest [ |  | ] - Started ChannelControllerTest in 4.057 seconds (process running for 5.936)
+26-02-23 22:33:25.212 [Test worker] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils [ |  | ] - Could not detect default configuration classes for test class [com.sprint.mission.discodeit.controller.MessageControllerTest]: MessageControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+26-02-23 22:33:25.228 [Test worker] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper [ |  | ] - Found @SpringBootConfiguration com.sprint.mission.discodeit.DiscodeitApplication for test class com.sprint.mission.discodeit.controller.MessageControllerTest
+26-02-23 22:33:25.286 [Test worker] INFO  c.s.m.d.c.MessageControllerTest [ |  | ] - Starting MessageControllerTest using Java 17.0.16 with PID 360 (started by eet5g in C:\myWs\codeit-sprint-mission\8-sprint-mission)
+26-02-23 22:33:25.286 [Test worker] INFO  c.s.m.d.c.MessageControllerTest [ |  | ] - The following 1 profile is active: "test"
+26-02-23 22:33:25.554 [Test worker] INFO  o.s.b.a.w.s.WelcomePageHandlerMapping [ |  | ] - Adding welcome page: class path resource [static/index.html]
+26-02-23 22:33:25.622 [Test worker] INFO  o.s.b.t.m.w.SpringBootMockServletContext [ |  | ] - Initializing Spring TestDispatcherServlet ''
+26-02-23 22:33:25.623 [Test worker] INFO  o.s.t.w.s.TestDispatcherServlet [ |  | ] - Initializing Servlet ''
+26-02-23 22:33:25.624 [Test worker] INFO  o.s.t.w.s.TestDispatcherServlet [ |  | ] - Completed initialization in 1 ms
+26-02-23 22:33:25.632 [Test worker] INFO  c.s.m.d.c.MessageControllerTest [ |  | ] - Started MessageControllerTest in 0.399 seconds (process running for 7.144)
+26-02-23 22:33:25.764 [Test worker] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils [ |  | ] - Could not detect default configuration classes for test class [com.sprint.mission.discodeit.controller.UserControllerTest]: UserControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+26-02-23 22:33:25.777 [Test worker] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper [ |  | ] - Found @SpringBootConfiguration com.sprint.mission.discodeit.DiscodeitApplication for test class com.sprint.mission.discodeit.controller.UserControllerTest
+26-02-23 22:33:25.819 [Test worker] INFO  c.s.m.d.c.UserControllerTest [ |  | ] - Starting UserControllerTest using Java 17.0.16 with PID 360 (started by eet5g in C:\myWs\codeit-sprint-mission\8-sprint-mission)
+26-02-23 22:33:25.820 [Test worker] INFO  c.s.m.d.c.UserControllerTest [ |  | ] - The following 1 profile is active: "test"
+26-02-23 22:33:26.062 [Test worker] INFO  o.s.b.a.w.s.WelcomePageHandlerMapping [ |  | ] - Adding welcome page: class path resource [static/index.html]
+26-02-23 22:33:26.118 [Test worker] INFO  o.s.b.t.m.w.SpringBootMockServletContext [ |  | ] - Initializing Spring TestDispatcherServlet ''
+26-02-23 22:33:26.118 [Test worker] INFO  o.s.t.w.s.TestDispatcherServlet [ |  | ] - Initializing Servlet ''
+26-02-23 22:33:26.119 [Test worker] INFO  o.s.t.w.s.TestDispatcherServlet [ |  | ] - Completed initialization in 1 ms
+26-02-23 22:33:26.125 [Test worker] INFO  c.s.m.d.c.UserControllerTest [ |  | ] - Started UserControllerTest in 0.342 seconds (process running for 7.637)
+26-02-23 22:33:26.188 [Test worker] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils [ |  | ] - Could not detect default configuration classes for test class [com.sprint.mission.discodeit.integration.ChannelApiIntegrationTest]: ChannelApiIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+26-02-23 22:33:26.203 [Test worker] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper [ |  | ] - Found @SpringBootConfiguration com.sprint.mission.discodeit.DiscodeitApplication for test class com.sprint.mission.discodeit.integration.ChannelApiIntegrationTest
+26-02-23 22:33:26.241 [Test worker] INFO  c.s.m.d.i.ChannelApiIntegrationTest [ |  | ] - Starting ChannelApiIntegrationTest using Java 17.0.16 with PID 360 (started by eet5g in C:\myWs\codeit-sprint-mission\8-sprint-mission)
+26-02-23 22:33:26.241 [Test worker] INFO  c.s.m.d.i.ChannelApiIntegrationTest [ |  | ] - The following 1 profile is active: "test"
+26-02-23 22:33:27.095 [Test worker] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [ |  | ] - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+26-02-23 22:33:27.174 [Test worker] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [ |  | ] - Finished Spring Data repository scanning in 68 ms. Found 6 JPA repository interfaces.
+26-02-23 22:33:27.595 [Test worker] INFO  com.zaxxer.hikari.HikariDataSource [ |  | ] - HikariPool-1 - Starting...
+26-02-23 22:33:27.980 [Test worker] INFO  com.zaxxer.hikari.pool.HikariPool [ |  | ] - HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:testdb user=SA
+26-02-23 22:33:27.983 [Test worker] INFO  com.zaxxer.hikari.HikariDataSource [ |  | ] - HikariPool-1 - Start completed.
+26-02-23 22:33:28.146 [Test worker] INFO  o.h.jpa.internal.util.LogHelper [ |  | ] - HHH000204: Processing PersistenceUnitInfo [name: default]
+26-02-23 22:33:28.259 [Test worker] INFO  org.hibernate.Version [ |  | ] - HHH000412: Hibernate ORM core version 6.6.36.Final
+26-02-23 22:33:28.320 [Test worker] INFO  o.h.c.i.RegionFactoryInitiator [ |  | ] - HHH000026: Second-level cache disabled
+26-02-23 22:33:28.545 [Test worker] INFO  o.s.o.j.p.SpringPersistenceUnitInfo [ |  | ] - No LoadTimeWeaver setup: ignoring JPA class transformer
+26-02-23 22:33:28.702 [Test worker] INFO  o.hibernate.orm.connections.pooling [ |  | ] - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 2.3.232
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+26-02-23 22:33:29.947 [Test worker] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator [ |  | ] - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+26-02-23 22:33:29.950 [Test worker] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean [ |  | ] - Initialized JPA EntityManagerFactory for persistence unit 'default'
+26-02-23 22:33:30.335 [Test worker] INFO  c.s.m.d.s.LocalBinaryContentStorage [ |  | ] - LocalBinaryContentStorage 초기화 작업 root = C:\myWs\codeit-sprint-mission\8-sprint-mission\build\test-storage
+26-02-23 22:33:30.381 [Test worker] INFO  o.s.d.j.r.query.QueryEnhancerFactory [ |  | ] - Hibernate is in classpath; If applicable, HQL parser will be used.
+26-02-23 22:33:31.223 [Test worker] INFO  o.s.b.a.w.s.WelcomePageHandlerMapping [ |  | ] - Adding welcome page: class path resource [static/index.html]
+26-02-23 22:33:31.708 [Test worker] INFO  o.s.b.t.m.w.SpringBootMockServletContext [ |  | ] - Initializing Spring TestDispatcherServlet ''
+26-02-23 22:33:31.708 [Test worker] INFO  o.s.t.w.s.TestDispatcherServlet [ |  | ] - Initializing Servlet ''
+26-02-23 22:33:31.713 [Test worker] INFO  o.s.b.a.e.web.EndpointLinksResolver [ |  | ] - Exposing 4 endpoints beneath base path '/actuator'
+26-02-23 22:33:31.725 [Test worker] INFO  o.s.t.w.s.TestDispatcherServlet [ |  | ] - Completed initialization in 17 ms
+26-02-23 22:33:31.787 [Test worker] INFO  c.s.m.d.i.ChannelApiIntegrationTest [ |  | ] - Started ChannelApiIntegrationTest in 5.574 seconds (process running for 13.298)
+26-02-23 22:33:31.868 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [0d63ae19-fe87-4199-9b54-d8046b58028f | POST | /api/channels/public] - [Channel] create public channel start name=pub_delete, description=d
+26-02-23 22:33:31.931 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [0d63ae19-fe87-4199-9b54-d8046b58028f | POST | /api/channels/public] - [Channel] create public channel success channelId=e8702656-9e39-4a3a-ac1c-7785158d9e96
+26-02-23 22:33:32.023 [Test worker] DEBUG org.hibernate.SQL [0d63ae19-fe87-4199-9b54-d8046b58028f | POST | /api/channels/public] - 
+    insert 
+    into
+        discodeit_schema.channels
+        (created_at, description, name, type, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.036 [Test worker] TRACE org.hibernate.orm.jdbc.bind [0d63ae19-fe87-4199-9b54-d8046b58028f | POST | /api/channels/public] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:31.900697900Z]
+26-02-23 22:33:32.044 [Test worker] TRACE org.hibernate.orm.jdbc.bind [0d63ae19-fe87-4199-9b54-d8046b58028f | POST | /api/channels/public] - binding parameter (2:VARCHAR) <- [d]
+26-02-23 22:33:32.044 [Test worker] TRACE org.hibernate.orm.jdbc.bind [0d63ae19-fe87-4199-9b54-d8046b58028f | POST | /api/channels/public] - binding parameter (3:VARCHAR) <- [pub_delete]
+26-02-23 22:33:32.044 [Test worker] TRACE org.hibernate.orm.jdbc.bind [0d63ae19-fe87-4199-9b54-d8046b58028f | POST | /api/channels/public] - binding parameter (4:ENUM) <- [PUBLIC]
+26-02-23 22:33:32.045 [Test worker] TRACE org.hibernate.orm.jdbc.bind [0d63ae19-fe87-4199-9b54-d8046b58028f | POST | /api/channels/public] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:31.900697900Z]
+26-02-23 22:33:32.045 [Test worker] TRACE org.hibernate.orm.jdbc.bind [0d63ae19-fe87-4199-9b54-d8046b58028f | POST | /api/channels/public] - binding parameter (6:UUID) <- [e8702656-9e39-4a3a-ac1c-7785158d9e96]
+26-02-23 22:33:32.078 [Test worker] DEBUG org.hibernate.SQL [0d63ae19-fe87-4199-9b54-d8046b58028f | POST | /api/channels/public] - 
+    select
+        m1_0.id,
+        m1_0.author_id,
+        m1_0.channel_id,
+        m1_0.content,
+        m1_0.created_at,
+        m1_0.updated_at 
+    from
+        discodeit_schema.messages m1_0 
+    left join
+        discodeit_schema.channels c1_0 
+            on c1_0.id=m1_0.channel_id 
+    where
+        c1_0.id=? 
+    order by
+        m1_0.created_at desc 
+    fetch
+        first ? rows only
+26-02-23 22:33:32.081 [Test worker] TRACE org.hibernate.orm.jdbc.bind [0d63ae19-fe87-4199-9b54-d8046b58028f | POST | /api/channels/public] - binding parameter (1:UUID) <- [e8702656-9e39-4a3a-ac1c-7785158d9e96]
+26-02-23 22:33:32.082 [Test worker] TRACE org.hibernate.orm.jdbc.bind [0d63ae19-fe87-4199-9b54-d8046b58028f | POST | /api/channels/public] - binding parameter (2:INTEGER) <- [1]
+26-02-23 22:33:32.148 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [bd54e97f-463f-4fc0-a8a7-ab98b3237abb | DELETE | /api/channels/e8702656-9e39-4a3a-ac1c-7785158d9e96] - [Channel] delete channel start channelId=e8702656-9e39-4a3a-ac1c-7785158d9e96
+26-02-23 22:33:32.169 [Test worker] DEBUG org.hibernate.SQL [bd54e97f-463f-4fc0-a8a7-ab98b3237abb | DELETE | /api/channels/e8702656-9e39-4a3a-ac1c-7785158d9e96] - 
+    select
+        count(*) 
+    from
+        discodeit_schema.channels c1_0 
+    where
+        c1_0.id=?
+26-02-23 22:33:32.172 [Test worker] TRACE org.hibernate.orm.jdbc.bind [bd54e97f-463f-4fc0-a8a7-ab98b3237abb | DELETE | /api/channels/e8702656-9e39-4a3a-ac1c-7785158d9e96] - binding parameter (1:UUID) <- [e8702656-9e39-4a3a-ac1c-7785158d9e96]
+26-02-23 22:33:32.178 [Test worker] DEBUG org.hibernate.SQL [bd54e97f-463f-4fc0-a8a7-ab98b3237abb | DELETE | /api/channels/e8702656-9e39-4a3a-ac1c-7785158d9e96] - 
+    select
+        m1_0.id,
+        m1_0.author_id,
+        m1_0.channel_id,
+        m1_0.content,
+        m1_0.created_at,
+        m1_0.updated_at 
+    from
+        discodeit_schema.messages m1_0 
+    left join
+        discodeit_schema.channels c1_0 
+            on c1_0.id=m1_0.channel_id 
+    where
+        c1_0.id=?
+26-02-23 22:33:32.179 [Test worker] TRACE org.hibernate.orm.jdbc.bind [bd54e97f-463f-4fc0-a8a7-ab98b3237abb | DELETE | /api/channels/e8702656-9e39-4a3a-ac1c-7785158d9e96] - binding parameter (1:UUID) <- [e8702656-9e39-4a3a-ac1c-7785158d9e96]
+26-02-23 22:33:32.183 [Test worker] DEBUG org.hibernate.SQL [bd54e97f-463f-4fc0-a8a7-ab98b3237abb | DELETE | /api/channels/e8702656-9e39-4a3a-ac1c-7785158d9e96] - 
+    select
+        rs1_0.id,
+        rs1_0.channel_id,
+        rs1_0.created_at,
+        rs1_0.last_read_at,
+        rs1_0.updated_at,
+        rs1_0.user_id 
+    from
+        discodeit_schema.read_statuses rs1_0 
+    left join
+        discodeit_schema.channels c1_0 
+            on c1_0.id=rs1_0.channel_id 
+    where
+        c1_0.id=?
+26-02-23 22:33:32.185 [Test worker] TRACE org.hibernate.orm.jdbc.bind [bd54e97f-463f-4fc0-a8a7-ab98b3237abb | DELETE | /api/channels/e8702656-9e39-4a3a-ac1c-7785158d9e96] - binding parameter (1:UUID) <- [e8702656-9e39-4a3a-ac1c-7785158d9e96]
+26-02-23 22:33:32.200 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [bd54e97f-463f-4fc0-a8a7-ab98b3237abb | DELETE | /api/channels/e8702656-9e39-4a3a-ac1c-7785158d9e96] - [Channel] delete channel success channelId=e8702656-9e39-4a3a-ac1c-7785158d9e96
+26-02-23 22:33:32.213 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [93ada72c-db09-4233-863b-a5bcab6df1fc | POST | /api/channels/public] - [Channel] create public channel start name=pub1, description=description
+26-02-23 22:33:32.215 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [93ada72c-db09-4233-863b-a5bcab6df1fc | POST | /api/channels/public] - [Channel] create public channel success channelId=5c49f6fe-06a9-499c-9167-0eb6e4db123a
+26-02-23 22:33:32.217 [Test worker] DEBUG org.hibernate.SQL [93ada72c-db09-4233-863b-a5bcab6df1fc | POST | /api/channels/public] - 
+    insert 
+    into
+        discodeit_schema.channels
+        (created_at, description, name, type, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.218 [Test worker] TRACE org.hibernate.orm.jdbc.bind [93ada72c-db09-4233-863b-a5bcab6df1fc | POST | /api/channels/public] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.214132800Z]
+26-02-23 22:33:32.218 [Test worker] TRACE org.hibernate.orm.jdbc.bind [93ada72c-db09-4233-863b-a5bcab6df1fc | POST | /api/channels/public] - binding parameter (2:VARCHAR) <- [description]
+26-02-23 22:33:32.218 [Test worker] TRACE org.hibernate.orm.jdbc.bind [93ada72c-db09-4233-863b-a5bcab6df1fc | POST | /api/channels/public] - binding parameter (3:VARCHAR) <- [pub1]
+26-02-23 22:33:32.218 [Test worker] TRACE org.hibernate.orm.jdbc.bind [93ada72c-db09-4233-863b-a5bcab6df1fc | POST | /api/channels/public] - binding parameter (4:ENUM) <- [PUBLIC]
+26-02-23 22:33:32.218 [Test worker] TRACE org.hibernate.orm.jdbc.bind [93ada72c-db09-4233-863b-a5bcab6df1fc | POST | /api/channels/public] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.214132800Z]
+26-02-23 22:33:32.218 [Test worker] TRACE org.hibernate.orm.jdbc.bind [93ada72c-db09-4233-863b-a5bcab6df1fc | POST | /api/channels/public] - binding parameter (6:UUID) <- [5c49f6fe-06a9-499c-9167-0eb6e4db123a]
+26-02-23 22:33:32.219 [Test worker] DEBUG org.hibernate.SQL [93ada72c-db09-4233-863b-a5bcab6df1fc | POST | /api/channels/public] - 
+    select
+        m1_0.id,
+        m1_0.author_id,
+        m1_0.channel_id,
+        m1_0.content,
+        m1_0.created_at,
+        m1_0.updated_at 
+    from
+        discodeit_schema.messages m1_0 
+    left join
+        discodeit_schema.channels c1_0 
+            on c1_0.id=m1_0.channel_id 
+    where
+        c1_0.id=? 
+    order by
+        m1_0.created_at desc 
+    fetch
+        first ? rows only
+26-02-23 22:33:32.220 [Test worker] TRACE org.hibernate.orm.jdbc.bind [93ada72c-db09-4233-863b-a5bcab6df1fc | POST | /api/channels/public] - binding parameter (1:UUID) <- [5c49f6fe-06a9-499c-9167-0eb6e4db123a]
+26-02-23 22:33:32.220 [Test worker] TRACE org.hibernate.orm.jdbc.bind [93ada72c-db09-4233-863b-a5bcab6df1fc | POST | /api/channels/public] - binding parameter (2:INTEGER) <- [1]
+26-02-23 22:33:32.229 [Test worker] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils [ |  | ] - Could not detect default configuration classes for test class [com.sprint.mission.discodeit.integration.MessageApiIntegrationTest]: MessageApiIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+26-02-23 22:33:32.231 [Test worker] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper [ |  | ] - Found @SpringBootConfiguration com.sprint.mission.discodeit.DiscodeitApplication for test class com.sprint.mission.discodeit.integration.MessageApiIntegrationTest
+26-02-23 22:33:32.239 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [b14d0c3f-dce4-4450-aa64-7d06ceb1931a | POST | /api/channels/public] - [Channel] create public channel start name=list_channel, description=d
+26-02-23 22:33:32.240 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [b14d0c3f-dce4-4450-aa64-7d06ceb1931a | POST | /api/channels/public] - [Channel] create public channel success channelId=31a51489-69a8-4767-a892-e84cd261d99e
+26-02-23 22:33:32.241 [Test worker] DEBUG org.hibernate.SQL [b14d0c3f-dce4-4450-aa64-7d06ceb1931a | POST | /api/channels/public] - 
+    insert 
+    into
+        discodeit_schema.channels
+        (created_at, description, name, type, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.243 [Test worker] TRACE org.hibernate.orm.jdbc.bind [b14d0c3f-dce4-4450-aa64-7d06ceb1931a | POST | /api/channels/public] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.240679Z]
+26-02-23 22:33:32.243 [Test worker] TRACE org.hibernate.orm.jdbc.bind [b14d0c3f-dce4-4450-aa64-7d06ceb1931a | POST | /api/channels/public] - binding parameter (2:VARCHAR) <- [d]
+26-02-23 22:33:32.243 [Test worker] TRACE org.hibernate.orm.jdbc.bind [b14d0c3f-dce4-4450-aa64-7d06ceb1931a | POST | /api/channels/public] - binding parameter (3:VARCHAR) <- [list_channel]
+26-02-23 22:33:32.243 [Test worker] TRACE org.hibernate.orm.jdbc.bind [b14d0c3f-dce4-4450-aa64-7d06ceb1931a | POST | /api/channels/public] - binding parameter (4:ENUM) <- [PUBLIC]
+26-02-23 22:33:32.243 [Test worker] TRACE org.hibernate.orm.jdbc.bind [b14d0c3f-dce4-4450-aa64-7d06ceb1931a | POST | /api/channels/public] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.240679Z]
+26-02-23 22:33:32.243 [Test worker] TRACE org.hibernate.orm.jdbc.bind [b14d0c3f-dce4-4450-aa64-7d06ceb1931a | POST | /api/channels/public] - binding parameter (6:UUID) <- [31a51489-69a8-4767-a892-e84cd261d99e]
+26-02-23 22:33:32.244 [Test worker] DEBUG org.hibernate.SQL [b14d0c3f-dce4-4450-aa64-7d06ceb1931a | POST | /api/channels/public] - 
+    select
+        m1_0.id,
+        m1_0.author_id,
+        m1_0.channel_id,
+        m1_0.content,
+        m1_0.created_at,
+        m1_0.updated_at 
+    from
+        discodeit_schema.messages m1_0 
+    left join
+        discodeit_schema.channels c1_0 
+            on c1_0.id=m1_0.channel_id 
+    where
+        c1_0.id=? 
+    order by
+        m1_0.created_at desc 
+    fetch
+        first ? rows only
+26-02-23 22:33:32.245 [Test worker] TRACE org.hibernate.orm.jdbc.bind [b14d0c3f-dce4-4450-aa64-7d06ceb1931a | POST | /api/channels/public] - binding parameter (1:UUID) <- [31a51489-69a8-4767-a892-e84cd261d99e]
+26-02-23 22:33:32.246 [Test worker] TRACE org.hibernate.orm.jdbc.bind [b14d0c3f-dce4-4450-aa64-7d06ceb1931a | POST | /api/channels/public] - binding parameter (2:INTEGER) <- [1]
+26-02-23 22:33:32.269 [Test worker] DEBUG org.hibernate.SQL [840df509-509a-444e-879a-9454fb4682f3 | GET | /api/messages] - 
+    select
+        m1_0.id,
+        a1_0.id,
+        a1_0.created_at,
+        a1_0.email,
+        a1_0.password,
+        p1_0.id,
+        p1_0.content_type,
+        p1_0.created_at,
+        p1_0.file_name,
+        p1_0.size,
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.last_active_at,
+        s1_0.updated_at,
+        s1_0.user_id,
+        a1_0.updated_at,
+        a1_0.username,
+        m1_0.channel_id,
+        m1_0.content,
+        m1_0.created_at,
+        m1_0.updated_at 
+    from
+        discodeit_schema.messages m1_0 
+    left join
+        discodeit_schema.channels c1_0 
+            on c1_0.id=m1_0.channel_id 
+    left join
+        discodeit_schema.users a1_0 
+            on a1_0.id=m1_0.author_id 
+    left join
+        discodeit_schema.binary_contents p1_0 
+            on p1_0.id=a1_0.profile_id 
+    left join
+        discodeit_schema.user_statuses s1_0 
+            on a1_0.id=s1_0.user_id 
+    where
+        c1_0.id=? 
+    order by
+        m1_0.created_at desc 
+    fetch
+        first ? rows only
+26-02-23 22:33:32.271 [Test worker] TRACE org.hibernate.orm.jdbc.bind [840df509-509a-444e-879a-9454fb4682f3 | GET | /api/messages] - binding parameter (1:UUID) <- [31a51489-69a8-4767-a892-e84cd261d99e]
+26-02-23 22:33:32.272 [Test worker] TRACE org.hibernate.orm.jdbc.bind [840df509-509a-444e-879a-9454fb4682f3 | GET | /api/messages] - binding parameter (2:INTEGER) <- [51]
+26-02-23 22:33:32.292 [Test worker] INFO  c.s.m.d.s.basic.BasicUserService [f5e133fb-c8ce-40b2-9de4-6e935817a44d | POST | /api/users] - [USER] create start username=m1, email=m1@test.com
+26-02-23 22:33:32.295 [Test worker] DEBUG org.hibernate.SQL [f5e133fb-c8ce-40b2-9de4-6e935817a44d | POST | /api/users] - 
+    select
+        u1_0.id 
+    from
+        discodeit_schema.users u1_0 
+    where
+        u1_0.username=? 
+        or u1_0.email=? 
+    fetch
+        first ? rows only
+26-02-23 22:33:32.298 [Test worker] TRACE org.hibernate.orm.jdbc.bind [f5e133fb-c8ce-40b2-9de4-6e935817a44d | POST | /api/users] - binding parameter (1:VARCHAR) <- [m1]
+26-02-23 22:33:32.298 [Test worker] TRACE org.hibernate.orm.jdbc.bind [f5e133fb-c8ce-40b2-9de4-6e935817a44d | POST | /api/users] - binding parameter (2:VARCHAR) <- [m1@test.com]
+26-02-23 22:33:32.298 [Test worker] TRACE org.hibernate.orm.jdbc.bind [f5e133fb-c8ce-40b2-9de4-6e935817a44d | POST | /api/users] - binding parameter (3:INTEGER) <- [1]
+26-02-23 22:33:32.307 [Test worker] INFO  c.s.m.d.s.basic.BasicUserService [f5e133fb-c8ce-40b2-9de4-6e935817a44d | POST | /api/users] - [User] create success userId=8d4fcf9b-381b-4337-a1af-6d7009a3fe76
+26-02-23 22:33:32.312 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - [Channel] create public channel start name=msg_channel, description=d
+26-02-23 22:33:32.313 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - [Channel] create public channel success channelId=ea123cea-8eae-4a6c-a259-2c6d4da10597
+26-02-23 22:33:32.315 [Test worker] DEBUG org.hibernate.SQL [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - 
+    insert 
+    into
+        discodeit_schema.users
+        (created_at, email, password, profile_id, updated_at, username, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.315 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.301758800Z]
+26-02-23 22:33:32.316 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (2:VARCHAR) <- [m1@test.com]
+26-02-23 22:33:32.316 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (3:VARCHAR) <- [pw]
+26-02-23 22:33:32.316 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (4:UUID) <- [null]
+26-02-23 22:33:32.316 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.301758800Z]
+26-02-23 22:33:32.316 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (6:VARCHAR) <- [m1]
+26-02-23 22:33:32.316 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (7:UUID) <- [8d4fcf9b-381b-4337-a1af-6d7009a3fe76]
+26-02-23 22:33:32.317 [Test worker] DEBUG org.hibernate.SQL [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - 
+    insert 
+    into
+        discodeit_schema.user_statuses
+        (created_at, last_active_at, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+26-02-23 22:33:32.317 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.304757900Z]
+26-02-23 22:33:32.319 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (2:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.299759400Z]
+26-02-23 22:33:32.319 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (3:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.304757900Z]
+26-02-23 22:33:32.319 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (4:UUID) <- [8d4fcf9b-381b-4337-a1af-6d7009a3fe76]
+26-02-23 22:33:32.319 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (5:UUID) <- [d7a0ceb5-ad4f-4769-8b5f-d5c09a30d25a]
+26-02-23 22:33:32.320 [Test worker] DEBUG org.hibernate.SQL [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - 
+    insert 
+    into
+        discodeit_schema.channels
+        (created_at, description, name, type, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.321 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.312270900Z]
+26-02-23 22:33:32.321 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (2:VARCHAR) <- [d]
+26-02-23 22:33:32.321 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (3:VARCHAR) <- [msg_channel]
+26-02-23 22:33:32.321 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (4:ENUM) <- [PUBLIC]
+26-02-23 22:33:32.321 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.312270900Z]
+26-02-23 22:33:32.321 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (6:UUID) <- [ea123cea-8eae-4a6c-a259-2c6d4da10597]
+26-02-23 22:33:32.322 [Test worker] DEBUG org.hibernate.SQL [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - 
+    select
+        m1_0.id,
+        m1_0.author_id,
+        m1_0.channel_id,
+        m1_0.content,
+        m1_0.created_at,
+        m1_0.updated_at 
+    from
+        discodeit_schema.messages m1_0 
+    left join
+        discodeit_schema.channels c1_0 
+            on c1_0.id=m1_0.channel_id 
+    where
+        c1_0.id=? 
+    order by
+        m1_0.created_at desc 
+    fetch
+        first ? rows only
+26-02-23 22:33:32.323 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (1:UUID) <- [ea123cea-8eae-4a6c-a259-2c6d4da10597]
+26-02-23 22:33:32.323 [Test worker] TRACE org.hibernate.orm.jdbc.bind [fe37b131-7d13-430d-b3c4-f7ceb088d0da | POST | /api/channels/public] - binding parameter (2:INTEGER) <- [1]
+26-02-23 22:33:32.335 [Test worker] INFO  c.s.m.d.s.basic.BasicMessageService [6f490998-877e-4c9a-913d-b1b72b4dd739 | POST | /api/messages] - [MESSAGE] create start message=hello
+26-02-23 22:33:32.353 [Test worker] INFO  c.s.m.d.s.basic.BasicMessageService [6f490998-877e-4c9a-913d-b1b72b4dd739 | POST | /api/messages] - [MESSAGE] create success messageId=c496a29f-7f61-4275-a330-683f142d183c
+26-02-23 22:33:32.362 [Test worker] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils [ |  | ] - Could not detect default configuration classes for test class [com.sprint.mission.discodeit.integration.UserApiIntegrationTest]: UserApiIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+26-02-23 22:33:32.365 [Test worker] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper [ |  | ] - Found @SpringBootConfiguration com.sprint.mission.discodeit.DiscodeitApplication for test class com.sprint.mission.discodeit.integration.UserApiIntegrationTest
+26-02-23 22:33:32.372 [Test worker] INFO  c.s.m.d.s.basic.BasicUserService [7623ea98-98b6-4400-8981-f6aba5cbbfec | POST | /api/users] - [USER] create start username=jun, email=jun@test.com
+26-02-23 22:33:32.373 [Test worker] DEBUG org.hibernate.SQL [7623ea98-98b6-4400-8981-f6aba5cbbfec | POST | /api/users] - 
+    select
+        u1_0.id 
+    from
+        discodeit_schema.users u1_0 
+    where
+        u1_0.username=? 
+        or u1_0.email=? 
+    fetch
+        first ? rows only
+26-02-23 22:33:32.373 [Test worker] TRACE org.hibernate.orm.jdbc.bind [7623ea98-98b6-4400-8981-f6aba5cbbfec | POST | /api/users] - binding parameter (1:VARCHAR) <- [jun]
+26-02-23 22:33:32.373 [Test worker] TRACE org.hibernate.orm.jdbc.bind [7623ea98-98b6-4400-8981-f6aba5cbbfec | POST | /api/users] - binding parameter (2:VARCHAR) <- [jun@test.com]
+26-02-23 22:33:32.373 [Test worker] TRACE org.hibernate.orm.jdbc.bind [7623ea98-98b6-4400-8981-f6aba5cbbfec | POST | /api/users] - binding parameter (3:INTEGER) <- [1]
+26-02-23 22:33:32.375 [Test worker] INFO  c.s.m.d.s.basic.BasicUserService [7623ea98-98b6-4400-8981-f6aba5cbbfec | POST | /api/users] - [User] create success userId=9cd5106c-9022-4f76-9486-4a9c5e8c6222
+26-02-23 22:33:32.384 [Test worker] DEBUG org.hibernate.SQL [f4900846-71d5-4581-9c80-d9c8c403b465 | GET | /api/users] - 
+    select
+        u1_0.id,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.password,
+        p1_0.id,
+        p1_0.content_type,
+        p1_0.created_at,
+        p1_0.file_name,
+        p1_0.size,
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.last_active_at,
+        s1_0.updated_at,
+        s1_0.user_id,
+        u1_0.updated_at,
+        u1_0.username 
+    from
+        discodeit_schema.users u1_0 
+    left join
+        discodeit_schema.binary_contents p1_0 
+            on p1_0.id=u1_0.profile_id 
+    left join
+        discodeit_schema.user_statuses s1_0 
+            on u1_0.id=s1_0.user_id
+26-02-23 22:33:32.395 [Test worker] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils [ |  | ] - Could not detect default configuration classes for test class [com.sprint.mission.discodeit.repository.ChannelRepositoryTest]: ChannelRepositoryTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+26-02-23 22:33:32.413 [Test worker] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper [ |  | ] - Found @SpringBootConfiguration com.sprint.mission.discodeit.DiscodeitApplication for test class com.sprint.mission.discodeit.repository.ChannelRepositoryTest
+26-02-23 22:33:32.444 [Test worker] INFO  c.s.m.d.r.ChannelRepositoryTest [ |  | ] - Starting ChannelRepositoryTest using Java 17.0.16 with PID 360 (started by eet5g in C:\myWs\codeit-sprint-mission\8-sprint-mission)
+26-02-23 22:33:32.445 [Test worker] INFO  c.s.m.d.r.ChannelRepositoryTest [ |  | ] - The following 1 profile is active: "test"
+26-02-23 22:33:32.525 [Test worker] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [ |  | ] - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+26-02-23 22:33:32.554 [Test worker] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [ |  | ] - Finished Spring Data repository scanning in 28 ms. Found 6 JPA repository interfaces.
+26-02-23 22:33:32.564 [Test worker] INFO  o.s.b.t.a.j.TestDatabaseAutoConfiguration$EmbeddedDataSourceBeanFactoryPostProcessor [ |  | ] - Replacing 'dataSource' DataSource bean with embedded version
+26-02-23 22:33:32.581 [Test worker] INFO  o.s.j.d.e.EmbeddedDatabaseFactory [ |  | ] - Starting embedded database: url='jdbc:h2:mem:6ac13422-e344-4628-928d-ef1d4a634609;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false', username='sa'
+26-02-23 22:33:32.611 [Test worker] INFO  o.h.jpa.internal.util.LogHelper [ |  | ] - HHH000204: Processing PersistenceUnitInfo [name: default]
+26-02-23 22:33:32.613 [Test worker] INFO  o.h.c.i.RegionFactoryInitiator [ |  | ] - HHH000026: Second-level cache disabled
+26-02-23 22:33:32.624 [Test worker] INFO  o.s.o.j.p.SpringPersistenceUnitInfo [ |  | ] - No LoadTimeWeaver setup: ignoring JPA class transformer
+26-02-23 22:33:32.626 [Test worker] INFO  o.hibernate.orm.connections.pooling [ |  | ] - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseFactory$EmbeddedDataSourceProxy@31a68cff']
+	Database driver: undefined/unknown
+	Database version: 2.3.232
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+26-02-23 22:33:32.702 [Test worker] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator [ |  | ] - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+26-02-23 22:33:32.702 [Test worker] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean [ |  | ] - Initialized JPA EntityManagerFactory for persistence unit 'default'
+26-02-23 22:33:32.754 [Test worker] INFO  c.s.m.d.r.ChannelRepositoryTest [ |  | ] - Started ChannelRepositoryTest in 0.338 seconds (process running for 14.266)
+26-02-23 22:33:32.766 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.users
+        (created_at, email, password, profile_id, updated_at, username, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.766 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.760781700Z]
+26-02-23 22:33:32.766 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [jun@test.com]
+26-02-23 22:33:32.767 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [testPass]
+26-02-23 22:33:32.767 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:UUID) <- [null]
+26-02-23 22:33:32.767 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.760781700Z]
+26-02-23 22:33:32.767 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:VARCHAR) <- [jun]
+26-02-23 22:33:32.767 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (7:UUID) <- [5cc83aaf-21b0-468b-866e-791ae6e85414]
+26-02-23 22:33:32.769 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.user_statuses
+        (created_at, last_active_at, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+26-02-23 22:33:32.770 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.762782Z]
+26-02-23 22:33:32.770 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.759781800Z]
+26-02-23 22:33:32.770 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.762782Z]
+26-02-23 22:33:32.770 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:UUID) <- [5cc83aaf-21b0-468b-866e-791ae6e85414]
+26-02-23 22:33:32.770 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:UUID) <- [ec074b48-83ae-40ee-baa4-70b56bfad0ad]
+26-02-23 22:33:32.774 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.channels
+        (created_at, description, name, type, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.774 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.771907700Z]
+26-02-23 22:33:32.774 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [d]
+26-02-23 22:33:32.774 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [pub]
+26-02-23 22:33:32.774 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:ENUM) <- [PUBLIC]
+26-02-23 22:33:32.774 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.771907700Z]
+26-02-23 22:33:32.774 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:UUID) <- [3e4c2c16-608e-44f1-8600-505bfdefcf49]
+26-02-23 22:33:32.776 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.channels
+        (created_at, description, name, type, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.777 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.773909400Z]
+26-02-23 22:33:32.777 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [d]
+26-02-23 22:33:32.777 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [pri]
+26-02-23 22:33:32.777 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:ENUM) <- [PRIVATE]
+26-02-23 22:33:32.777 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.773909400Z]
+26-02-23 22:33:32.778 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:UUID) <- [e4e73b5d-aa2b-452c-bef2-8676ad4cf8a2]
+26-02-23 22:33:32.790 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    select
+        c1_0.id,
+        c1_0.created_at,
+        c1_0.description,
+        c1_0.name,
+        c1_0.type,
+        c1_0.updated_at 
+    from
+        discodeit_schema.channels c1_0 
+    where
+        c1_0.type='PUBLIC' 
+        or exists(select
+            1 
+        from
+            discodeit_schema.read_statuses rs1_0 
+        where
+            rs1_0.channel_id=c1_0.id 
+            and rs1_0.user_id=?)
+26-02-23 22:33:32.791 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:UUID) <- [5cc83aaf-21b0-468b-866e-791ae6e85414]
+26-02-23 22:33:32.880 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.users
+        (created_at, email, password, profile_id, updated_at, username, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.880 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.879358900Z]
+26-02-23 22:33:32.880 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [jun@test.com]
+26-02-23 22:33:32.880 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [testPass]
+26-02-23 22:33:32.881 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:UUID) <- [null]
+26-02-23 22:33:32.881 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.879358900Z]
+26-02-23 22:33:32.881 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:VARCHAR) <- [jun]
+26-02-23 22:33:32.881 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (7:UUID) <- [0795141b-5343-4bc6-a93a-dfa4a907b4c8]
+26-02-23 22:33:32.882 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.user_statuses
+        (created_at, last_active_at, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+26-02-23 22:33:32.883 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.879358900Z]
+26-02-23 22:33:32.883 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.879358900Z]
+26-02-23 22:33:32.883 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.879358900Z]
+26-02-23 22:33:32.883 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:UUID) <- [0795141b-5343-4bc6-a93a-dfa4a907b4c8]
+26-02-23 22:33:32.884 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:UUID) <- [391db14c-dc23-465f-824b-1c3028c3c4b2]
+26-02-23 22:33:32.887 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.channels
+        (created_at, description, name, type, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.888 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.885355400Z]
+26-02-23 22:33:32.888 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [d]
+26-02-23 22:33:32.888 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [pub]
+26-02-23 22:33:32.888 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:ENUM) <- [PUBLIC]
+26-02-23 22:33:32.888 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.885355400Z]
+26-02-23 22:33:32.888 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:UUID) <- [5843d11f-f2ef-4c18-99fb-7778c2a8e379]
+26-02-23 22:33:32.889 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.channels
+        (created_at, description, name, type, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.890 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.885355400Z]
+26-02-23 22:33:32.890 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [d]
+26-02-23 22:33:32.891 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [pri1]
+26-02-23 22:33:32.891 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:ENUM) <- [PRIVATE]
+26-02-23 22:33:32.891 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.885355400Z]
+26-02-23 22:33:32.891 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:UUID) <- [3db6b4db-1053-4e22-81d0-4832f21825e1]
+26-02-23 22:33:32.892 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.channels
+        (created_at, description, name, type, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.892 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.885355400Z]
+26-02-23 22:33:32.892 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [d]
+26-02-23 22:33:32.892 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [pri2]
+26-02-23 22:33:32.892 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:ENUM) <- [PRIVATE]
+26-02-23 22:33:32.892 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.885355400Z]
+26-02-23 22:33:32.893 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:UUID) <- [45e2393f-77ad-42b3-a5b4-a0972d651cad]
+26-02-23 22:33:32.893 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.read_statuses
+        (channel_id, created_at, last_read_at, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.894 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:UUID) <- [3db6b4db-1053-4e22-81d0-4832f21825e1]
+26-02-23 22:33:32.894 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.886356800Z]
+26-02-23 22:33:32.894 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.885355400Z]
+26-02-23 22:33:32.894 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.886356800Z]
+26-02-23 22:33:32.894 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:UUID) <- [0795141b-5343-4bc6-a93a-dfa4a907b4c8]
+26-02-23 22:33:32.894 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:UUID) <- [9437eff4-22d9-4faf-90f4-795a81d6b6e3]
+26-02-23 22:33:32.896 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    select
+        c1_0.id,
+        c1_0.created_at,
+        c1_0.description,
+        c1_0.name,
+        c1_0.type,
+        c1_0.updated_at 
+    from
+        discodeit_schema.channels c1_0 
+    where
+        c1_0.type='PUBLIC' 
+        or exists(select
+            1 
+        from
+            discodeit_schema.read_statuses rs1_0 
+        where
+            rs1_0.channel_id=c1_0.id 
+            and rs1_0.user_id=?)
+26-02-23 22:33:32.897 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:UUID) <- [0795141b-5343-4bc6-a93a-dfa4a907b4c8]
+26-02-23 22:33:32.903 [Test worker] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils [ |  | ] - Could not detect default configuration classes for test class [com.sprint.mission.discodeit.repository.MessageRepositoryTest]: MessageRepositoryTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+26-02-23 22:33:32.910 [Test worker] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper [ |  | ] - Found @SpringBootConfiguration com.sprint.mission.discodeit.DiscodeitApplication for test class com.sprint.mission.discodeit.repository.MessageRepositoryTest
+26-02-23 22:33:32.915 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.channels
+        (created_at, description, name, type, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.916 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.914052700Z]
+26-02-23 22:33:32.916 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [d]
+26-02-23 22:33:32.916 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [c]
+26-02-23 22:33:32.916 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:ENUM) <- [PUBLIC]
+26-02-23 22:33:32.916 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.914052700Z]
+26-02-23 22:33:32.916 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:UUID) <- [df5fc5ec-b199-4793-87d0-25386321d2b1]
+26-02-23 22:33:32.918 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    select
+        m1_0.id,
+        m1_0.author_id,
+        m1_0.channel_id,
+        m1_0.content,
+        m1_0.created_at,
+        m1_0.updated_at 
+    from
+        discodeit_schema.messages m1_0 
+    left join
+        discodeit_schema.channels c1_0 
+            on c1_0.id=m1_0.channel_id 
+    where
+        c1_0.id=? 
+    order by
+        m1_0.created_at desc 
+    fetch
+        first ? rows only
+26-02-23 22:33:32.920 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:UUID) <- [df5fc5ec-b199-4793-87d0-25386321d2b1]
+26-02-23 22:33:32.920 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:INTEGER) <- [1]
+26-02-23 22:33:32.928 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.users
+        (created_at, email, password, profile_id, updated_at, username, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.928 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.927014200Z]
+26-02-23 22:33:32.928 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [jun@test.com]
+26-02-23 22:33:32.928 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [pw]
+26-02-23 22:33:32.928 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:UUID) <- [null]
+26-02-23 22:33:32.929 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.927014200Z]
+26-02-23 22:33:32.929 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:VARCHAR) <- [jun]
+26-02-23 22:33:32.929 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (7:UUID) <- [58eadc44-24b5-4132-bf6f-92fccc9c8e32]
+26-02-23 22:33:32.930 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.user_statuses
+        (created_at, last_active_at, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+26-02-23 22:33:32.931 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.927537600Z]
+26-02-23 22:33:32.932 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.926492Z]
+26-02-23 22:33:32.932 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.927537600Z]
+26-02-23 22:33:32.932 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:UUID) <- [58eadc44-24b5-4132-bf6f-92fccc9c8e32]
+26-02-23 22:33:32.932 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:UUID) <- [aaa8b21b-bda8-48b5-8d92-89248e595999]
+26-02-23 22:33:32.941 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.channels
+        (created_at, description, name, type, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.941 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.933183400Z]
+26-02-23 22:33:32.942 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [d]
+26-02-23 22:33:32.942 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [c]
+26-02-23 22:33:32.942 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:ENUM) <- [PUBLIC]
+26-02-23 22:33:32.942 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.933183400Z]
+26-02-23 22:33:32.942 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:UUID) <- [404e827d-82df-428c-8ee2-e2a55dbab30b]
+26-02-23 22:33:32.943 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.messages
+        (author_id, channel_id, content, created_at, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.943 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:UUID) <- [58eadc44-24b5-4132-bf6f-92fccc9c8e32]
+26-02-23 22:33:32.943 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:UUID) <- [404e827d-82df-428c-8ee2-e2a55dbab30b]
+26-02-23 22:33:32.944 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [m1]
+26-02-23 22:33:32.944 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.934234200Z]
+26-02-23 22:33:32.944 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.934234200Z]
+26-02-23 22:33:32.944 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:UUID) <- [f40bef4c-b76f-411f-aabf-3cb053c7cb55]
+26-02-23 22:33:32.947 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.messages
+        (author_id, channel_id, content, created_at, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.947 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:UUID) <- [58eadc44-24b5-4132-bf6f-92fccc9c8e32]
+26-02-23 22:33:32.947 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:UUID) <- [404e827d-82df-428c-8ee2-e2a55dbab30b]
+26-02-23 22:33:32.947 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [m2]
+26-02-23 22:33:32.947 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.936240300Z]
+26-02-23 22:33:32.947 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.936240300Z]
+26-02-23 22:33:32.947 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:UUID) <- [14d30c41-5c01-4c41-b465-9eaee608964f]
+26-02-23 22:33:32.948 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.messages
+        (author_id, channel_id, content, created_at, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.948 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:UUID) <- [58eadc44-24b5-4132-bf6f-92fccc9c8e32]
+26-02-23 22:33:32.949 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:UUID) <- [404e827d-82df-428c-8ee2-e2a55dbab30b]
+26-02-23 22:33:32.949 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [m3]
+26-02-23 22:33:32.949 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.936240300Z]
+26-02-23 22:33:32.949 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.936240300Z]
+26-02-23 22:33:32.949 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:UUID) <- [868329f2-5c75-4031-826e-3275c1bd049e]
+26-02-23 22:33:32.955 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    select
+        m1_0.id,
+        a1_0.id,
+        a1_0.created_at,
+        a1_0.email,
+        a1_0.password,
+        p1_0.id,
+        p1_0.content_type,
+        p1_0.created_at,
+        p1_0.file_name,
+        p1_0.size,
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.last_active_at,
+        s1_0.updated_at,
+        s1_0.user_id,
+        a1_0.updated_at,
+        a1_0.username,
+        m1_0.channel_id,
+        m1_0.content,
+        m1_0.created_at,
+        m1_0.updated_at 
+    from
+        discodeit_schema.messages m1_0 
+    left join
+        discodeit_schema.channels c1_0 
+            on c1_0.id=m1_0.channel_id 
+    left join
+        discodeit_schema.users a1_0 
+            on a1_0.id=m1_0.author_id 
+    left join
+        discodeit_schema.binary_contents p1_0 
+            on p1_0.id=a1_0.profile_id 
+    left join
+        discodeit_schema.user_statuses s1_0 
+            on a1_0.id=s1_0.user_id 
+    where
+        c1_0.id=? 
+    order by
+        m1_0.created_at desc 
+    fetch
+        first ? rows only
+26-02-23 22:33:32.957 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:UUID) <- [404e827d-82df-428c-8ee2-e2a55dbab30b]
+26-02-23 22:33:32.957 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:INTEGER) <- [3]
+26-02-23 22:33:32.971 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.users
+        (created_at, email, password, profile_id, updated_at, username, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.973 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.970948Z]
+26-02-23 22:33:32.973 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [jun@test.com]
+26-02-23 22:33:32.973 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [pw]
+26-02-23 22:33:32.973 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:UUID) <- [null]
+26-02-23 22:33:32.973 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.970948Z]
+26-02-23 22:33:32.973 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:VARCHAR) <- [jun]
+26-02-23 22:33:32.973 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (7:UUID) <- [42c344aa-defe-49bc-8202-5e2ad2d7756e]
+26-02-23 22:33:32.975 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.user_statuses
+        (created_at, last_active_at, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+26-02-23 22:33:32.975 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.971954100Z]
+26-02-23 22:33:32.975 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.970948Z]
+26-02-23 22:33:32.976 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.971954100Z]
+26-02-23 22:33:32.976 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:UUID) <- [42c344aa-defe-49bc-8202-5e2ad2d7756e]
+26-02-23 22:33:32.976 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:UUID) <- [b554ce44-5c0e-4030-8eec-a2054752d610]
+26-02-23 22:33:32.979 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.channels
+        (created_at, description, name, type, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.980 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.977106600Z]
+26-02-23 22:33:32.980 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [d]
+26-02-23 22:33:32.980 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [c]
+26-02-23 22:33:32.980 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:ENUM) <- [PUBLIC]
+26-02-23 22:33:32.981 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.977106600Z]
+26-02-23 22:33:32.981 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:UUID) <- [ad9d3341-d787-4e5e-a2df-1f4a608fcc36]
+26-02-23 22:33:32.981 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.messages
+        (author_id, channel_id, content, created_at, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.982 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:UUID) <- [42c344aa-defe-49bc-8202-5e2ad2d7756e]
+26-02-23 22:33:32.982 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:UUID) <- [ad9d3341-d787-4e5e-a2df-1f4a608fcc36]
+26-02-23 22:33:32.982 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [m1]
+26-02-23 22:33:32.982 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.978104900Z]
+26-02-23 22:33:32.982 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.978104900Z]
+26-02-23 22:33:32.983 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:UUID) <- [fae95bd7-1d47-4717-9d3e-607149513d34]
+26-02-23 22:33:32.991 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.messages
+        (author_id, channel_id, content, created_at, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:32.991 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:UUID) <- [42c344aa-defe-49bc-8202-5e2ad2d7756e]
+26-02-23 22:33:32.992 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:UUID) <- [ad9d3341-d787-4e5e-a2df-1f4a608fcc36]
+26-02-23 22:33:32.992 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [m2]
+26-02-23 22:33:32.992 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.991151500Z]
+26-02-23 22:33:32.992 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:32.991151500Z]
+26-02-23 22:33:32.992 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:UUID) <- [76277d6e-265e-42f2-b345-54581517d65f]
+26-02-23 22:33:32.994 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    select
+        m1_0.id,
+        m1_0.author_id,
+        m1_0.channel_id,
+        m1_0.content,
+        m1_0.created_at,
+        m1_0.updated_at 
+    from
+        discodeit_schema.messages m1_0 
+    left join
+        discodeit_schema.channels c1_0 
+            on c1_0.id=m1_0.channel_id 
+    where
+        c1_0.id=? 
+    order by
+        m1_0.created_at desc 
+    fetch
+        first ? rows only
+26-02-23 22:33:32.995 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:UUID) <- [ad9d3341-d787-4e5e-a2df-1f4a608fcc36]
+26-02-23 22:33:32.995 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:INTEGER) <- [1]
+26-02-23 22:33:33.006 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.channels
+        (created_at, description, name, type, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+26-02-23 22:33:33.006 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:33.005743400Z]
+26-02-23 22:33:33.007 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [d]
+26-02-23 22:33:33.007 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [c]
+26-02-23 22:33:33.007 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:ENUM) <- [PUBLIC]
+26-02-23 22:33:33.007 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:33.005743400Z]
+26-02-23 22:33:33.007 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:UUID) <- [83108176-5c2d-4426-9cca-0702b4acc160]
+26-02-23 22:33:33.012 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    select
+        m1_0.id,
+        a1_0.id,
+        a1_0.created_at,
+        a1_0.email,
+        a1_0.password,
+        p1_0.id,
+        p1_0.content_type,
+        p1_0.created_at,
+        p1_0.file_name,
+        p1_0.size,
+        s1_0.id,
+        s1_0.created_at,
+        s1_0.last_active_at,
+        s1_0.updated_at,
+        s1_0.user_id,
+        a1_0.updated_at,
+        a1_0.username,
+        m1_0.channel_id,
+        m1_0.content,
+        m1_0.created_at,
+        m1_0.updated_at 
+    from
+        discodeit_schema.messages m1_0 
+    left join
+        discodeit_schema.channels c1_0 
+            on c1_0.id=m1_0.channel_id 
+    left join
+        discodeit_schema.users a1_0 
+            on a1_0.id=m1_0.author_id 
+    left join
+        discodeit_schema.binary_contents p1_0 
+            on p1_0.id=a1_0.profile_id 
+    left join
+        discodeit_schema.user_statuses s1_0 
+            on a1_0.id=s1_0.user_id 
+    where
+        c1_0.id=? 
+    order by
+        m1_0.created_at desc 
+    fetch
+        first ? rows only
+26-02-23 22:33:33.012 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:UUID) <- [83108176-5c2d-4426-9cca-0702b4acc160]
+26-02-23 22:33:33.012 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:INTEGER) <- [3]
+26-02-23 22:33:33.019 [Test worker] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils [ |  | ] - Could not detect default configuration classes for test class [com.sprint.mission.discodeit.repository.UserRepositoryTest]: UserRepositoryTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+26-02-23 22:33:33.027 [Test worker] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper [ |  | ] - Found @SpringBootConfiguration com.sprint.mission.discodeit.DiscodeitApplication for test class com.sprint.mission.discodeit.repository.UserRepositoryTest
+26-02-23 22:33:33.033 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    select
+        u1_0.id 
+    from
+        discodeit_schema.users u1_0 
+    where
+        u1_0.username=? 
+        or u1_0.email=? 
+    fetch
+        first ? rows only
+26-02-23 22:33:33.034 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:VARCHAR) <- [nope]
+26-02-23 22:33:33.034 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [nope@test.com]
+26-02-23 22:33:33.034 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:INTEGER) <- [1]
+26-02-23 22:33:33.042 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    select
+        u1_0.id,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.password,
+        u1_0.profile_id,
+        u1_0.updated_at,
+        u1_0.username 
+    from
+        discodeit_schema.users u1_0 
+    where
+        u1_0.username=?
+26-02-23 22:33:33.042 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:VARCHAR) <- [nope]
+26-02-23 22:33:33.056 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.binary_contents
+        (content_type, created_at, file_name, size, id) 
+    values
+        (?, ?, ?, ?, ?)
+26-02-23 22:33:33.056 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:VARCHAR) <- [image/png]
+26-02-23 22:33:33.056 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:TIMESTAMP_UTC) <- [2026-02-23T13:33:33.052586700Z]
+26-02-23 22:33:33.056 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [test.png]
+26-02-23 22:33:33.056 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:BIGINT) <- [10]
+26-02-23 22:33:33.057 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:UUID) <- [ce0b8f26-8df6-4882-9321-221389e2970b]
+26-02-23 22:33:33.058 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.users
+        (created_at, email, password, profile_id, updated_at, username, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+26-02-23 22:33:33.058 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:33.052586700Z]
+26-02-23 22:33:33.058 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [jun@test.com]
+26-02-23 22:33:33.058 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [pw]
+26-02-23 22:33:33.058 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:UUID) <- [ce0b8f26-8df6-4882-9321-221389e2970b]
+26-02-23 22:33:33.058 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:33.052586700Z]
+26-02-23 22:33:33.059 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:VARCHAR) <- [jun]
+26-02-23 22:33:33.059 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (7:UUID) <- [f3ee2164-0ade-41e3-b12d-bb0bad80f2e9]
+26-02-23 22:33:33.059 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.user_statuses
+        (created_at, last_active_at, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+26-02-23 22:33:33.060 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:33.055102600Z]
+26-02-23 22:33:33.060 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:TIMESTAMP_UTC) <- [2026-02-23T13:33:33.052586700Z]
+26-02-23 22:33:33.060 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:TIMESTAMP_UTC) <- [2026-02-23T13:33:33.055102600Z]
+26-02-23 22:33:33.060 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:UUID) <- [f3ee2164-0ade-41e3-b12d-bb0bad80f2e9]
+26-02-23 22:33:33.060 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:UUID) <- [aea348e6-cd26-4fef-81f7-ce2ff54a35c8]
+26-02-23 22:33:33.062 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    select
+        u1_0.id 
+    from
+        discodeit_schema.users u1_0 
+    where
+        u1_0.username=? 
+        or u1_0.email=? 
+    fetch
+        first ? rows only
+26-02-23 22:33:33.062 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:VARCHAR) <- [jun]
+26-02-23 22:33:33.063 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [x@test.com]
+26-02-23 22:33:33.063 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:INTEGER) <- [1]
+26-02-23 22:33:33.065 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    select
+        u1_0.id 
+    from
+        discodeit_schema.users u1_0 
+    where
+        u1_0.username=? 
+        or u1_0.email=? 
+    fetch
+        first ? rows only
+26-02-23 22:33:33.066 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:VARCHAR) <- [x]
+26-02-23 22:33:33.066 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [jun@test.com]
+26-02-23 22:33:33.066 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:INTEGER) <- [1]
+26-02-23 22:33:33.072 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.binary_contents
+        (content_type, created_at, file_name, size, id) 
+    values
+        (?, ?, ?, ?, ?)
+26-02-23 22:33:33.073 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:VARCHAR) <- [image/png]
+26-02-23 22:33:33.073 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:TIMESTAMP_UTC) <- [2026-02-23T13:33:33.072272800Z]
+26-02-23 22:33:33.073 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [test.png]
+26-02-23 22:33:33.073 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:BIGINT) <- [10]
+26-02-23 22:33:33.073 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:UUID) <- [1e0a25db-1d62-4a62-b4ea-9c1776f135c4]
+26-02-23 22:33:33.074 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.users
+        (created_at, email, password, profile_id, updated_at, username, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+26-02-23 22:33:33.075 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:33.071276800Z]
+26-02-23 22:33:33.075 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:VARCHAR) <- [jun@test.com]
+26-02-23 22:33:33.075 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:VARCHAR) <- [pw]
+26-02-23 22:33:33.075 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:UUID) <- [1e0a25db-1d62-4a62-b4ea-9c1776f135c4]
+26-02-23 22:33:33.075 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:TIMESTAMP_UTC) <- [2026-02-23T13:33:33.071276800Z]
+26-02-23 22:33:33.075 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (6:VARCHAR) <- [jun]
+26-02-23 22:33:33.076 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (7:UUID) <- [9c378bfe-3acc-4dd8-9c61-15993e0edb5b]
+26-02-23 22:33:33.076 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    insert 
+    into
+        discodeit_schema.user_statuses
+        (created_at, last_active_at, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+26-02-23 22:33:33.077 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:TIMESTAMP_UTC) <- [2026-02-23T13:33:33.072272800Z]
+26-02-23 22:33:33.077 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (2:TIMESTAMP_UTC) <- [2026-02-23T13:33:33.071276800Z]
+26-02-23 22:33:33.077 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (3:TIMESTAMP_UTC) <- [2026-02-23T13:33:33.072272800Z]
+26-02-23 22:33:33.077 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (4:UUID) <- [9c378bfe-3acc-4dd8-9c61-15993e0edb5b]
+26-02-23 22:33:33.077 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (5:UUID) <- [fbd147a5-029e-49c3-a643-f7718f86ac2b]
+26-02-23 22:33:33.079 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    select
+        u1_0.id,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.password,
+        u1_0.profile_id,
+        u1_0.updated_at,
+        u1_0.username 
+    from
+        discodeit_schema.users u1_0 
+    where
+        u1_0.username=?
+26-02-23 22:33:33.080 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:VARCHAR) <- [jun]
+26-02-23 22:33:33.083 [Test worker] DEBUG org.hibernate.SQL [ |  | ] - 
+    select
+        us1_0.id,
+        us1_0.created_at,
+        us1_0.last_active_at,
+        us1_0.updated_at,
+        us1_0.user_id 
+    from
+        discodeit_schema.user_statuses us1_0 
+    where
+        us1_0.user_id=?
+26-02-23 22:33:33.083 [Test worker] TRACE org.hibernate.orm.jdbc.bind [ |  | ] - binding parameter (1:UUID) <- [9c378bfe-3acc-4dd8-9c61-15993e0edb5b]
+26-02-23 22:33:33.561 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [ |  | ] - [Channel] delete channel start channelId=4cb88080-8da6-491f-b8af-5eb9d43c0797
+26-02-23 22:33:33.562 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [ |  | ] - [Channel] delete channel success channelId=4cb88080-8da6-491f-b8af-5eb9d43c0797
+26-02-23 22:33:33.570 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [ |  | ] - [Channel] create public channel start name=general, description=공지 채널
+26-02-23 22:33:33.575 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [ |  | ] - [Channel] create private channel start
+26-02-23 22:33:33.580 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [ |  | ] - [Channel] update channel start name=newName, description=newDesc
+26-02-23 22:33:33.580 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [ |  | ] - [Channel] update channel success channelId=null
+26-02-23 22:33:33.585 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [ |  | ] - [Channel] create public channel start name=general, description=공지 채널
+26-02-23 22:33:33.585 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [ |  | ] - [Channel] create public channel success channelId=null
+26-02-23 22:33:33.590 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [ |  | ] - [Channel] create private channel start
+26-02-23 22:33:33.591 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [ |  | ] - [Channel] create private channel success channelId=null
+26-02-23 22:33:33.599 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [ |  | ] - [Channel] update channel start name=newName, description=newDesc
+26-02-23 22:33:33.603 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [ |  | ] - [Channel] update channel start name=newName, description=newDesc
+26-02-23 22:33:33.606 [Test worker] INFO  c.s.m.d.s.basic.BasicChannelService [ |  | ] - [Channel] delete channel start channelId=f63e0e31-4c91-44b6-9bb5-d03df6368700
+26-02-23 22:33:33.767 [Test worker] INFO  c.s.m.d.s.basic.BasicMessageService [ |  | ] - [MESSAGE] delete start messageId=c8e07c53-e464-42d0-a6d3-f7761a50b86e
+26-02-23 22:33:33.768 [Test worker] INFO  c.s.m.d.s.basic.BasicMessageService [ |  | ] - [MESSAGE] delete success messageId=c8e07c53-e464-42d0-a6d3-f7761a50b86e
+26-02-23 22:33:33.771 [Test worker] INFO  c.s.m.d.s.basic.BasicMessageService [ |  | ] - [MESSAGE] create start message=helloMan
+26-02-23 22:33:33.775 [Test worker] INFO  c.s.m.d.s.basic.BasicMessageService [ |  | ] - [MESSAGE] update start message=new content
+26-02-23 22:33:33.895 [Test worker] INFO  c.s.m.d.s.basic.BasicMessageService [ |  | ] - [MESSAGE] create start message=helloMan
+26-02-23 22:33:33.898 [Test worker] INFO  c.s.m.d.s.basic.BasicMessageService [ |  | ] - [MESSAGE] create success messageId=null
+26-02-23 22:33:33.902 [Test worker] INFO  c.s.m.d.s.basic.BasicMessageService [ |  | ] - [MESSAGE] update start message=new content
+26-02-23 22:33:33.902 [Test worker] INFO  c.s.m.d.s.basic.BasicMessageService [ |  | ] - [MESSAGE] update success messageId=38be448a-024b-4413-b52a-b8b974da2c15
+26-02-23 22:33:33.906 [Test worker] INFO  c.s.m.d.s.basic.BasicMessageService [ |  | ] - [MESSAGE] delete start messageId=95ecf409-4e2b-4d23-8d78-091454a133de
+26-02-23 22:33:33.911 [Test worker] INFO  c.s.m.d.s.basic.BasicMessageService [ |  | ] - [MESSAGE] create start message=helloMan
+26-02-23 22:33:33.927 [Test worker] INFO  c.s.m.d.s.basic.BasicUserService [ |  | ] - [USER] delete start userId=a9f154b0-5848-4d14-9ae3-2e41c727c12c
+26-02-23 22:33:33.927 [Test worker] INFO  c.s.m.d.s.basic.BasicUserService [ |  | ] - [User] delete success userId=a9f154b0-5848-4d14-9ae3-2e41c727c12c
+26-02-23 22:33:33.930 [Test worker] INFO  c.s.m.d.s.basic.BasicUserService [ |  | ] - [USER] create start username=jun, email=jun@test.com
+26-02-23 22:33:33.938 [Test worker] INFO  c.s.m.d.s.basic.BasicUserService [ |  | ] - [USER] update start username=newName, email=new@test.com
+26-02-23 22:33:33.943 [Test worker] INFO  c.s.m.d.s.basic.BasicUserService [ |  | ] - [USER] update start username=newName, email=new@test.com
+26-02-23 22:33:33.946 [Test worker] INFO  c.s.m.d.s.basic.BasicUserService [ |  | ] - [USER] update start username=newName, email=new@test.com
+26-02-23 22:33:33.950 [Test worker] INFO  c.s.m.d.s.basic.BasicUserService [ |  | ] - [USER] update start username=newName, email=new@test.com
+26-02-23 22:33:33.951 [Test worker] INFO  c.s.m.d.s.basic.BasicUserService [ |  | ] - [User] update success userId=null
+26-02-23 22:33:33.953 [Test worker] INFO  c.s.m.d.s.basic.BasicUserService [ |  | ] - [USER] delete start userId=4971f940-089d-48eb-82c1-bc9be8d1f7e7
+26-02-23 22:33:33.957 [Test worker] INFO  c.s.m.d.s.basic.BasicUserService [ |  | ] - [USER] create start username=jun, email=jun@test.com
+26-02-23 22:33:33.957 [Test worker] INFO  c.s.m.d.s.basic.BasicUserService [ |  | ] - [User] create success userId=null
+26-02-23 22:33:34.101 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean [ |  | ] - Closing JPA EntityManagerFactory for persistence unit 'default'
+26-02-23 22:33:34.505 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource [ |  | ] - HikariPool-1 - Shutdown initiated...
+26-02-23 22:33:34.506 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource [ |  | ] - HikariPool-1 - Shutdown completed.
+26-02-23 22:33:34.507 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean [ |  | ] - Closing JPA EntityManagerFactory for persistence unit 'default'

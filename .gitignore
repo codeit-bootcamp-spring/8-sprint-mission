@@ -1,3 +1,9 @@
+### Security / Environment ###
+.env
+.env.local
+.env.development
+.env.production
+
 HELP.md
 .gradle
 build/

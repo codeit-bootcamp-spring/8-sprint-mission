@@ -1,0 +1,25 @@
+# 빌드 결과물 및 로그
+build/
+.gradle/
+out/
+bin/
+*.log
+
+# IDE 설정 파일
+.idea/
+.vscode/
+*.iml
+
+# OS 및 기타
+.DS_Store
+.git/
+.gitignore
+
+# 도커 관련 파일
+Dockerfile
+docker-compose.yaml
+.dockerignore
+
+# 문서 및 로그
+*.md
+HELP.md

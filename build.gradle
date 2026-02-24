@@ -65,6 +65,11 @@ dependencies {
 
     // actuator 의존성
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // AWS SDK 버전 관리를 위한 BOM
+    implementation platform('software.amazon.awssdk:bom:2.21.29')
+    implementation 'software.amazon.awssdk:s3'
+    implementation 'software.amazon.awssdk:netty-nio-client'
 }
 
 tasks.named('test') {
