@@ -1,0 +1,90 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: discodeit:local
+    container_name: discodeit-app
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-discodeit}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-discodeit_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-discodeit1234}
+
+      SERVER_PORT: ${SERVER_PORT:-8080}
+      JVM_OPTS: ${JVM_OPTS:--Xms256m -Xmx512m -XX:+UseG1GC}
+
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FILE_PATH: /app/logs/application.log
+
+      TZ: "Asia/Seoul"
+      # 외부 환경 변수로 절대 경로를 주입
+      DISCODEIT_STORAGE_LOCAL_ROOT_PATH: /app/data/uploadfiles
+    ports:
+      - "${APP_PORT:-8888}:${SERVER_PORT:-8080}"
+    env_file:
+      - .env
+    volumes:
+      - app_logs:/app/logs
+      - app_data:/app/data/uploadfiles
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:${SERVER_PORT:-8080}/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - discodeit-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+  postgres:
+    image: postgres:17
+    container_name: my-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --locale=C
+      - TZ="Asia/Seoul"
+    # 로컬 PostgreSQL과의 포트 방지를 위해
+    ports:
+      - "${POSTGRES_PORT:-54321}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-discodeit_user} -d ${POSTGRES_DB:-discodeit}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    networks:
+      - discodeit-network
+volumes:
+  postgres_data:
+    driver: local
+    name: discodeit-postgres-data
+  app_logs:
+    driver: local
+    name: discodeit-app-logs
+  app_data:
+    driver: local
+    name: discodeit-app-data
+networks:
+  discodeit-network:
+    driver: bridge
+    name: discodeit-network
+
+
