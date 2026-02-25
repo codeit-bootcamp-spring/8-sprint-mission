@@ -35,9 +35,10 @@ management:
       exposure:
         # 외부로 노출할 엔드포인트 지정
         include: health,info,metrics,loggers
-  info:
-    env:
-      enabled: true  # 해당 설정으로 ${...} 변수를 info에서 읽을 수 있다.
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: always
 
 # 애플리케이션 및 주요 설정 정보
 info:
