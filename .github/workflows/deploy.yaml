@@ -1,4 +1,4 @@
-name: Juns Java Deployment_AWS ECS Pipeline
+name: Junsy Java Deployment_AWS ECS Pipeline
 
 on:
   push:
