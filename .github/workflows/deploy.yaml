@@ -1,0 +1,72 @@
+name: Juns Java Deployment_AWS ECS Pipeline
+
+on:
+  push:
+    branches: [ "release" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Public ECR 로그인 -> us-east-1 리전으로 설정
+      - name: Configure AWS credentials (for ECR)
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR Public
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      # 이미지 빌드 및 푸시 (latest와 commit hash 태그 사용)
+      - name: Build, tag and push image to AWS ECR
+        env:
+          ECR_URI: ${{ vars.ECR_REPOSITORY_URI }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_URI:latest -t $ECR_URI:$IMAGE_TAG .
+          docker push $ECR_URI:latest
+          docker push $ECR_URI:$IMAGE_TAG
+
+  deploy:
+    needs: build-and-push # 빌드가 성공해야 배포 시작
+    runs-on: ubuntu-latest
+    steps:
+      # ECS 클러스터 접근을 위해 원래 리전(ap-northeast-2)으로 설정
+      - name: Configure AWS credentials (for ECS)
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      # 자원 확보 위해서 기존 서비스 중단
+      - name: Stop existing service
+        run: |
+          aws ecs update-service --cluster ${{ vars.ECS_CLUSTER }} \
+                                 --service ${{ vars.ECS_SERVICE }} \
+                                 --desired-count 0
+      # 태스크 정의 업데이트 (새 이미지 적용)
+      - name: new task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition-family: ${{ vars.ECS_TASK_DEFINITION }}
+          container-name: discodeit-app # 태스크 정의 내 컨테이너 이름 확인 필요
+          image: ${{ vars.ECR_REPOSITORY_URI }}:latest
+
+      # 새로운 태스크 정의로 서비스 재시작
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ vars.ECS_SERVICE }}
+          cluster: ${{ vars.ECS_CLUSTER }}
+          desired-count: 1 # 다시 1개로 올림
+          wait-for-service-stability: true
