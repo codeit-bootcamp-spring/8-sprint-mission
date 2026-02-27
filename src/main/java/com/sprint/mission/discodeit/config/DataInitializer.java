@@ -55,19 +55,23 @@ public class DataInitializer {
   private void ensureSeedUserProfiles() {
     for (String[] u : SEED_USERS) {
       String username = u[0];
-      userRepository.findByUsername(username).ifPresent(user -> {
-        if (user.getProfile() == null) {
-          loadSeedProfileImage(username).ifPresent(profileRequest -> {
+      // Use eager-fetch query to avoid LazyInitializationException on profile
+      userRepository.findByUsernameWithProfile(username).ifPresent(user -> {
+        loadSeedProfileImage(username).ifPresent(profileRequest -> {
+          boolean hasRealProfile = user.getProfile() != null
+              && user.getProfile().getSize() != null
+              && user.getProfile().getSize() > 10_000;
+          if (!hasRealProfile) {
             try {
               userService.update(user.getId(),
                   new UserUpdateRequest(user.getUsername(), user.getEmail(), null),
                   Optional.of(profileRequest));
-              log.info("Set profile for existing seed user: {}", username);
+              log.info("Updated profile for seed user: {}", username);
             } catch (Exception e) {
-              log.warn("Could not set profile for {}: {}", username, e.getMessage());
+              log.warn("Could not update profile for {}: {}", username, e.getMessage());
             }
-          });
-        }
+          }
+        });
       });
     }
   }

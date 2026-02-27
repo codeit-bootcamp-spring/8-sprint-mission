@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.sprint.mission'
-version = '1.7.0'
+version = '1.2-M8'
 
 // 2. Repositories 블록은 최상위 레벨에 위치해야 합니다.
 repositories {
@@ -55,10 +55,14 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    implementation 'de.codecentric:spring-boot-admin-starter-client:3.4.3'
 }
 
 // 5. Test 블록
 test {
     useJUnitPlatform()
+}
+
+// 6. Jar 파일명 설정 (Dockerfile의 PROJECT_NAME과 일치)
+bootJar {
+    archiveBaseName = 'discodeit'
 }

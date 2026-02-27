@@ -104,11 +104,11 @@ public class BasicUserService implements UserService {
 
     String newUsername = userUpdateRequest.newUsername();
     String newEmail = userUpdateRequest.newEmail();
-    if (userRepository.existsByEmail(newEmail)) {
+    if (newEmail != null && !newEmail.equals(user.getEmail()) && userRepository.existsByEmail(newEmail)) {
       log.warn("사용자 수정 실패: 이메일 중복, newEmail={}", newEmail);
       throw new IllegalArgumentException("User with email " + newEmail + " already exists");
     }
-    if (userRepository.existsByUsername(newUsername)) {
+    if (newUsername != null && !newUsername.equals(user.getUsername()) && userRepository.existsByUsername(newUsername)) {
       log.warn("사용자 수정 실패: 사용자명 중복, newUsername={}", newUsername);
       throw new IllegalArgumentException("User with username " + newUsername + " already exists");
     }
