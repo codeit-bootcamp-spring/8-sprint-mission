@@ -1,8 +1,10 @@
 name: CI (Continuous Integration)
 
 on:
-pull_request:
-  branches: [ "main" ]
+  push:
+    branches: [ "현승원-sprint8" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   test:
@@ -26,4 +28,4 @@ jobs:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }} # GitHub Secrets에 등록 필요
+          token: ${{ secrets.CODECOV_TOKEN }}
