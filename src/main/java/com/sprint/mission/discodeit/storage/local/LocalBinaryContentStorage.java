@@ -1,6 +1,6 @@
 package com.sprint.mission.discodeit.storage.local;
 
-import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
+import com.sprint.mission.discodeit.dto.datafix.BinaryContentDto;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
@@ -75,21 +75,21 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
 				return root.resolve(key.toString());
 		}
 
-	@Override
-	public ResponseEntity<Resource> download(BinaryContentDto metaData) {
-			InputStream inputStream = get(metaData.id());
-			Resource resource = new InputStreamResource(inputStream);
+		@Override
+		public ResponseEntity<Resource> download(BinaryContentDto metaData) {
+				InputStream inputStream = get(metaData.id());
+				Resource resource = new InputStreamResource(inputStream);
 
-			String contentType = metaData.contentType();
-			String disposition = (contentType != null && contentType.startsWith("image/"))
-					? "inline; filename=\"" + metaData.fileName() + "\""
-					: "attachment; filename=\"" + metaData.fileName() + "\"";
+				String contentType = metaData.contentType();
+				String disposition = (contentType != null && contentType.startsWith("image/"))
+						? "inline; filename=\"" + metaData.fileName() + "\""
+						: "attachment; filename=\"" + metaData.fileName() + "\"";
 
-			return ResponseEntity
-					.status(HttpStatus.OK)
-					.header(HttpHeaders.CONTENT_DISPOSITION, disposition)
-					.header(HttpHeaders.CONTENT_TYPE, contentType)
-					.header(HttpHeaders.CONTENT_LENGTH, String.valueOf(metaData.size()))
-					.body(resource);
-	}
+				return ResponseEntity
+						.status(HttpStatus.OK)
+						.header(HttpHeaders.CONTENT_DISPOSITION, disposition)
+						.header(HttpHeaders.CONTENT_TYPE, contentType)
+						.header(HttpHeaders.CONTENT_LENGTH, String.valueOf(metaData.size()))
+						.body(resource);
+		}
 }

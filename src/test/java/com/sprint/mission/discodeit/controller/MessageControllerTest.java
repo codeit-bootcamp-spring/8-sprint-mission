@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sprint.mission.discodeit.dto.data.MessageDto;
+import com.sprint.mission.discodeit.dto.datafix.MessageDto;
 import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
@@ -73,33 +73,33 @@ class MessageControllerTest {
 						"test-image".getBytes()
 				);
 
-			UUID messageId = UUID.randomUUID();
-			Instant now = Instant.now();
-			UUID attachmentId = UUID.randomUUID();
+				UUID messageId = UUID.randomUUID();
+				Instant now = Instant.now();
+				UUID attachmentId = UUID.randomUUID();
 
-			MessageDto createdMessage = new MessageDto(
-					messageId,
-					"안녕하세요, 테스트 메시지입니다.",
-					channelId,
-					authorId,
-					List.of(attachmentId),
-					now
-			);
+				MessageDto createdMessage = new MessageDto(
+						messageId,
+						"안녕하세요, 테스트 메시지입니다.",
+						channelId,
+						authorId,
+						List.of(attachmentId),
+						now
+				);
 
-			given(messageService.create(any(MessageCreateRequest.class), any(List.class)))
-					.willReturn(createdMessage);
+				given(messageService.create(any(MessageCreateRequest.class), any(List.class)))
+						.willReturn(createdMessage);
 
-			// When & Then
-			mockMvc.perform(multipart("/api/messages")
-							.file(messageCreateRequestPart)
-							.file(attachment)
-							.contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
-					.andExpect(status().isCreated())
-					.andExpect(jsonPath("$.id").value(messageId.toString()))
-					.andExpect(jsonPath("$.content").value("안녕하세요, 테스트 메시지입니다."))
-					.andExpect(jsonPath("$.channelId").value(channelId.toString()))
-					.andExpect(jsonPath("$.authorId").value(authorId.toString()))
-					.andExpect(jsonPath("$.attachmentIds[0]").value(attachmentId.toString()));
+				// When & Then
+				mockMvc.perform(multipart("/api/messages")
+								.file(messageCreateRequestPart)
+								.file(attachment)
+								.contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
+						.andExpect(status().isCreated())
+						.andExpect(jsonPath("$.id").value(messageId.toString()))
+						.andExpect(jsonPath("$.content").value("안녕하세요, 테스트 메시지입니다."))
+						.andExpect(jsonPath("$.channelId").value(channelId.toString()))
+						.andExpect(jsonPath("$.authorId").value(authorId.toString()))
+						.andExpect(jsonPath("$.attachmentIds[0]").value(attachmentId.toString()));
 		}
 
 		@Test
@@ -138,16 +138,16 @@ class MessageControllerTest {
 						"수정된 메시지 내용입니다."
 				);
 
-			Instant now = Instant.now();
+				Instant now = Instant.now();
 
-			MessageDto updatedMessage = new MessageDto(
-					messageId,
-					"수정된 메시지 내용입니다.",
-					channelId,
-					authorId,
-					new ArrayList<>(),
-					now
-			);
+				MessageDto updatedMessage = new MessageDto(
+						messageId,
+						"수정된 메시지 내용입니다.",
+						channelId,
+						authorId,
+						new ArrayList<>(),
+						now
+				);
 
 				given(messageService.update(eq(messageId), any(MessageUpdateRequest.class)))
 						.willReturn(updatedMessage);
@@ -157,10 +157,10 @@ class MessageControllerTest {
 								.contentType(MediaType.APPLICATION_JSON)
 								.content(objectMapper.writeValueAsString(updateRequest)))
 						.andExpect(status().isOk())
-					.andExpect(jsonPath("$.id").value(messageId.toString()))
-					.andExpect(jsonPath("$.content").value("수정된 메시지 내용입니다."))
-					.andExpect(jsonPath("$.channelId").value(channelId.toString()))
-					.andExpect(jsonPath("$.authorId").value(authorId.toString()));
+						.andExpect(jsonPath("$.id").value(messageId.toString()))
+						.andExpect(jsonPath("$.content").value("수정된 메시지 내용입니다."))
+						.andExpect(jsonPath("$.channelId").value(channelId.toString()))
+						.andExpect(jsonPath("$.authorId").value(authorId.toString()));
 		}
 
 		@Test
@@ -214,29 +214,29 @@ class MessageControllerTest {
 		@DisplayName("채널별 메시지 목록 조회 성공 테스트")
 		void findAllByChannelId_Success() throws Exception {
 				// Given
-			UUID channelId = UUID.randomUUID();
-			UUID authorId = UUID.randomUUID();
-			Instant cursor = Instant.now();
-			Pageable pageable = PageRequest.of(0, 50, Sort.Direction.DESC, "createdAt");
+				UUID channelId = UUID.randomUUID();
+				UUID authorId = UUID.randomUUID();
+				Instant cursor = Instant.now();
+				Pageable pageable = PageRequest.of(0, 50, Sort.Direction.DESC, "createdAt");
 
-			List<MessageDto> messages = List.of(
-					new MessageDto(
-							UUID.randomUUID(),
-							"첫 번째 메시지",
-							channelId,
-							authorId,
-							new ArrayList<>(),
-							cursor.minusSeconds(10)
-					),
-					new MessageDto(
-							UUID.randomUUID(),
-							"두 번째 메시지",
-							channelId,
-							authorId,
-							new ArrayList<>(),
-							cursor.minusSeconds(20)
-					)
-			);
+				List<MessageDto> messages = List.of(
+						new MessageDto(
+								UUID.randomUUID(),
+								"첫 번째 메시지",
+								channelId,
+								authorId,
+								new ArrayList<>(),
+								cursor.minusSeconds(10)
+						),
+						new MessageDto(
+								UUID.randomUUID(),
+								"두 번째 메시지",
+								channelId,
+								authorId,
+								new ArrayList<>(),
+								cursor.minusSeconds(20)
+						)
+				);
 
 				PageResponse<MessageDto> pageResponse = new PageResponse<>(
 						messages,

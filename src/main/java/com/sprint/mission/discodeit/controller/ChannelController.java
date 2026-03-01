@@ -1,6 +1,6 @@
 package com.sprint.mission.discodeit.controller;
 
-import com.sprint.mission.discodeit.dto.data.ChannelDto;
+import com.sprint.mission.discodeit.dto.datafix.ChannelDto;
 import com.sprint.mission.discodeit.dto.request.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
@@ -26,60 +26,60 @@ import jakarta.validation.Valid;
 @RequiredArgsConstructor
 public class ChannelController {
 
-  private final ChannelService channelService;
+		private final ChannelService channelService;
 
-  /**
-   * User가 참여 중인 Channel 목록 조회 GET /api/channels?userId=...
-   */
-  @GetMapping
-  public List<ChannelDto> findAllByUserId(@RequestParam UUID userId) {
-    return channelService.findAllByUserId(userId);
-  }
+		/**
+		 * User가 참여 중인 Channel 목록 조회 GET /api/channels?userId=...
+		 */
+		@GetMapping
+		public List<ChannelDto> findAllByUserId(@RequestParam UUID userId) {
+				return channelService.findAllByUserId(userId);
+		}
 
-  /**
-   * Public Channel 생성 POST /api/channels/public
-   */
-  @PostMapping(value = "/public", consumes = {"application/json", "multipart/form-data"})
-  public ChannelDto createPublic(
-      @RequestPart(value = "channelCreateRequest", required = false) @Valid PublicChannelCreateRequest requestPart,
-      @RequestBody(required = false) @Valid PublicChannelCreateRequest requestBody) {
-    PublicChannelCreateRequest request = requestPart != null ? requestPart : requestBody;
-    if (request == null) {
-      throw new IllegalArgumentException("PublicChannelCreateRequest가 필요합니다.");
-    }
-    return channelService.create(request);
-  }
+		/**
+		 * Public Channel 생성 POST /api/channels/public
+		 */
+		@PostMapping(value = "/public", consumes = {"application/json", "multipart/form-data"})
+		public ChannelDto createPublic(
+				@RequestPart(value = "channelCreateRequest", required = false) @Valid PublicChannelCreateRequest requestPart,
+				@RequestBody(required = false) @Valid PublicChannelCreateRequest requestBody) {
+				PublicChannelCreateRequest request = requestPart != null ? requestPart : requestBody;
+				if (request == null) {
+						throw new IllegalArgumentException("PublicChannelCreateRequest가 필요합니다.");
+				}
+				return channelService.create(request);
+		}
 
-  /**
-   * Private Channel 생성 POST /api/channels/private
-   */
-  @PostMapping(value = "/private", consumes = {"application/json", "multipart/form-data"})
-  public ChannelDto createPrivate(
-      @RequestPart(value = "channelCreateRequest", required = false) @Valid PrivateChannelCreateRequest requestPart,
-      @RequestBody(required = false) @Valid PrivateChannelCreateRequest requestBody) {
-    PrivateChannelCreateRequest request = requestPart != null ? requestPart : requestBody;
-    if (request == null) {
-      throw new IllegalArgumentException("PrivateChannelCreateRequest가 필요합니다.");
-    }
-    return channelService.create(request);
-  }
+		/**
+		 * Private Channel 생성 POST /api/channels/private
+		 */
+		@PostMapping(value = "/private", consumes = {"application/json", "multipart/form-data"})
+		public ChannelDto createPrivate(
+				@RequestPart(value = "channelCreateRequest", required = false) @Valid PrivateChannelCreateRequest requestPart,
+				@RequestBody(required = false) @Valid PrivateChannelCreateRequest requestBody) {
+				PrivateChannelCreateRequest request = requestPart != null ? requestPart : requestBody;
+				if (request == null) {
+						throw new IllegalArgumentException("PrivateChannelCreateRequest가 필요합니다.");
+				}
+				return channelService.create(request);
+		}
 
-  /**
-   * Channel 정보 수정 PATCH /api/channels/{channelId}
-   */
-  @PatchMapping("/{channelId}")
-  public ChannelDto update(
-      @PathVariable UUID channelId,
-      @RequestBody @Valid PublicChannelUpdateRequest request) {
-    return channelService.update(channelId, request);
-  }
+		/**
+		 * Channel 정보 수정 PATCH /api/channels/{channelId}
+		 */
+		@PatchMapping("/{channelId}")
+		public ChannelDto update(
+				@PathVariable UUID channelId,
+				@RequestBody @Valid PublicChannelUpdateRequest request) {
+				return channelService.update(channelId, request);
+		}
 
-  /**
-   * Channel 삭제 DELETE /api/channels/{channelId}
-   */
-  @DeleteMapping("/{channelId}")
-  public ResponseEntity<Void> delete(@PathVariable UUID channelId) {
-    channelService.delete(channelId);
-    return ResponseEntity.noContent().build();
-  }
+		/**
+		 * Channel 삭제 DELETE /api/channels/{channelId}
+		 */
+		@DeleteMapping("/{channelId}")
+		public ResponseEntity<Void> delete(@PathVariable UUID channelId) {
+				channelService.delete(channelId);
+				return ResponseEntity.noContent().build();
+		}
 }

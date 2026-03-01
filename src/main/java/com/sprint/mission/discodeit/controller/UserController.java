@@ -1,6 +1,6 @@
 package com.sprint.mission.discodeit.controller;
 
-import com.sprint.mission.discodeit.dto.data.UserDto;
+import com.sprint.mission.discodeit.dto.datafix.UserDto;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -140,25 +139,25 @@ public class UserController {
 				return ResponseEntity.noContent().build();
 		}
 
-	@GetMapping("/{userId}/userStatus")
-	public ResponseEntity<?> getUserStatus(@PathVariable UUID userId) {
-			try {
-					return ResponseEntity.ok(userStatusService.findByUserId(userId));
-			} catch (Exception e) {
-					log.error("사용자 상태 조회 중 오류 발생: {}", userId, e);
-					return ResponseEntity.notFound().build();
-			}
-	}
+		@GetMapping("/{userId}/userStatus")
+		public ResponseEntity<?> getUserStatus(@PathVariable UUID userId) {
+				try {
+						return ResponseEntity.ok(userStatusService.findByUserId(userId));
+				} catch (Exception e) {
+						log.error("사용자 상태 조회 중 오류 발생: {}", userId, e);
+						return ResponseEntity.notFound().build();
+				}
+		}
 
-	@PatchMapping("/{userId}/userStatus")
-	public ResponseEntity<?> updateUserStatus(
-			@PathVariable UUID userId,
-			@RequestBody(required = false) com.sprint.mission.discodeit.dto.request.UserStatusUpdateRequest request) {
-			try {
-					return ResponseEntity.ok(userStatusService.updateByUserId(userId, request));
-			} catch (Exception e) {
-					log.error("사용자 상태 업데이트 중 오류 발생: {}", userId, e);
-					return ResponseEntity.notFound().build();
-			}
-	}
+		@PatchMapping("/{userId}/userStatus")
+		public ResponseEntity<?> updateUserStatus(
+				@PathVariable UUID userId,
+				@RequestBody(required = false) com.sprint.mission.discodeit.dto.request.UserStatusUpdateRequest request) {
+				try {
+						return ResponseEntity.ok(userStatusService.updateByUserId(userId, request));
+				} catch (Exception e) {
+						log.error("사용자 상태 업데이트 중 오류 발생: {}", userId, e);
+						return ResponseEntity.notFound().build();
+				}
+		}
 }

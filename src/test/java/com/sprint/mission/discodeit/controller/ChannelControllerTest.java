@@ -13,8 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sprint.mission.discodeit.dto.data.ChannelDto;
-import com.sprint.mission.discodeit.dto.data.UserDto;
+import com.sprint.mission.discodeit.dto.datafix.ChannelDto;
+import com.sprint.mission.discodeit.dto.datafix.UserDto;
 import com.sprint.mission.discodeit.dto.request.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
@@ -55,16 +55,16 @@ class ChannelControllerTest {
 						"채널 설명입니다."
 				);
 
-			UUID channelId = UUID.randomUUID();
-			ChannelDto createdChannel = new ChannelDto(
-					channelId,
-					ChannelType.PUBLIC,
-					"test-channel",
-					"채널 설명입니다.",
-					new ArrayList<>(),
-					new ArrayList<>(),
-					Instant.now()
-			);
+				UUID channelId = UUID.randomUUID();
+				ChannelDto createdChannel = new ChannelDto(
+						channelId,
+						ChannelType.PUBLIC,
+						"test-channel",
+						"채널 설명입니다.",
+						new ArrayList<>(),
+						new ArrayList<>(),
+						Instant.now()
+				);
 
 				given(channelService.create(any(PublicChannelCreateRequest.class)))
 						.willReturn(createdChannel);
@@ -110,15 +110,15 @@ class ChannelControllerTest {
 								"user" + userId.toString().substring(0, 5) + "@example.com", null, false));
 				}
 
-			ChannelDto createdChannel = new ChannelDto(
-					channelId,
-					ChannelType.PRIVATE,
-					null,
-					null,
-					participants,
-					participantIds,
-					Instant.now()
-			);
+				ChannelDto createdChannel = new ChannelDto(
+						channelId,
+						ChannelType.PRIVATE,
+						null,
+						null,
+						participants,
+						participantIds,
+						Instant.now()
+				);
 
 				given(channelService.create(any(PrivateChannelCreateRequest.class)))
 						.willReturn(createdChannel);
@@ -144,15 +144,15 @@ class ChannelControllerTest {
 						"업데이트된 채널 설명입니다."
 				);
 
-			ChannelDto updatedChannel = new ChannelDto(
-					channelId,
-					ChannelType.PUBLIC,
-					"updated-channel",
-					"업데이트된 채널 설명입니다.",
-					new ArrayList<>(),
-					new ArrayList<>(),
-					Instant.now()
-			);
+				ChannelDto updatedChannel = new ChannelDto(
+						channelId,
+						ChannelType.PUBLIC,
+						"updated-channel",
+						"업데이트된 채널 설명입니다.",
+						new ArrayList<>(),
+						new ArrayList<>(),
+						Instant.now()
+				);
 
 				given(channelService.update(eq(channelId), any(PublicChannelUpdateRequest.class)))
 						.willReturn(updatedChannel);
@@ -243,26 +243,26 @@ class ChannelControllerTest {
 				UUID channelId1 = UUID.randomUUID();
 				UUID channelId2 = UUID.randomUUID();
 
-			List<ChannelDto> channels = List.of(
-					new ChannelDto(
-							channelId1,
-							ChannelType.PUBLIC,
-							"public-channel",
-							"공개 채널 설명",
-							new ArrayList<>(),
-							new ArrayList<>(),
-							Instant.now()
-					),
-					new ChannelDto(
-							channelId2,
-							ChannelType.PRIVATE,
-							null,
-							null,
-							List.of(new UserDto(userId, "user1", "user1@example.com", null, true)),
-							List.of(userId),
-							Instant.now().minusSeconds(3600)
-					)
-			);
+				List<ChannelDto> channels = List.of(
+						new ChannelDto(
+								channelId1,
+								ChannelType.PUBLIC,
+								"public-channel",
+								"공개 채널 설명",
+								new ArrayList<>(),
+								new ArrayList<>(),
+								Instant.now()
+						),
+						new ChannelDto(
+								channelId2,
+								ChannelType.PRIVATE,
+								null,
+								null,
+								List.of(new UserDto(userId, "user1", "user1@example.com", null, true)),
+								List.of(userId),
+								Instant.now().minusSeconds(3600)
+						)
+				);
 
 				given(channelService.findAllByUserId(userId)).willReturn(channels);
 
