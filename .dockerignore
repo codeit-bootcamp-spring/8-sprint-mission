@@ -1,0 +1,36 @@
+# Gradle build output
+build/
+.gradle/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker files (avoid recursive copy)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Local environment
+.env
+*.env
+
+# Local storage (runtime data)
+storage/
+
+# Test reports
+test-results/
+reports/
+
+# Logs
+*.log
+logs/
