@@ -21,7 +21,7 @@ jobs:
       image: ${{ steps.build-image.outputs.image }}
 
     steps:
-      - name: Chceckout
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
