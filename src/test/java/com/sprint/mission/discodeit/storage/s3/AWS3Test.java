@@ -6,7 +6,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Properties;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -19,6 +21,7 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
+@Slf4j
 public class AWS3Test {
 
   private S3Client s3Client;
@@ -63,16 +66,18 @@ public class AWS3Test {
   }
 
   @Test
+  @DisplayName("S3 업로드 테스트: 지정된 경로(key)로 문자열 데이터를 객체로 저장할 수 있다.")
   void uploadTest() {
     PutObjectRequest putObjectRequest = PutObjectRequest.builder()
         .bucket(bucketName)
         .key(Test_FILE_KEY)
         .build();
     s3Client.putObject(putObjectRequest, RequestBody.fromString("Hello, Discodeit S3 Test"));
-    System.out.println("업로드 성공: " + Test_FILE_KEY);
+    log.info("S3 객체 업로드 완료. Key: {}", Test_FILE_KEY);
   }
 
   @Test
+  @DisplayName("S3 다운로드: 버킷에 저장된 객체를 조회하여 업로드된 내용과 일치하는지 확인 가능하다.")
   void downloadTest() {
     GetObjectRequest getObjectRequest = GetObjectRequest.builder()
         .bucket(bucketName)
@@ -80,12 +85,13 @@ public class AWS3Test {
         .build();
 
     String downloadText = s3Client.getObjectAsBytes(getObjectRequest).asUtf8String();
-    System.out.println("다운로드 성공: " + downloadText);
+    log.info("S3 객체 다운로드 완료. downloadText: {}", downloadText);
 
-    assertNotNull(downloadText);
+    assertNotNull(downloadText, "다운로드 된 텍스트는 null이 될 수 없습니다.");
   }
 
   @Test
+  @DisplayName("Presigned URL 생성: 특정 객체에 대해 10분간 유효한 임시 접근 URL을 생성할 수 있다.")
   void generatePresignedUrlTest() {
     GetObjectRequest getObjectRequest = GetObjectRequest.builder()
         .bucket(bucketName)
@@ -101,8 +107,8 @@ public class AWS3Test {
         presignRequest);
     String url = presignedGetObjectRequest.url().toString();
 
-    System.out.println("Presigned URL 생성 성공: " + url);
+    log.info("Presigned URL 생성 성공. url: {}", url);
 
-    assertNotNull(url);
+    assertNotNull(url, "생성된 Presigned URL은 null이 될 수 없습니다.");
   }
 }
