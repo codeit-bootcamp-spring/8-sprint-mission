@@ -28,21 +28,22 @@ public class AWS3Test {
   private S3Presigner s3Presigner;
   private String bucketName;
   // 객체 키
-  private final String Test_FILE_KEY = "test-folder/hello.txt";
+  private final String TEST_FILE_KEY = "test-folder/hello.txt";
 
   @BeforeEach
   void setUp() throws IOException {
+    // 환경 변수 우선 로드
     String accessKey = System.getenv("AWS_S3_ACCESS_KEY");
     String secretKey = System.getenv("AWS_S3_SECRET_KEY");
     String regionStr = System.getenv("AWS_S3_REGION");
     String bucketName = System.getenv("AWS_S3_BUCKET");
 
+    // 환경 변수가 없는 경우 .env 로드
     if (accessKey == null || secretKey == null) {
       Properties properties = new Properties();
       try (FileInputStream fis = new FileInputStream(".env")) {
         properties.load(fis);
       }
-
       accessKey = properties.getProperty("AWS_S3_ACCESS_KEY");
       secretKey = properties.getProperty("AWS_S3_SECRET_KEY");
       regionStr = properties.getProperty("AWS_S3_REGION");
@@ -66,22 +67,22 @@ public class AWS3Test {
   }
 
   @Test
-  @DisplayName("S3 업로드 테스트: 지정된 경로(key)로 문자열 데이터를 객체로 저장할 수 있다.")
-  void uploadTest() {
+  @DisplayName("upload: 지정된 경로(key)로 문자열 데이터를 객체로 저장할 수 있다.")
+  void upload() {
     PutObjectRequest putObjectRequest = PutObjectRequest.builder()
         .bucket(bucketName)
-        .key(Test_FILE_KEY)
+        .key(TEST_FILE_KEY)
         .build();
     s3Client.putObject(putObjectRequest, RequestBody.fromString("Hello, Discodeit S3 Test"));
-    log.info("S3 객체 업로드 완료. Key: {}", Test_FILE_KEY);
+    log.info("S3 객체 업로드 완료. Key: {}", TEST_FILE_KEY);
   }
 
   @Test
-  @DisplayName("S3 다운로드: 버킷에 저장된 객체를 조회하여 업로드된 내용과 일치하는지 확인 가능하다.")
-  void downloadTest() {
+  @DisplayName("download: 버킷에 저장된 객체를 조회하여 업로드된 내용과 일치하는지 확인 가능하다.")
+  void download() {
     GetObjectRequest getObjectRequest = GetObjectRequest.builder()
         .bucket(bucketName)
-        .key(Test_FILE_KEY)
+        .key(TEST_FILE_KEY)
         .build();
 
     String downloadText = s3Client.getObjectAsBytes(getObjectRequest).asUtf8String();
@@ -91,11 +92,11 @@ public class AWS3Test {
   }
 
   @Test
-  @DisplayName("Presigned URL 생성: 특정 객체에 대해 10분간 유효한 임시 접근 URL을 생성할 수 있다.")
-  void generatePresignedUrlTest() {
+  @DisplayName("generatePresignedUrl: 특정 객체에 대해 10분간 유효한 임시 접근 URL을 생성할 수 있다.")
+  void generatePresignedUrl() {
     GetObjectRequest getObjectRequest = GetObjectRequest.builder()
         .bucket(bucketName)
-        .key(Test_FILE_KEY)
+        .key(TEST_FILE_KEY)
         .build();
 
     GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
