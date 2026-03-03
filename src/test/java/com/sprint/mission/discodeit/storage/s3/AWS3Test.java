@@ -36,7 +36,7 @@ public class AWS3Test {
     String accessKey = System.getenv("AWS_S3_ACCESS_KEY");
     String secretKey = System.getenv("AWS_S3_SECRET_KEY");
     String regionStr = System.getenv("AWS_S3_REGION");
-    String bucketName = System.getenv("AWS_S3_BUCKET");
+    this.bucketName = System.getenv("AWS_S3_BUCKET");
 
     // 환경 변수가 없는 경우 .env 로드
     if (accessKey == null || secretKey == null) {
@@ -47,7 +47,7 @@ public class AWS3Test {
       accessKey = properties.getProperty("AWS_S3_ACCESS_KEY");
       secretKey = properties.getProperty("AWS_S3_SECRET_KEY");
       regionStr = properties.getProperty("AWS_S3_REGION");
-      bucketName = properties.getProperty("AWS_S3_BUCKET");
+      this.bucketName = properties.getProperty("AWS_S3_BUCKET");
     }
 
     AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
@@ -62,8 +62,6 @@ public class AWS3Test {
         .region(region)
         .credentialsProvider(StaticCredentialsProvider.create(credentials))
         .build();
-
-    this.bucketName = bucketName;
   }
 
   @Test
