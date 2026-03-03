@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -109,5 +110,16 @@ public class AWS3Test {
     log.info("Presigned URL 생성 성공. url: {}", url);
 
     assertNotNull(url, "생성된 Presigned URL은 null이 될 수 없습니다.");
+  }
+
+  @AfterEach
+  void tearDown() {
+    if (s3Client != null) {
+      s3Client.close();
+    }
+    if (s3Presigner != null) {
+      s3Presigner.close();
+    }
+    log.info("S3 테스트 리소스 해제 완료");
   }
 }
