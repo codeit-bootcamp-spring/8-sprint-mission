@@ -16,28 +16,14 @@ RUN ./gradlew build -x test --no-daemon
 FROM amazoncorretto:17-alpine
 WORKDIR /app
 
-ENV PROJECT_NAME=discodeit
-ENV PROJECT_VERSION=1.2-M8
+ARG PROJECT_NAME=discodeit
+ARG PROJECT_VERSION=1.2-M8
+
+ENV PROJECT_NAME=${PROJECT_NAME}
+ENV PROJECT_VERSION=${PROJECT_VERSION}
 ENV JVM_OPTS=""
 
-COPY --from=builder /app/build/libs/*.jar $PROJECT_NAME-$PROJECT_VERSION.jar
-
+COPY --from=builder /app/build/libs/${PROJECT_NAME}-${PROJECT_VERSION}.jar ./app.jar
 EXPOSE 80
 
-ENTRYPOINT ["sh", "-c", "java $JVM_OPTS -jar $PROJECT_NAME-$PROJECT_VERSION.jar"]
-
-# ===================================================================
-# 빌드 및 실행 예시:
-# 
-# 1. 애플리케이션 빌드:
-# ./gradlew build
-# 
-# 2. Docker 이미지 빌드:
-# docker build -t menu-app:basic .
-# 
-# 3. 컨테이너 실행:
-# docker run -p 8888:8080 menu-app:basic
-# 
-# 4. 애플리케이션 접속 확인:
-# curl http://localhost:8888/actuator/health
-# =================================================================== 
+ENTRYPOINT ["sh", "-c", "java $JVM_OPTS -jar app.jar"]
