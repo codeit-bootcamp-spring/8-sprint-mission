@@ -65,7 +65,7 @@ public class S3BinaryContentStorageTest {
     BinaryContentDto binaryContentDto = new BinaryContentDto(uuid, "hello.txt", 10L, "text/plain");
 
     // when
-    ResponseEntity<Void> response = s3BinaryContentStorage.download(binaryContentDto);
+    ResponseEntity<?> response = s3BinaryContentStorage.download(binaryContentDto);
 
     // then
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
@@ -78,7 +78,7 @@ public class S3BinaryContentStorageTest {
 
     // given
     BinaryContentDto binaryContentDto = new BinaryContentDto(uuid, "hello.txt", 10L, "text/plain");
-    ResponseEntity<Void> response = s3BinaryContentStorage.download(binaryContentDto);
+    ResponseEntity<?> response = s3BinaryContentStorage.download(binaryContentDto);
 
     // when
     String url = response.getHeaders().getLocation().toString();
