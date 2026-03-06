@@ -16,6 +16,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -114,12 +115,27 @@ public class AWS3Test {
 
   @AfterEach
   void tearDown() {
-    if (s3Client != null) {
-      s3Client.close();
+    try {
+      if (s3Client != null) {
+        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+            .bucket(bucketName)
+            .key(TEST_FILE_KEY)
+            .build();
+
+        s3Client.deleteObject(deleteObjectRequest);
+        log.info("S3 테스트 객체 삭제 완료. Key: {}", TEST_FILE_KEY);
+      }
+    } catch (Exception e) {
+      log.error("S3 테스트 객체 삭제 중 오류 발생: {}", e.getMessage());
+    } finally {
+      // 리소스 해제
+      if (s3Client != null) {
+        s3Client.close();
+      }
+      if (s3Presigner != null) {
+        s3Presigner.close();
+      }
+      log.info("S3 클린업 및 리소스 해제 완료");
     }
-    if (s3Presigner != null) {
-      s3Presigner.close();
-    }
-    log.info("S3 테스트 리소스 해제 완료");
   }
 }
