@@ -2,10 +2,11 @@ name: Deploy to AWS ECS Discodeit
 
 on:
   push:
-    branches: [ release ]
+    branches: [ "이재준-sprint8" ]
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
+  ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
   ECR_REPOSITORY_URI: ${{ vars.ECR_REPOSITORY_URI }}
   ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
   ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
@@ -20,7 +21,7 @@ jobs:
       image: ${{ steps.build-image.outputs.image }}
 
     steps:
-      - name: Chceckout
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -34,7 +35,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: us-east-1 # Amazon ECR Public 인증은 us-east-1
 
       - name: Login to Amazon ECR Public
         id: login-ecr-public
@@ -45,8 +46,6 @@ jobs:
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
-          ECR_REGISTRY: public.ecr.aws/o2t0o1h5
-          ECR_REPOSITORY: discodeit
           IMAGE_TAG: ${{ github.sha }}
         run: |
           chmod +x ./gradlew
@@ -94,7 +93,7 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICES }}
+          service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
 
