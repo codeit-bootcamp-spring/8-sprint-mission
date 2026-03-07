@@ -1,0 +1,32 @@
+services:
+  # 1. PostgreSQL 서비스
+  db:
+    image: postgres:17
+    container_name: discodeit-db
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data  # DB 데이터 유지
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql   # schema.sql 자동 실행용
+    ports:
+      - "5432:5432"
+
+  # 2. 애플리케이션 서비스
+  app:
+    build: .  # 로컬 Dockerfile 활용
+    container_name: discodeit-app
+    depends_on:
+      - db   # DB가 먼저 켜져야 함
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: ${APP_PROFILE}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./binary-storage:/app/binary-storage # 파일 데이터 유지
+    ports:
+      - "8081:80"

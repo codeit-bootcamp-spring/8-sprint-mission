@@ -3,13 +3,9 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-.kotlin
 
 ### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+.idea
 *.iws
 *.iml
 *.ipr
@@ -42,8 +38,21 @@ bin/
 ### Mac OS ###
 .DS_Store
 
-.idea/
-*.imi
+### Discodeit ###
+.discodeit
 
+### env ###
+.env
+
+### 숨김 파일 ###
 *.ser
 *.log
+.logs/
+storage_data/
+/data/
+file-data-map/
+postgres_data/
+
+### 예외 처리 ###
+!.gitignore
+!.dockerignore

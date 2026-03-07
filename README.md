@@ -1,0 +1,1 @@
+[![codecov](https://codecov.io/github/idktomorrow/8-sprint-mission/graph/badge.svg?token=O3KQM86HM2)](https://codecov.io/github/idktomorrow/8-sprint-mission)

@@ -1,0 +1,25 @@
+# Gradle 관련 제외
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# 인텔리제이 및 설정 파일 제외
+.idea/
+*.iml
+out/
+bin/
+
+# 로그 및 임시 데이터 제외
+.discodeit/
+.logs/
+*.log
+*.ser
+
+# 로컬 데이터 폴더
+postgres_data/
+binary-storage/
+
+# 도커 관련 파일 자체 제외
+.env
+.git
+.gitignore

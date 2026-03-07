@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Auth", description = "인증 API")
@@ -32,6 +31,6 @@ public interface AuthApi {
       )
   })
   ResponseEntity<UserDto> login(
-      @Parameter(description = "로그인 정보") @Valid LoginRequest loginRequest
+      @Parameter(description = "로그인 정보") LoginRequest loginRequest
   );
 } 

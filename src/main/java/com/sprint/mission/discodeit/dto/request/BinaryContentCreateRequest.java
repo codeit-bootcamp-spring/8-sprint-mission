@@ -1,21 +1,18 @@
 package com.sprint.mission.discodeit.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 public record BinaryContentCreateRequest(
-
-    @NotBlank(message = "파일명은 필수입니다.")
+    @NotBlank(message = "파일 이름은 필수입니다")
+    @Size(max = 255, message = "파일 이름은 255자 이하여야 합니다")
     String fileName,
-
-    @NotBlank(message = "파일 타입은 필수입니다.")
+    
+    @NotBlank(message = "콘텐츠 타입은 필수입니다")
     String contentType,
-
-    //notnull은  " " 공백은 통과시킴 (null차단)
-    //notempty는 null은 통과시킴 (크기 0차단)
-    @NotNull(message = "파일 데이터는 null일 수 없습니다.")
-    @NotEmpty(message = "파일 내용이 비어있습니다.")
+    
+    @NotNull(message = "파일 데이터는 필수입니다")
     byte[] bytes
 ) {
 

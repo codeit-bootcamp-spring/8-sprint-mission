@@ -1,44 +1,42 @@
 spring:
-  profiles:
-    active: dev
   application:
     name: discodeit
   servlet:
     multipart:
-      max-file-size: 10MB # 파일 하나의 최대 크기
-      max-request-size: 30MB  # 한 번에 최대 업로드 가능 용량
+      maxFileSize: 10MB # 파일 하나의 최대 크기
+      maxRequestSize: 30MB  # 한 번에 최대 업로드 가능 용량
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/discodeit
-    username: discodeit_user
-    password: discodeit1234
   jpa:
     hibernate:
       ddl-auto: validate
-    properties:
-      hibernate:
-        format_sql: true
-    #        default_batch_fetch_size: 100
     open-in-view: false
+  profiles:
+    active:
+      - dev
+  boot:
+    admin:
+      client:
+        instance:
+          name: discodeit
 
-#Actuator 노출 설정 추가
 management:
   endpoints:
     web:
       exposure:
-        include: "health,info,metrics,loggers" # 미션 요구사항
-  info:
-    env:
-      enabled: true
+        include: health,info,metrics,loggers
+  endpoint:
+    health:
+      show-details: always
 
-#Actuator info 상세 정보 추가 (변수를 활용해 자동 동기화)
 info:
-  app:
-    name: Discodeit
-    version: 1.7.0
-    java-version: 17
-    spring-boot-version: 3.4.0
-  settings:
+  name: Discodeit
+  version: 1.7.0
+  java:
+    version: 17
+  spring-boot:
+    version: 3.4.0
+  config:
     datasource:
       url: ${spring.datasource.url}
       driver-class-name: ${spring.datasource.driver-class-name}
@@ -48,16 +46,21 @@ info:
       type: ${discodeit.storage.type}
       path: ${discodeit.storage.local.root-path}
     multipart:
-      max-file-size: ${spring.servlet.multipart.max-file-size}
-      max-request-size: ${spring.servlet.multipart.max-request-size}
-
-logging:
-  level:
-    org.hibernate.SQL: debug
-    org.hibernate.orm.jdbc.bind: trace
+      max-file-size: ${spring.servlet.multipart.maxFileSize}
+      max-request-size: ${spring.servlet.multipart.maxRequestSize}
 
 discodeit:
   storage:
-    type: local
+    type: ${STORAGE_TYPE:local}
     local:
-      root-path: .discodeit/storage
+      root-path: ${STORAGE_LOCAL_ROOT_PATH:.discodeit/storage}
+    s3:
+      access-key: ${AWS_S3_ACCESS_KEY}
+      secret-key: ${AWS_S3_SECRET_KEY}
+      region: ${AWS_S3_REGION}
+      bucket: ${AWS_S3_BUCKET}
+      presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600}  # (기본값: 10분)
+
+logging:
+  level:
+    root: info

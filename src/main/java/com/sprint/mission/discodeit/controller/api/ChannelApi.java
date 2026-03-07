@@ -4,7 +4,6 @@ import com.sprint.mission.discodeit.dto.data.ChannelDto;
 import com.sprint.mission.discodeit.dto.request.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
-import com.sprint.mission.discodeit.dto.data.ChannelDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -14,11 +13,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
-
 import java.util.List;
 import java.util.UUID;
+import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Channel", description = "Channel API")
 public interface ChannelApi {
@@ -31,7 +28,7 @@ public interface ChannelApi {
       )
   })
   ResponseEntity<ChannelDto> create(
-      @Parameter(description = "Public Channel 생성 정보") @Valid PublicChannelCreateRequest request
+      @Parameter(description = "Public Channel 생성 정보") PublicChannelCreateRequest request
   );
 
   @Operation(summary = "Private Channel 생성")
@@ -42,7 +39,7 @@ public interface ChannelApi {
       )
   })
   ResponseEntity<ChannelDto> create(
-      @Parameter(description = "Private Channel 생성 정보") @Valid PrivateChannelCreateRequest request
+      @Parameter(description = "Private Channel 생성 정보") PrivateChannelCreateRequest request
   );
 
   @Operation(summary = "Channel 정보 수정")
@@ -62,7 +59,7 @@ public interface ChannelApi {
   })
   ResponseEntity<ChannelDto> update(
       @Parameter(description = "수정할 Channel ID") UUID channelId,
-      @Parameter(description = "수정할 Channel 정보") @Valid PublicChannelUpdateRequest request
+      @Parameter(description = "수정할 Channel 정보") PublicChannelUpdateRequest request
   );
 
   @Operation(summary = "Channel 삭제")
