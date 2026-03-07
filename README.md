@@ -1,7 +1,8 @@
 # Discodeit
 
-> Spring Boot 기반의 **채팅 서비스 백엔드 학습 프로젝트**  
-> JPA 기반의 미션 프로젝트
+> Spring Boot 기반의 **채팅 서비스 백엔드 학습 프로젝트**
+
+[![codecov](https://codecov.io/gh/Junkov0/8-sprint-mission/branch/sprint-8-%EC%B5%9C%EC%A4%80%EC%98%81/graph/badge.svg?token=HMJPN1YT2F)](https://codecov.io/gh/Junkov0/8-sprint-mission)
 
 ---
 

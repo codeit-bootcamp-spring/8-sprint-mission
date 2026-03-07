@@ -2,25 +2,15 @@ spring:
   application:
     name: discodeit
 
-  boot:
-    admin:
-      client:
-        instance:
-          name: discodeit
-
   servlet:
     multipart:
       max-file-size: 10MB       # 파일 1개 최대
       max-request-size: 20MB    # 요청 전체(여러 파일 합) 최대
   datasource:
     url: jdbc:postgresql://localhost:5432/discodeit?currentSchema=discodeit_schema
-    username: discodeit_user
-    password: discodeit1234
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-  sql:
-    init:
-      mode: always
-
   sql:
     init:
       mode: always
@@ -45,9 +35,10 @@ management:
       exposure:
         # 외부로 노출할 엔드포인트 지정
         include: health,info,metrics,loggers
-  info:
-    env:
-      enabled: true  # 해당 설정으로 ${...} 변수를 info에서 읽을 수 있다.
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: always
 
 # 애플리케이션 및 주요 설정 정보
 info:
@@ -72,6 +63,12 @@ info:
 
 discodeit:
   storage:
-    type: local
+    type: ${STORAGE_TYPE:local} # s3로 설정 시 S3 모드 활성화
+    s3:
+      access-key: ${AWS_S3_ACCESS_KEY}
+      secret-key: ${AWS_S3_SECRET_KEY}
+      region: ${AWS_S3_REGION}
+      bucket: ${AWS_S3_BUCKET}
+      presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600}
     local:
       root-path: C:\myWs\uploadedFiles

@@ -1,0 +1,47 @@
+services:
+  # 데이터베이스 서비스
+  db:
+    image: postgres:17-alpine
+    container_name: discodeit-db
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      # 데이터 유지: (실제 데이터가 저장되는 볼륨)
+      - postgres_data:/var/lib/postgresql/data
+      # 자동 실행: 스프링 프로젝트의 schema.sql, DB 초기화 경로로 연결
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 애플리케이션 서비스
+  app:
+    build: .
+    container_name: discodeit-app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8081:80"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE}
+      STORAGE_TYPE: ${STORAGE_TYPE}
+      AWS_S3_ACCESS_KEY: ${AWS_S3_ACCESS_KEY}
+      AWS_S3_SECRET_KEY: ${AWS_S3_SECRET_KEY}
+      AWS_S3_REGION: ${AWS_S3_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      # schema.sql에서 정의한 스키마(discodeit_schema)를 지정
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}?currentSchema=discodeit_schema
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      JVM_OPTS: ${JVM_OPTS}
+    volumes:
+      - app_uploads:/app/uploadedFiles
+
+volumes:
+  postgres_data:
+  app_uploads:

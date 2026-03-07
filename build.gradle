@@ -66,8 +66,10 @@ dependencies {
     // actuator 의존성
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
-    // Spring Boot Admin Client
-    implementation 'de.codecentric:spring-boot-admin-starter-client:3.4.5'
+    // AWS SDK 버전 관리를 위한 BOM
+    implementation platform('software.amazon.awssdk:bom:2.21.29')
+    implementation 'software.amazon.awssdk:s3'
+    implementation 'software.amazon.awssdk:netty-nio-client'
 }
 
 tasks.named('test') {

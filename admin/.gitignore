@@ -1,10 +1,3 @@
-### Security / Environment ###
-.env
-.env.local
-.env.development
-.env.production
-discodeit.env
-
 HELP.md
 .gradle
 build/
@@ -25,7 +18,6 @@ bin/
 !**/src/test/**/bin/
 
 ### IntelliJ IDEA ###
-.discodeit/
 .idea
 *.iws
 *.iml
@@ -43,7 +35,3 @@ out/
 
 ### VS Code ###
 .vscode/
-
-### log ###
-*.log
-.logs/
