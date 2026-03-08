@@ -1,10 +1,12 @@
 package com.sprint.mission.discodeit.storage.s3;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Properties;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,35 +23,53 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequ
 
 public class AWSS3Test {
 
-		private String bucketName;
-		private S3Client s3Client;
-		private S3Presigner s3Presigner;
+    private String bucketName;
+    private S3Client s3Client;
+    private S3Presigner s3Presigner;
 
-		@BeforeEach
-		void setUp() throws IOException {
-				Properties props = new Properties();
-				try (FileInputStream fis = new FileInputStream(".env")) {
-						props.load(fis);
-				}
+    @BeforeEach
+    void setUp() throws IOException {
+        String accessKey;
+        String secretKey;
+        String regionStr;
 
-				String accessKey = props.getProperty("AWS_S3_ACCESS_KEY").trim();
-				String secretKey = props.getProperty("AWS_S3_SECRET_KEY").trim();
-				String regionStr = props.getProperty("AWS_S3_REGION").trim();
-				this.bucketName = props.getProperty("AWS_S3_BUCKET").trim();
+        // CI: 환경 변수 사용 (GitHub Secrets → AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, S3_BUCKET_NAME)
+        if (System.getenv("AWS_ACCESS_KEY_ID") != null && System.getenv("AWS_SECRET_ACCESS_KEY") != null) {
+            accessKey = System.getenv("AWS_ACCESS_KEY_ID").trim();
+            secretKey = System.getenv("AWS_SECRET_ACCESS_KEY").trim();
+            regionStr = (System.getenv("AWS_REGION") != null ? System.getenv("AWS_REGION") : System.getenv("AWS_DEFAULT_REGION") != null ? System.getenv("AWS_DEFAULT_REGION") : "ap-northeast-2").trim();
+            this.bucketName = (System.getenv("S3_BUCKET_NAME") != null ? System.getenv("S3_BUCKET_NAME") : System.getenv("AWS_S3_BUCKET")).trim();
+        } else if (new File(".env").exists()) {
+            // 로컬: .env 파일 사용
+            Properties props = new Properties();
+            try (FileInputStream fis = new FileInputStream(".env")) {
+                props.load(fis);
+            }
+            accessKey = props.getProperty("AWS_S3_ACCESS_KEY", "").trim();
+            secretKey = props.getProperty("AWS_S3_SECRET_KEY", "").trim();
+            regionStr = props.getProperty("AWS_S3_REGION", "ap-northeast-2").trim();
+            this.bucketName = props.getProperty("AWS_S3_BUCKET", "").trim();
+        } else {
+            Assumptions.assumeTrue(false, "AWS credentials not found: set env vars or .env file");
+            return;
+        }
 
-				AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
-				Region region = Region.of(regionStr);
+        Assumptions.assumeTrue(accessKey != null && !accessKey.isEmpty() && secretKey != null && !secretKey.isEmpty(),
+                "AWS credentials are empty - skip S3 tests");
 
-				this.s3Client = S3Client.builder()
-						.region(region)
-						.credentialsProvider(StaticCredentialsProvider.create(credentials))
-						.build();
+        AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
+        Region region = Region.of(regionStr);
 
-				this.s3Presigner = S3Presigner.builder()
-						.region(region)
-						.credentialsProvider(StaticCredentialsProvider.create(credentials))
-						.build();
-		}
+        this.s3Client = S3Client.builder()
+                .region(region)
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .build();
+
+        this.s3Presigner = S3Presigner.builder()
+                .region(region)
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .build();
+    }
 
 		@Test
 		@DisplayName("S3 파일 업로드 테스트")
