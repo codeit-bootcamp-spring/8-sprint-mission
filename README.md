@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/seungwon00/8-sprint-mission/graph/badge.svg?token=YOUR_TOKEN&branch=현승원-sprint8-v2)](https://codecov.io/gh/seungwon00/8-sprint-mission/tree/현승원-sprint8-v2)
+[![codecov](https://codecov.io/gh/seungwon00/8-sprint-mission/graph/badge.svg?token=4e21ef2d-2089-4994-a02b-de66e9f5f36e&branch=%ED%98%84%EC%8A%B9%EC%9B%90-sprint8-v2)](https://codecov.io/gh/seungwon00/8-sprint-mission)
 
 # 한글 인코딩 문제 해결 가이드
 
