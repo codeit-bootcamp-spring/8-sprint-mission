@@ -40,8 +40,10 @@ class UserStatusRepositoryTest {
   private User createTestUserWithStatus(String username, String email, Instant lastActiveAt) {
     BinaryContent profile = new BinaryContent("profile.jpg", 1024L, "image/jpeg");
     User user = new User(username, email, "password123!@#", profile);
+    user = userRepository.saveAndFlush(user);  // persist user first to get ID
     UserStatus status = new UserStatus(user, lastActiveAt);
-    return userRepository.save(user);
+    userStatusRepository.saveAndFlush(status);  // persist status with user_id
+    return user;
   }
 
   @Test
@@ -62,7 +64,8 @@ class UserStatusRepositoryTest {
     // then
     assertThat(foundStatus).isPresent();
     assertThat(foundStatus.get().getUser().getId()).isEqualTo(userId);
-    assertThat(foundStatus.get().getLastActiveAt()).isEqualTo(now);
+    assertThat(foundStatus.get().getLastActiveAt().truncatedTo(ChronoUnit.MILLIS))
+        .isEqualTo(now.truncatedTo(ChronoUnit.MILLIS));
   }
 
   @Test

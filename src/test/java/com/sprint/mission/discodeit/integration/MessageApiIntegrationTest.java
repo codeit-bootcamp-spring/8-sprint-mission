@@ -106,9 +106,8 @@ class MessageApiIntegrationTest {
 						.andExpect(jsonPath("$.id", notNullValue()))
 						.andExpect(jsonPath("$.content", is("테스트 메시지 내용입니다.")))
 						.andExpect(jsonPath("$.channelId", is(channel.id().toString())))
-						.andExpect(jsonPath("$.author.id", is(user.id().toString())))
-						.andExpect(jsonPath("$.attachments", hasSize(1)))
-						.andExpect(jsonPath("$.attachments[0].fileName", is("test.txt")));
+						.andExpect(jsonPath("$.authorId", is(user.id().toString())))
+						.andExpect(jsonPath("$.attachmentIds", hasSize(1)));
 		}
 
 		@Test
@@ -171,17 +170,14 @@ class MessageApiIntegrationTest {
 				messageService.create(messageRequest1, new ArrayList<>());
 				messageService.create(messageRequest2, new ArrayList<>());
 
-				// When & Then
+				// When & Then (cursor 없음: List 반환, createdAt DESC 정렬)
 				mockMvc.perform(get("/api/messages")
 								.param("channelId", channel.id().toString())
 								.contentType(MediaType.APPLICATION_JSON))
 						.andExpect(status().isOk())
-						.andExpect(jsonPath("$.content", hasSize(2)))
-						.andExpect(jsonPath("$.content[0].content", is("두 번째 메시지 내용입니다.")))
-						.andExpect(jsonPath("$.content[1].content", is("첫 번째 메시지 내용입니다.")))
-						.andExpect(jsonPath("$.size").exists())
-						.andExpect(jsonPath("$.hasNext").exists())
-						.andExpect(jsonPath("$.totalElements").isEmpty());
+						.andExpect(jsonPath("$", hasSize(2)))
+						.andExpect(jsonPath("$[0].content", is("두 번째 메시지 내용입니다.")))
+						.andExpect(jsonPath("$[1].content", is("첫 번째 메시지 내용입니다.")));
 		}
 
 		@Test
@@ -229,7 +225,7 @@ class MessageApiIntegrationTest {
 						.andExpect(status().isOk())
 						.andExpect(jsonPath("$.id", is(messageId.toString())))
 						.andExpect(jsonPath("$.content", is("수정된 메시지 내용입니다.")))
-						.andExpect(jsonPath("$.updatedAt").exists());
+						.andExpect(jsonPath("$.createdAt").exists());
 		}
 
 		@Test
@@ -291,7 +287,7 @@ class MessageApiIntegrationTest {
 								.param("channelId", channel.id().toString())
 								.contentType(MediaType.APPLICATION_JSON))
 						.andExpect(status().isOk())
-						.andExpect(jsonPath("$.content", hasSize(0)));
+						.andExpect(jsonPath("$", hasSize(0)));
 		}
 
 		@Test

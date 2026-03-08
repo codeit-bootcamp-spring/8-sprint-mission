@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.dto.request.ReadStatusUpdateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.exception.readstatus.DuplicateReadStatusException;
 import com.sprint.mission.discodeit.mapper.ReadStatusMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
@@ -44,11 +45,13 @@ public class BasicReadStatusService implements ReadStatusService {
 
 				ReadStatus readStatus = readStatusRepository.findByUserIdAndChannelId(user.getId(),
 								channel.getId())
-						.orElseGet(() -> {
-								Instant lastReadAt = request.lastReadAt();
-								return readStatusRepository.save(new ReadStatus(user, channel, lastReadAt));
-						});
+						.orElse(null);
 
+				if (readStatus != null) {
+						throw DuplicateReadStatusException.forUserIdAndChannelId(user.getId(), channel.getId());
+				}
+
+				readStatus = readStatusRepository.save(new ReadStatus(user, channel, request.lastReadAt()));
 				return readStatusMapper.toDto(readStatus);
 		}
 

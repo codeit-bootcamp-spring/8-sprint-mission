@@ -145,7 +145,7 @@ public class GlobalExceptionHandler {
     return switch (code) {
       case USER_NOT_FOUND, CHANNEL_NOT_FOUND, MESSAGE_NOT_FOUND, BINARY_CONTENT_NOT_FOUND,
            READ_STATUS_NOT_FOUND, USER_STATUS_NOT_FOUND -> HttpStatus.NOT_FOUND.value();
-      case DUPLICATE_USER, USER_STATUS_ALREADY_EXISTS -> HttpStatus.CONFLICT.value();
+      case DUPLICATE_USER, USER_STATUS_ALREADY_EXISTS, READ_STATUS_ALREADY_EXISTS -> HttpStatus.CONFLICT.value();
       case PRIVATE_CHANNEL_UPDATE, REQUEST_REQUIRED -> HttpStatus.BAD_REQUEST.value();
       case AUTH_FAILED -> HttpStatus.UNAUTHORIZED.value();
     };

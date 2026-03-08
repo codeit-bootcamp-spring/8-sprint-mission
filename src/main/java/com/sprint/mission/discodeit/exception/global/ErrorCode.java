@@ -12,6 +12,7 @@ public enum ErrorCode {
   MESSAGE_NOT_FOUND("메시지를 찾을 수 없습니다."),
   BINARY_CONTENT_NOT_FOUND("파일을 찾을 수 없습니다."),
   READ_STATUS_NOT_FOUND("읽음 상태를 찾을 수 없습니다."),
+  READ_STATUS_ALREADY_EXISTS("이미 해당 사용자와 채널에 대한 읽음 상태가 존재합니다."),
   USER_STATUS_NOT_FOUND("사용자 상태를 찾을 수 없습니다."),
   USER_STATUS_ALREADY_EXISTS("이미 사용자 상태가 존재합니다."),
   AUTH_FAILED("인증에 실패했습니다."),

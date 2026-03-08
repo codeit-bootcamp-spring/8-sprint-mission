@@ -111,7 +111,7 @@ class UserControllerTest {
 						.andExpect(jsonPath("$.id").value(userId.toString()))
 						.andExpect(jsonPath("$.username").value("testuser"))
 						.andExpect(jsonPath("$.email").value("test@example.com"))
-						.andExpect(jsonPath("$.profile.fileName").value("profile.jpg"))
+						.andExpect(jsonPath("$.profileId").value(profileDto.id().toString()))
 						.andExpect(jsonPath("$.online").value(false));
 		}
 
@@ -234,7 +234,7 @@ class UserControllerTest {
 						.andExpect(jsonPath("$.id").value(userId.toString()))
 						.andExpect(jsonPath("$.username").value("updateduser"))
 						.andExpect(jsonPath("$.email").value("updated@example.com"))
-						.andExpect(jsonPath("$.profile.fileName").value("updated-profile.jpg"))
+						.andExpect(jsonPath("$.profileId").value(profileDto.id().toString()))
 						.andExpect(jsonPath("$.online").value(true));
 		}
 

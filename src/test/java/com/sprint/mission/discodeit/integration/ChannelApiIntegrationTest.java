@@ -78,8 +78,8 @@ class ChannelApiIntegrationTest {
 		void createPublicChannel_Failure_InvalidRequest() throws Exception {
 				// Given
 				PublicChannelCreateRequest invalidRequest = new PublicChannelCreateRequest(
-						"a", // 최소 길이 위반
-						"테스트 채널 설명입니다."
+						"", // @NotBlank 위반
+						"x".repeat(501) // @Size(max=500) 위반
 				);
 
 				String requestBody = objectMapper.writeValueAsString(invalidRequest);

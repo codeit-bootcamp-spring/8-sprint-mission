@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.service.ChannelService;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -40,28 +41,28 @@ public class ChannelController {
 		 * Public Channel 생성 POST /api/channels/public
 		 */
 		@PostMapping(value = "/public", consumes = {"application/json", "multipart/form-data"})
-		public ChannelDto createPublic(
+		public ResponseEntity<ChannelDto> createPublic(
 				@RequestPart(value = "channelCreateRequest", required = false) @Valid PublicChannelCreateRequest requestPart,
 				@RequestBody(required = false) @Valid PublicChannelCreateRequest requestBody) {
 				PublicChannelCreateRequest request = requestPart != null ? requestPart : requestBody;
 				if (request == null) {
 						throw new IllegalArgumentException("PublicChannelCreateRequest가 필요합니다.");
 				}
-				return channelService.create(request);
+				return ResponseEntity.status(HttpStatus.CREATED).body(channelService.create(request));
 		}
 
 		/**
 		 * Private Channel 생성 POST /api/channels/private
 		 */
 		@PostMapping(value = "/private", consumes = {"application/json", "multipart/form-data"})
-		public ChannelDto createPrivate(
+		public ResponseEntity<ChannelDto> createPrivate(
 				@RequestPart(value = "channelCreateRequest", required = false) @Valid PrivateChannelCreateRequest requestPart,
 				@RequestBody(required = false) @Valid PrivateChannelCreateRequest requestBody) {
 				PrivateChannelCreateRequest request = requestPart != null ? requestPart : requestBody;
 				if (request == null) {
 						throw new IllegalArgumentException("PrivateChannelCreateRequest가 필요합니다.");
 				}
-				return channelService.create(request);
+				return ResponseEntity.status(HttpStatus.CREATED).body(channelService.create(request));
 		}
 
 		/**

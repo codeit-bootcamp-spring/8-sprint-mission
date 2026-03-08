@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
+import com.sprint.mission.discodeit.dto.data.BinaryContentWithBytesDto;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
@@ -49,14 +50,15 @@ class BinaryContentControllerTest {
 		void find_Success() throws Exception {
 				// Given
 				UUID binaryContentId = UUID.randomUUID();
-				BinaryContentDto binaryContent = new BinaryContentDto(
+				BinaryContentWithBytesDto binaryContent = new BinaryContentWithBytesDto(
 						binaryContentId,
 						"test.jpg",
 						10240L,
-						MediaType.IMAGE_JPEG_VALUE
+						MediaType.IMAGE_JPEG_VALUE,
+						"base64data"
 				);
 
-				given(binaryContentService.find(binaryContentId)).willReturn(binaryContent);
+				given(binaryContentService.findWithBytes(binaryContentId)).willReturn(binaryContent);
 
 				// When & Then
 				mockMvc.perform(get("/api/binaryContents/{binaryContentId}", binaryContentId)
@@ -74,7 +76,7 @@ class BinaryContentControllerTest {
 				// Given
 				UUID nonExistentId = UUID.randomUUID();
 
-				given(binaryContentService.find(nonExistentId))
+				given(binaryContentService.findWithBytes(nonExistentId))
 						.willThrow(BinaryContentNotFoundException.withId(nonExistentId));
 
 				// When & Then

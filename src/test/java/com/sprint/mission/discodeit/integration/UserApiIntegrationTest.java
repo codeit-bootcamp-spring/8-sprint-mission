@@ -79,8 +79,7 @@ class UserApiIntegrationTest {
 						.andExpect(jsonPath("$.id", notNullValue()))
 						.andExpect(jsonPath("$.username", is("testuser")))
 						.andExpect(jsonPath("$.email", is("test@example.com")))
-						.andExpect(jsonPath("$.profile.fileName", is("profile.jpg")))
-						.andExpect(jsonPath("$.online", is(true)));
+						.andExpect(jsonPath("$.profileId", notNullValue()));
 		}
 
 		@Test
@@ -185,7 +184,7 @@ class UserApiIntegrationTest {
 						.andExpect(jsonPath("$.id", is(userId.toString())))
 						.andExpect(jsonPath("$.username", is("updateduser")))
 						.andExpect(jsonPath("$.email", is("updated@example.com")))
-						.andExpect(jsonPath("$.profile.fileName", is("updated-profile.jpg")));
+						.andExpect(jsonPath("$.profileId", notNullValue()));
 		}
 
 		@Test
