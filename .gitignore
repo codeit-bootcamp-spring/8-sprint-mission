@@ -5,8 +5,19 @@ build/
 !**/src/test/**/build/
 .kotlin
 
-### docekr ###
+### env / secrets (형상관리 금지) ###
+.env
 discodeit.env
+
+### logs ###
+.logs/
+
+### Node (의존성, 형상관리 금지) ###
+node_modules/
+
+### Local storage / Binary contents ###
+.discodeit/
+storage/binary-contents/
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
