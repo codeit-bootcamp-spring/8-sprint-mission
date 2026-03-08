@@ -30,7 +30,14 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run Tests with Jacoco Report
-        run: ./gradlew test
+        run: ./gradlew test --continue
+
+      - name: Upload test report (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: build/reports/tests/test/
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
