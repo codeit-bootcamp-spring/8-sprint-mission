@@ -2,9 +2,9 @@ name: CI (Continuous Integration)
 
 on:
   push:
-    branches: [ "현승원-sprint8" ]
+    branches: [ "현승원-sprint8-v2" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "현승원" ]
 
 jobs:
   test:
