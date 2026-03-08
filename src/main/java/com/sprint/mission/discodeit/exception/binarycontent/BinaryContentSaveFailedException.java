@@ -10,4 +10,8 @@ public class BinaryContentSaveFailedException extends BinaryContentException {
     super(ErrorCode.BINARY_CONTENT_SAVE_FAILED,
         Map.of("binaryContentId", binaryContentId, "fileName", fileName));
   }
+
+  public BinaryContentSaveFailedException() {
+    super(ErrorCode.BINARY_CONTENT_CONVERT_FAILED);
+  }
 }

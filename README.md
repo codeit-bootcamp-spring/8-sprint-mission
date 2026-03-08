@@ -1,0 +1,1 @@
+[![codecov](https://codecov.io/gh/parkhamin/8-sprint-mission/branch/%EB%B0%95%ED%95%98%EB%AF%BC-sprint8/graph/badge.svg?token=7AQWESI08F)](https://codecov.io/gh/parkhamin/8-sprint-mission)
