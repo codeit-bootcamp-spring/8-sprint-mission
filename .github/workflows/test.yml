@@ -46,4 +46,5 @@ jobs:
           # Gradle 빌드 후 생성되는 Jacoco 리포트 경로를 직접 지정합니다.
           file: ./build/reports/jacoco/test/jacocoTestReport.xml
           fail_ci_if_error: true
+          verbose: true
           
