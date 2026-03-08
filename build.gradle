@@ -2,6 +2,7 @@ plugins {
     id 'org.springframework.boot' version '3.5.9'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'java'
+    id 'jacoco'
 }
 
 group = 'com.sprint.mission'
@@ -63,6 +64,15 @@ dependencies {
 // 5. Test 블록
 test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+// Jacoco - Codecov용 커버리지 리포트
+jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = true
+    }
 }
 
 // 6. Jar 파일명 설정 (Dockerfile의 PROJECT_NAME과 일치)
