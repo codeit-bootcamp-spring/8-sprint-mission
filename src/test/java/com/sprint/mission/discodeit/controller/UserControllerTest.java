@@ -21,6 +21,7 @@ import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserStatusUpdateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
+import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.UserStatusService;
 import java.time.Instant;
@@ -50,6 +51,9 @@ class UserControllerTest {
 
 		@MockitoBean
 		private UserStatusService userStatusService;
+
+		@MockitoBean
+		private BinaryContentService binaryContentService;
 
 		@Test
 		@DisplayName("사용자 생성 성공 테스트")

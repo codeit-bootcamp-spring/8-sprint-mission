@@ -10,7 +10,7 @@ import static org.mockito.Mockito.verify;
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
-import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
+import java.util.NoSuchElementException;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
@@ -113,7 +113,7 @@ class BasicBinaryContentServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> binaryContentService.find(binaryContentId))
-						.isInstanceOf(BinaryContentNotFoundException.class);
+						.isInstanceOf(NoSuchElementException.class);
 		}
 
 		@Test
@@ -167,6 +167,6 @@ class BasicBinaryContentServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> binaryContentService.delete(binaryContentId))
-						.isInstanceOf(BinaryContentNotFoundException.class);
+						.isInstanceOf(NoSuchElementException.class);
 		}
 } 

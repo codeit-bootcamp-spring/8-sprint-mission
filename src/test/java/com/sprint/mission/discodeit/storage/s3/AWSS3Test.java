@@ -9,7 +9,10 @@ import java.util.Properties;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.MethodOrderer;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -21,6 +24,7 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AWSS3Test {
 
     private String bucketName;
@@ -72,6 +76,7 @@ public class AWSS3Test {
     }
 
 		@Test
+		@Order(1)
 		@DisplayName("S3 파일 업로드 테스트")
 		void uploadTest() {
 				s3Client.putObject(
@@ -86,6 +91,7 @@ public class AWSS3Test {
 		}
 
 		@Test
+		@Order(2)
 		@DisplayName("S3 파일 다운로드 테스트")
 		void downloadTest() {
 				java.io.File file = new java.io.File("downloaded-test.txt");
@@ -106,6 +112,7 @@ public class AWSS3Test {
 		}
 
 		@Test
+		@Order(3)
 		@DisplayName("Presigned URL 생성 테스트")
 		void presignedUrlTest() {
 				GetObjectRequest getObjectRequest = GetObjectRequest.builder()

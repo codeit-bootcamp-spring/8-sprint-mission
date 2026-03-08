@@ -12,9 +12,7 @@ import com.sprint.mission.discodeit.dto.request.UserStatusCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserStatusUpdateRequest;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
-import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
-import com.sprint.mission.discodeit.exception.userstatus.DuplicateUserStatusException;
-import com.sprint.mission.discodeit.exception.userstatus.UserStatusNotFoundException;
+import java.util.NoSuchElementException;
 import com.sprint.mission.discodeit.mapper.UserStatusMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
@@ -99,7 +97,7 @@ class BasicUserStatusServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> userStatusService.create(request))
-						.isInstanceOf(DuplicateUserStatusException.class);
+						.isInstanceOf(IllegalArgumentException.class);
 		}
 
 		@Test
@@ -111,7 +109,7 @@ class BasicUserStatusServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> userStatusService.create(request))
-						.isInstanceOf(UserNotFoundException.class);
+						.isInstanceOf(NoSuchElementException.class);
 		}
 
 		@Test
@@ -136,7 +134,7 @@ class BasicUserStatusServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> userStatusService.find(userStatusId))
-						.isInstanceOf(UserStatusNotFoundException.class);
+						.isInstanceOf(NoSuchElementException.class);
 		}
 
 		@Test
@@ -182,7 +180,7 @@ class BasicUserStatusServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> userStatusService.update(userStatusId, request))
-						.isInstanceOf(UserStatusNotFoundException.class);
+						.isInstanceOf(NoSuchElementException.class);
 		}
 
 		@Test
@@ -213,7 +211,7 @@ class BasicUserStatusServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> userStatusService.updateByUserId(userId, request))
-						.isInstanceOf(UserStatusNotFoundException.class);
+						.isInstanceOf(NoSuchElementException.class);
 		}
 
 		@Test
@@ -237,6 +235,6 @@ class BasicUserStatusServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> userStatusService.delete(userStatusId))
-						.isInstanceOf(UserStatusNotFoundException.class);
+						.isInstanceOf(NoSuchElementException.class);
 		}
 } 

@@ -11,10 +11,12 @@ import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
-import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
+import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.repository.UserStatusRepository;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +36,15 @@ class BasicUserServiceTest {
 
 		@Mock
 		private UserMapper userMapper;
+
+		@Mock
+		private UserStatusRepository userStatusRepository;
+
+		@Mock
+		private BinaryContentRepository binaryContentRepository;
+
+		@Mock
+		private BinaryContentStorage binaryContentStorage;
 
 		@InjectMocks
 		private BasicUserService userService;
@@ -83,7 +94,7 @@ class BasicUserServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> userService.create(request, Optional.empty()))
-						.isInstanceOf(UserAlreadyExistsException.class);
+						.isInstanceOf(IllegalArgumentException.class);
 		}
 
 		@Test
@@ -96,7 +107,7 @@ class BasicUserServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> userService.create(request, Optional.empty()))
-						.isInstanceOf(UserAlreadyExistsException.class);
+						.isInstanceOf(IllegalArgumentException.class);
 		}
 
 		@Test
@@ -121,7 +132,7 @@ class BasicUserServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> userService.find(userId))
-						.isInstanceOf(UserNotFoundException.class);
+						.isInstanceOf(NoSuchElementException.class);
 		}
 
 		@Test
@@ -155,7 +166,7 @@ class BasicUserServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> userService.update(userId, request, Optional.empty()))
-						.isInstanceOf(UserNotFoundException.class);
+						.isInstanceOf(NoSuchElementException.class);
 		}
 
 		@Test
@@ -179,6 +190,6 @@ class BasicUserServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> userService.delete(userId))
-						.isInstanceOf(UserNotFoundException.class);
+						.isInstanceOf(NoSuchElementException.class);
 		}
 } 

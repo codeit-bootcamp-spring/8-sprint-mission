@@ -17,9 +17,7 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
-import com.sprint.mission.discodeit.exception.message.MessageNotFoundException;
-import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
+import java.util.NoSuchElementException;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
@@ -146,7 +144,7 @@ class BasicMessageServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> messageService.create(request, List.of()))
-						.isInstanceOf(ChannelNotFoundException.class);
+						.isInstanceOf(NoSuchElementException.class);
 		}
 
 		@Test
@@ -159,7 +157,7 @@ class BasicMessageServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> messageService.create(request, List.of()))
-						.isInstanceOf(UserNotFoundException.class);
+						.isInstanceOf(NoSuchElementException.class);
 		}
 
 		@Test
@@ -184,7 +182,7 @@ class BasicMessageServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> messageService.find(messageId))
-						.isInstanceOf(MessageNotFoundException.class);
+						.isInstanceOf(NoSuchElementException.class);
 		}
 
 		@Test
@@ -332,7 +330,7 @@ class BasicMessageServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> messageService.update(messageId, request))
-						.isInstanceOf(MessageNotFoundException.class);
+						.isInstanceOf(NoSuchElementException.class);
 		}
 
 		@Test
@@ -356,6 +354,6 @@ class BasicMessageServiceTest {
 
 				// when & then
 				assertThatThrownBy(() -> messageService.delete(messageId))
-						.isInstanceOf(MessageNotFoundException.class);
+						.isInstanceOf(NoSuchElementException.class);
 		}
 } 
