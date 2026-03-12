@@ -18,11 +18,11 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/auth")
 public class AuthController implements AuthApi {
 
-  private final AuthService authService;
+		private final AuthService authService;
 
-  @PostMapping(path = "login")
-  public ResponseEntity<UserDto> login(@RequestBody @Valid LoginRequest loginRequest) {
-    UserDto user = authService.login(loginRequest);
-    return ResponseEntity.status(HttpStatus.OK).body(user);
-  }
+		@PostMapping(path = "login")
+		public ResponseEntity<UserDto> login(@RequestBody @Valid LoginRequest loginRequest) {
+				UserDto user = authService.login(loginRequest);
+				return ResponseEntity.status(HttpStatus.OK).body(user);
+		}
 }

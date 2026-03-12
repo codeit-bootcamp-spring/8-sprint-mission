@@ -5,6 +5,20 @@ build/
 !**/src/test/**/build/
 .kotlin
 
+### env / secrets (형상관리 금지) ###
+.env
+discodeit.env
+
+### logs ###
+.logs/
+
+### Node (의존성) ###
+node_modules/
+
+### Local storage ###
+.discodeit/
+storage/
+
 ### IntelliJ IDEA ###
 .idea/modules.xml
 .idea/jarRepositories.xml
@@ -45,8 +59,8 @@ bin/
 ### 멘토님 피드백 .idea 추가
 .idea
 
-# File Repository에서 생성되는 데이터 저장 폴더 무시
-data/
+# File Repository에서 생성되는 데이터 저장 폴더 무시 (프로젝트 루트만)
+/data/
 
 # BinaryContent 데이터 파일 (프로젝트 루트에 생성됨)
 binary_contents.json

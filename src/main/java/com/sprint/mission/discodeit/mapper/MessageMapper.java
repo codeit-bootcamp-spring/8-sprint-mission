@@ -11,15 +11,15 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", uses = {BinaryContentMapper.class, UserMapper.class})
 public interface MessageMapper {
 
-  @Mapping(target = "channelId", source = "channel.id")
-  @Mapping(target = "authorId", source = "author.id")
-  @Mapping(target = "attachmentIds", expression = "java(toAttachmentIds(message.getAttachments()))")
-  MessageDto toDto(Message message);
+		@Mapping(target = "channelId", source = "channel.id")
+		@Mapping(target = "authorId", source = "author.id")
+		@Mapping(target = "attachmentIds", expression = "java(toAttachmentIds(message.getAttachments()))")
+		MessageDto toDto(Message message);
 
-  default List<UUID> toAttachmentIds(List<BinaryContent> attachments) {
-    if (attachments == null) {
-      return List.of();
-    }
-    return attachments.stream().map(BinaryContent::getId).toList();
-  }
+		default List<UUID> toAttachmentIds(List<BinaryContent> attachments) {
+				if (attachments == null) {
+						return List.of();
+				}
+				return attachments.stream().map(BinaryContent::getId).toList();
+		}
 }

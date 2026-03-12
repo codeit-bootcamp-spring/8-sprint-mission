@@ -21,4 +21,8 @@ public class PrivateChannelUpdateException extends ChannelException {
   public PrivateChannelUpdateException(Map<String, Object> details) {
     super(ErrorCode.PRIVATE_CHANNEL_UPDATE, details);
   }
+
+  public static PrivateChannelUpdateException forChannel(UUID channelId) {
+    return new PrivateChannelUpdateException(channelId);
+  }
 }

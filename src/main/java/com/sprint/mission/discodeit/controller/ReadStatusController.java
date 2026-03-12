@@ -25,30 +25,32 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/readStatuses")
 public class ReadStatusController implements ReadStatusApi {
 
-  private final ReadStatusService readStatusService;
+		private final ReadStatusService readStatusService;
 
-  @PostMapping
-  public ResponseEntity<ReadStatusDto> create(@RequestBody @Valid ReadStatusCreateRequest request) {
-    ReadStatusDto createdReadStatus = readStatusService.create(request);
-    return ResponseEntity
-        .status(HttpStatus.CREATED)
-        .body(createdReadStatus);
-  }
+		@PostMapping
+		public ResponseEntity<ReadStatusDto> create(
+				@RequestBody @Valid ReadStatusCreateRequest request) {
+				ReadStatusDto createdReadStatus = readStatusService.create(request);
+				return ResponseEntity
+						.status(HttpStatus.CREATED)
+						.body(createdReadStatus);
+		}
 
-  @PatchMapping(path = "{readStatusId}")
-  public ResponseEntity<ReadStatusDto> update(@PathVariable("readStatusId") UUID readStatusId,
-      @RequestBody @Valid ReadStatusUpdateRequest request) {
-    ReadStatusDto updatedReadStatus = readStatusService.update(readStatusId, request);
-    return ResponseEntity
-        .status(HttpStatus.OK)
-        .body(updatedReadStatus);
-  }
+		@PatchMapping(path = "{readStatusId}")
+		public ResponseEntity<ReadStatusDto> update(@PathVariable("readStatusId") UUID readStatusId,
+				@RequestBody @Valid ReadStatusUpdateRequest request) {
+				ReadStatusDto updatedReadStatus = readStatusService.update(readStatusId, request);
+				return ResponseEntity
+						.status(HttpStatus.OK)
+						.body(updatedReadStatus);
+		}
 
-  @GetMapping
-  public ResponseEntity<List<ReadStatusDto>> findAllByUserId(@RequestParam("userId") UUID userId) {
-    List<ReadStatusDto> readStatuses = readStatusService.findAllByUserId(userId);
-    return ResponseEntity
-        .status(HttpStatus.OK)
-        .body(readStatuses);
-  }
+		@GetMapping
+		public ResponseEntity<List<ReadStatusDto>> findAllByUserId(
+				@RequestParam("userId") UUID userId) {
+				List<ReadStatusDto> readStatuses = readStatusService.findAllByUserId(userId);
+				return ResponseEntity
+						.status(HttpStatus.OK)
+						.body(readStatuses);
+		}
 }

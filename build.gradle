@@ -1,11 +1,12 @@
 plugins {
-    id 'org.springframework.boot' version '3.4.3'
+    id 'org.springframework.boot' version '3.5.9'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'java'
+    id 'jacoco'
 }
 
 group = 'com.sprint.mission'
-version = '1.7.0'
+version = '1.2-M8'
 
 // 2. Repositories 블록은 최상위 레벨에 위치해야 합니다.
 repositories {
@@ -55,10 +56,26 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    implementation 'de.codecentric:spring-boot-admin-starter-client:3.4.3'
+    // AWS S3 SDK 추가
+    implementation 'software.amazon.awssdk:s3:2.30.0'
+
 }
 
 // 5. Test 블록
 test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+// Jacoco - Codecov용 커버리지 리포트
+jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+// 6. Jar 파일명 설정 (Dockerfile의 PROJECT_NAME과 일치)
+bootJar {
+    archiveBaseName = 'discodeit'
 }

@@ -36,125 +36,132 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class BasicMessageService implements MessageService {
 
-  private final MessageRepository messageRepository;
-  private final ChannelRepository channelRepository;
-  private final UserRepository userRepository;
-  private final MessageMapper messageMapper;
-  private final BinaryContentStorage binaryContentStorage;
-  private final BinaryContentRepository binaryContentRepository;
-  private final PageResponseMapper pageResponseMapper;
+		private final MessageRepository messageRepository;
+		private final ChannelRepository channelRepository;
+		private final UserRepository userRepository;
+		private final MessageMapper messageMapper;
+		private final BinaryContentStorage binaryContentStorage;
+		private final BinaryContentRepository binaryContentRepository;
+		private final PageResponseMapper pageResponseMapper;
 
-  /** 메시지 생성 (채널/작성자 없으면 예외). */
-  @Transactional
-  @Override
-  public MessageDto create(MessageCreateRequest messageCreateRequest,
-      List<BinaryContentCreateRequest> binaryContentCreateRequests) {
-    UUID channelId = messageCreateRequest.channelId();
-    UUID authorId = messageCreateRequest.authorId();
-    log.debug("메시지 생성, channelId={}, authorId={}, attachments={}",
-        channelId, authorId, binaryContentCreateRequests.size());
+		/**
+		 * 메시지 생성 (채널/작성자 없으면 예외).
+		 */
+		@Transactional
+		@Override
+		public MessageDto create(MessageCreateRequest messageCreateRequest,
+				List<BinaryContentCreateRequest> binaryContentCreateRequests) {
+				UUID channelId = messageCreateRequest.channelId();
+				UUID authorId = messageCreateRequest.authorId();
+				log.debug("메시지 생성, channelId={}, authorId={}, attachments={}",
+						channelId, authorId, binaryContentCreateRequests.size());
 
-    Channel channel = channelRepository.findById(channelId)
-        .orElseThrow(() -> {
-          log.warn("메시지 생성 실패: 채널 없음, channelId={}", channelId);
-          return new NoSuchElementException("Channel with id " + channelId + " does not exist");
-        });
-    User author = userRepository.findById(authorId)
-        .orElseThrow(() -> {
-          log.warn("메시지 생성 실패: 작성자 없음, authorId={}", authorId);
-          return new NoSuchElementException("Author with id " + authorId + " does not exist");
-        });
+				Channel channel = channelRepository.findById(channelId)
+						.orElseThrow(() -> {
+								log.warn("메시지 생성 실패: 채널 없음, channelId={}", channelId);
+								return new NoSuchElementException(
+										"Channel with id " + channelId + " does not exist");
+						});
+				User author = userRepository.findById(authorId)
+						.orElseThrow(() -> {
+								log.warn("메시지 생성 실패: 작성자 없음, authorId={}", authorId);
+								return new NoSuchElementException("Author with id " + authorId + " does not exist");
+						});
 
-    List<BinaryContent> attachments = binaryContentCreateRequests.stream()
-        .map(attachmentRequest -> {
-          String fileName = attachmentRequest.fileName();
-          String contentType = attachmentRequest.contentType();
-          byte[] bytes = attachmentRequest.bytes();
+				List<BinaryContent> attachments = binaryContentCreateRequests.stream()
+						.map(attachmentRequest -> {
+								String fileName = attachmentRequest.fileName();
+								String contentType = attachmentRequest.contentType();
+								byte[] bytes = attachmentRequest.bytes();
 
-          BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
-              contentType);
-          binaryContentRepository.save(binaryContent);
-          binaryContentStorage.put(binaryContent.getId(), bytes);
-          return binaryContent;
-        })
-        .toList();
+								BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
+										contentType);
+								binaryContentRepository.save(binaryContent);
+								binaryContentStorage.put(binaryContent.getId(), bytes);
+								return binaryContent;
+						})
+						.toList();
 
-    String content = messageCreateRequest.content();
-    Message message = new Message(
-        content,
-        channel,
-        author,
-        attachments
-    );
+				String content = messageCreateRequest.content();
+				Message message = new Message(
+						content,
+						channel,
+						author,
+						attachments
+				);
 
-    messageRepository.save(message);
-    log.info("메시지 생성 완료, messageId={}, channelId={}, authorId={}",
-        message.getId(), channelId, authorId);
-    return messageMapper.toDto(message);
-  }
+				messageRepository.save(message);
+				log.info("메시지 생성 완료, messageId={}, channelId={}, authorId={}",
+						message.getId(), channelId, authorId);
+				return messageMapper.toDto(message);
+		}
 
-  @Transactional(readOnly = true)
-  @Override
-  public MessageDto find(UUID messageId) {
-    return messageRepository.findById(messageId)
-        .map(messageMapper::toDto)
-        .orElseThrow(
-            () -> new NoSuchElementException("Message with id " + messageId + " not found"));
-  }
+		@Transactional(readOnly = true)
+		@Override
+		public MessageDto find(UUID messageId) {
+				return messageRepository.findById(messageId)
+						.map(messageMapper::toDto)
+						.orElseThrow(
+								() -> new NoSuchElementException("Message with id " + messageId + " not found"));
+		}
 
-  @Transactional(readOnly = true)
-  @Override
-  public PageResponse<MessageDto> findAllByChannelId(UUID channelId, Instant createAt,
-      Pageable pageable) {
-    Slice<MessageDto> slice = messageRepository.findAllByChannelIdWithAuthor(channelId,
-            Optional.ofNullable(createAt).orElse(Instant.now()),
-            pageable)
-        .map(messageMapper::toDto);
+		@Transactional(readOnly = true)
+		@Override
+		public PageResponse<MessageDto> findAllByChannelId(UUID channelId, Instant createAt,
+				Pageable pageable) {
+				Slice<MessageDto> slice = messageRepository.findAllByChannelIdWithAuthor(channelId,
+								Optional.ofNullable(createAt).orElse(Instant.now()),
+								pageable)
+						.map(messageMapper::toDto);
 
-    Instant nextCursor = null;
-    if (!slice.getContent().isEmpty()) {
-      nextCursor = slice.getContent().get(slice.getContent().size() - 1)
-          .createdAt();
-    }
+				Instant nextCursor = null;
+				if (!slice.getContent().isEmpty()) {
+						nextCursor = slice.getContent().get(slice.getContent().size() - 1)
+								.createdAt();
+				}
 
-    return pageResponseMapper.fromSlice(slice, nextCursor);
-  }
+				return pageResponseMapper.fromSlice(slice, nextCursor);
+		}
 
-  @Transactional(readOnly = true)
-  @Override
-  public List<MessageDto> findAllByChannelIdAsList(UUID channelId) {
-    Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.DESC, "createdAt"));
-    return messageRepository.findAllByChannelIdWithAuthor(channelId, Instant.now(), pageable)
-        .map(messageMapper::toDto)
-        .getContent();
-  }
+		@Transactional(readOnly = true)
+		@Override
+		public List<MessageDto> findAllByChannelIdAsList(UUID channelId) {
+				Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.DESC, "createdAt"));
+				return messageRepository.findAllByChannelIdWithAuthor(channelId, Instant.now(), pageable)
+						.map(messageMapper::toDto)
+						.getContent();
+		}
 
-  /** 메시지 수정 (대상 없으면 예외). */
-  @Transactional
-  @Override
-  public MessageDto update(UUID messageId, MessageUpdateRequest request) {
-    String newContent = request.newContent();
-    log.debug("메시지 수정, messageId={}", messageId);
-    Message message = messageRepository.findById(messageId)
-        .orElseThrow(() -> {
-          log.warn("메시지 수정 실패: 메시지 없음, messageId={}", messageId);
-          return new NoSuchElementException("Message with id " + messageId + " not found");
-        });
-    message.update(newContent);
-    log.info("메시지 수정 완료, messageId={}", messageId);
-    return messageMapper.toDto(message);
-  }
+		/**
+		 * 메시지 수정 (대상 없으면 예외).
+		 */
+		@Transactional
+		@Override
+		public MessageDto update(UUID messageId, MessageUpdateRequest request) {
+				String newContent = request.newContent();
+				log.debug("메시지 수정, messageId={}", messageId);
+				Message message = messageRepository.findById(messageId)
+						.orElseThrow(() -> {
+								log.warn("메시지 수정 실패: 메시지 없음, messageId={}", messageId);
+								return new NoSuchElementException("Message with id " + messageId + " not found");
+						});
+				message.update(newContent);
+				log.info("메시지 수정 완료, messageId={}", messageId);
+				return messageMapper.toDto(message);
+		}
 
-  /** 메시지 삭제 (대상 없으면 예외). */
-  @Transactional
-  @Override
-  public void delete(UUID messageId) {
-    log.debug("메시지 삭제 시도, messageId={}", messageId);
-    if (!messageRepository.existsById(messageId)) {
-      log.warn("메시지 삭제 실패: 메시지 없음, messageId={}", messageId);
-      throw new NoSuchElementException("Message with id " + messageId + " not found");
-    }
-    messageRepository.deleteById(messageId);
-    log.info("메시지 삭제 완료, messageId={}", messageId);
-  }
+		/**
+		 * 메시지 삭제 (대상 없으면 예외).
+		 */
+		@Transactional
+		@Override
+		public void delete(UUID messageId) {
+				log.debug("메시지 삭제 시도, messageId={}", messageId);
+				if (!messageRepository.existsById(messageId)) {
+						log.warn("메시지 삭제 실패: 메시지 없음, messageId={}", messageId);
+						throw new NoSuchElementException("Message with id " + messageId + " not found");
+				}
+				messageRepository.deleteById(messageId);
+				log.info("메시지 삭제 완료, messageId={}", messageId);
+		}
 }

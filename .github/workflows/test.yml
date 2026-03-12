@@ -1,0 +1,50 @@
+name: CI (Continuous Integration)
+
+on:
+  push:
+    branches: [ "현승원-sprint8-v2" ]
+  pull_request:
+    branches: [ "현승원" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # 1. 여기에 Secrets를 환경 변수로 연결합니다.
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: 'ap-northeast-2'
+      S3_BUCKET_NAME: discodeit-binary-content-storage-seung
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Tests with Jacoco Report
+        run: ./gradlew test --continue
+
+      - name: Upload test report (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: build/reports/tests/test/
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          # Gradle 빌드 후 생성되는 Jacoco 리포트 경로를 직접 지정합니다.
+          file: ./build/reports/jacoco/test/jacocoTestReport.xml
+          fail_ci_if_error: true
+          verbose: true
+          

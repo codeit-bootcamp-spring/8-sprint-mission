@@ -18,43 +18,43 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Mapper(componentModel = "spring", uses = {UserMapper.class})
 public abstract class ChannelMapper {
 
-  @Autowired
-  private MessageRepository messageRepository;
-  @Autowired
-  private ReadStatusRepository readStatusRepository;
-  @Autowired
-  private UserMapper userMapper;
+		@Autowired
+		private MessageRepository messageRepository;
+		@Autowired
+		private ReadStatusRepository readStatusRepository;
+		@Autowired
+		private UserMapper userMapper;
 
-  @Mapping(target = "participants", expression = "java(resolveParticipants(channel))")
-  @Mapping(target = "participantIds", expression = "java(resolveParticipantIds(channel))")
-  @Mapping(target = "lastMessageAt", expression = "java(resolveLastMessageAt(channel))")
-  abstract public ChannelDto toDto(Channel channel);
+		@Mapping(target = "participants", expression = "java(resolveParticipants(channel))")
+		@Mapping(target = "participantIds", expression = "java(resolveParticipantIds(channel))")
+		@Mapping(target = "lastMessageAt", expression = "java(resolveLastMessageAt(channel))")
+		abstract public ChannelDto toDto(Channel channel);
 
-  protected List<UUID> resolveParticipantIds(Channel channel) {
-    if (!channel.getType().equals(ChannelType.PRIVATE)) {
-      return List.of();
-    }
-    return readStatusRepository.findAllByChannelIdWithUser(channel.getId()).stream()
-        .map(ReadStatus::getUser)
-        .map(u -> u.getId())
-        .toList();
-  }
+		protected List<UUID> resolveParticipantIds(Channel channel) {
+				if (!channel.getType().equals(ChannelType.PRIVATE)) {
+						return List.of();
+				}
+				return readStatusRepository.findAllByChannelIdWithUser(channel.getId()).stream()
+						.map(ReadStatus::getUser)
+						.map(u -> u.getId())
+						.toList();
+		}
 
-  protected Instant resolveLastMessageAt(Channel channel) {
-    return messageRepository.findLastMessageAtByChannelId(
-            channel.getId())
-        .orElse(Instant.MIN);
-  }
+		protected Instant resolveLastMessageAt(Channel channel) {
+				return messageRepository.findLastMessageAtByChannelId(
+								channel.getId())
+						.orElse(Instant.MIN);
+		}
 
-  protected List<UserDto> resolveParticipants(Channel channel) {
-    List<UserDto> participants = new ArrayList<>();
-    if (channel.getType().equals(ChannelType.PRIVATE)) {
-      readStatusRepository.findAllByChannelIdWithUser(channel.getId())
-          .stream()
-          .map(ReadStatus::getUser)
-          .map(userMapper::toDto)
-          .forEach(participants::add);
-    }
-    return participants;
-  }
+		protected List<UserDto> resolveParticipants(Channel channel) {
+				List<UserDto> participants = new ArrayList<>();
+				if (channel.getType().equals(ChannelType.PRIVATE)) {
+						readStatusRepository.findAllByChannelIdWithUser(channel.getId())
+								.stream()
+								.map(ReadStatus::getUser)
+								.map(userMapper::toDto)
+								.forEach(participants::add);
+				}
+				return participants;
+		}
 }

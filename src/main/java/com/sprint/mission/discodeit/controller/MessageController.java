@@ -40,75 +40,82 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/messages")
 public class MessageController implements MessageApi {
 
-  private final MessageService messageService;
+		private final MessageService messageService;
 
-  /** 메시지 생성 요청 처리 (첨부 파일 선택). */
-  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public ResponseEntity<MessageDto> create(
-      @RequestPart("messageCreateRequest") @Valid MessageCreateRequest messageCreateRequest,
-      @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments
-  ) {
-    List<BinaryContentCreateRequest> attachmentRequests = Optional.ofNullable(attachments)
-        .map(files -> files.stream()
-            .map(file -> {
-              try {
-                return new BinaryContentCreateRequest(
-                    file.getOriginalFilename(),
-                    file.getContentType(),
-                    file.getBytes()
-                );
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-            })
-            .toList())
-        .orElse(new ArrayList<>());
-    log.debug("메시지 생성 요청, channelId={}, authorId={}, attachments={}",
-        messageCreateRequest.channelId(), messageCreateRequest.authorId(), attachmentRequests.size());
-    MessageDto createdMessage = messageService.create(messageCreateRequest, attachmentRequests);
-    return ResponseEntity
-        .status(HttpStatus.CREATED)
-        .body(createdMessage);
-  }
+		/**
+		 * 메시지 생성 요청 처리 (첨부 파일 선택).
+		 */
+		@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+		public ResponseEntity<MessageDto> create(
+				@RequestPart("messageCreateRequest") @Valid MessageCreateRequest messageCreateRequest,
+				@RequestPart(value = "attachments", required = false) List<MultipartFile> attachments
+		) {
+				List<BinaryContentCreateRequest> attachmentRequests = Optional.ofNullable(attachments)
+						.map(files -> files.stream()
+								.map(file -> {
+										try {
+												return new BinaryContentCreateRequest(
+														file.getOriginalFilename(),
+														file.getContentType(),
+														file.getBytes()
+												);
+										} catch (IOException e) {
+												throw new RuntimeException(e);
+										}
+								})
+								.toList())
+						.orElse(new ArrayList<>());
+				log.debug("메시지 생성 요청, channelId={}, authorId={}, attachments={}",
+						messageCreateRequest.channelId(), messageCreateRequest.authorId(),
+						attachmentRequests.size());
+				MessageDto createdMessage = messageService.create(messageCreateRequest, attachmentRequests);
+				return ResponseEntity
+						.status(HttpStatus.CREATED)
+						.body(createdMessage);
+		}
 
-  /** 메시지 수정 요청 처리. */
-  @PatchMapping(path = "{messageId}")
-  public ResponseEntity<MessageDto> update(@PathVariable("messageId") UUID messageId,
-      @RequestBody @Valid MessageUpdateRequest request) {
-    log.debug("메시지 수정 요청, messageId={}", messageId);
-    MessageDto updatedMessage = messageService.update(messageId, request);
-    return ResponseEntity
-        .status(HttpStatus.OK)
-        .body(updatedMessage);
-  }
+		/**
+		 * 메시지 수정 요청 처리.
+		 */
+		@PatchMapping(path = "{messageId}")
+		public ResponseEntity<MessageDto> update(@PathVariable("messageId") UUID messageId,
+				@RequestBody @Valid MessageUpdateRequest request) {
+				log.debug("메시지 수정 요청, messageId={}", messageId);
+				MessageDto updatedMessage = messageService.update(messageId, request);
+				return ResponseEntity
+						.status(HttpStatus.OK)
+						.body(updatedMessage);
+		}
 
-  /** 메시지 삭제 요청 처리. */
-  @DeleteMapping(path = "{messageId}")
-  public ResponseEntity<Void> delete(@PathVariable("messageId") UUID messageId) {
-    log.debug("메시지 삭제 요청, messageId={}", messageId);
-    messageService.delete(messageId);
-    return ResponseEntity
-        .status(HttpStatus.NO_CONTENT)
-        .build();
-  }
+		/**
+		 * 메시지 삭제 요청 처리.
+		 */
+		@DeleteMapping(path = "{messageId}")
+		public ResponseEntity<Void> delete(@PathVariable("messageId") UUID messageId) {
+				log.debug("메시지 삭제 요청, messageId={}", messageId);
+				messageService.delete(messageId);
+				return ResponseEntity
+						.status(HttpStatus.NO_CONTENT)
+						.build();
+		}
 
-  @GetMapping
-  public ResponseEntity<?> findAllByChannelId(
-      @RequestParam("channelId") UUID channelId,
-      @RequestParam(value = "cursor", required = false) Instant cursor,
-      @PageableDefault(
-          size = 50,
-          page = 0,
-          sort = "createdAt",
-          direction = Direction.DESC
-      ) Pageable pageable) {
-    if (cursor == null) {
-      return ResponseEntity.ok(messageService.findAllByChannelIdAsList(channelId));
-    }
-    PageResponse<MessageDto> messages = messageService.findAllByChannelId(channelId, cursor,
-        pageable);
-    return ResponseEntity
-        .status(HttpStatus.OK)
-        .body(messages);
-  }
+		@GetMapping
+		public ResponseEntity<?> findAllByChannelId(
+				@RequestParam("channelId") UUID channelId,
+				@RequestParam(value = "cursor", required = false) Instant cursor,
+				@PageableDefault(
+						size = 50,
+						page = 0,
+						sort = "createdAt",
+						direction = Direction.DESC
+				) Pageable pageable) {
+				if (cursor == null) {
+						return ResponseEntity.ok(messageService.findAllByChannelIdAsList(channelId));
+				}
+				PageResponse<MessageDto> messages = messageService.findAllByChannelId(channelId, cursor,
+						pageable);
+				return ResponseEntity
+						.status(HttpStatus.OK)
+						.body(messages);
+		}
 }
