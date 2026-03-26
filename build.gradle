@@ -35,6 +35,10 @@ dependencies {
     // Monitoring
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+    // Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+
     // DB
     runtimeOnly 'org.postgresql:postgresql'
     runtimeOnly 'com.h2database:h2'
@@ -55,6 +59,7 @@ dependencies {
     implementation 'software.amazon.awssdk:s3:2.31.7'
 
     // Testing
+    testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testCompileOnly 'org.projectlombok:lombok'
