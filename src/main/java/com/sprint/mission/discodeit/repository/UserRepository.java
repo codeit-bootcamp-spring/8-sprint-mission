@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.repository;
 
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 
 import java.util.List;
@@ -20,4 +21,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
       "LEFT JOIN FETCH u.profile " +  // profile이 null이어도 가져옴
       "LEFT JOIN FETCH u.status")
   List<User> findAllWithProfileAndStatus();
+
+  boolean existsByRole(Role role);
 }

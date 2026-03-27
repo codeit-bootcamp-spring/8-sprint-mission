@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.dto;
 
+import com.sprint.mission.discodeit.entity.Role;
 import java.util.UUID;
 
 public record UserDto(
@@ -7,7 +8,8 @@ public record UserDto(
     String username, // 사용자의 이름
     String email,
     BinaryContentDto profile,
-    Boolean online
+    Boolean online,
+    Role role
 ) {
 
 }
