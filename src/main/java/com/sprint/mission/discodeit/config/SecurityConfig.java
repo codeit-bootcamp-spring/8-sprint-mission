@@ -1,5 +1,7 @@
 package com.sprint.mission.discodeit.config;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -10,10 +12,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.csrf.*;
 
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 @Slf4j
@@ -27,7 +29,7 @@ public class SecurityConfig {
                 // CSRF 설정: 쿠키 기반 CSRF 토큰 사용
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                        .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
                 )
                 // HTTP 요청 권한 설정
                 .authorizeHttpRequests(auth -> auth
@@ -75,5 +77,28 @@ public class SecurityConfig {
             log.info("현재 적용된 필터 체인 목록: ");
             filterNames.forEach(log::info);
         };
+    }
+
+    public static class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
+        private final CsrfTokenRequestHandler plain = new CsrfTokenRequestAttributeHandler();
+        private final CsrfTokenRequestHandler xor = new XorCsrfTokenRequestAttributeHandler();
+
+        @Override
+        public void handle(
+                HttpServletRequest request,
+                HttpServletResponse response,
+                Supplier<CsrfToken> csrfToken
+        ) {
+            this.xor.handle(request, response, csrfToken);
+            csrfToken.get();
+        }
+
+        @Override
+        public String resolveCsrfTokenValue(HttpServletRequest request, CsrfToken csrfToken) {
+            String headerValue = request.getHeader(csrfToken.getHeaderName());
+            return (org.springframework.util.StringUtils.hasText(headerValue) ? this.plain : this.xor)
+                    .resolveCsrfTokenValue(request, csrfToken)
+                    ;
+        }
     }
 }
