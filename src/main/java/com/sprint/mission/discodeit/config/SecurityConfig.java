@@ -19,11 +19,14 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableWebSecurity
@@ -40,7 +43,8 @@ public class SecurityConfig {
       LoginSuccessHandler loginSuccessHandler,
       LoginFailureHandler loginFailureHandler,
       CustomAuthenticationEntryPoint authenticationEntryPoint,
-      CustomAccessDeniedHandler accessDeniedHandler
+      CustomAccessDeniedHandler accessDeniedHandler,
+      SessionRegistry sessionRegistry
   ) throws Exception {
 
     http
@@ -77,12 +81,29 @@ public class SecurityConfig {
                 new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
             .permitAll()
         )
+        .sessionManagement(management -> management
+            .sessionConcurrency(concurrency -> concurrency
+                .maximumSessions(1)
+                .maxSessionsPreventsLogin(true)
+                .sessionRegistry(sessionRegistry)
+            )
+        )
         .exceptionHandling(ex -> ex
             .authenticationEntryPoint(authenticationEntryPoint)
             .accessDeniedHandler(accessDeniedHandler)
         );
 
     return http.build();
+  }
+
+  @Bean
+  public SessionRegistry sessionRegistry() {
+    return new SessionRegistryImpl();
+  }
+
+  @Bean
+  public HttpSessionEventPublisher httpSessionEventPublisher() {
+    return new HttpSessionEventPublisher();
   }
 
   @Bean
