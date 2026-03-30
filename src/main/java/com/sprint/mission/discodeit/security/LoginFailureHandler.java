@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Collections;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
@@ -35,7 +35,7 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
         Instant.now(),                                // timestamp
         ErrorCode.INVALID_CREDENTIALS.name(),       // code (상수 이름: "INVALID_CREDENTIALS")
         ErrorCode.INVALID_CREDENTIALS.getMessage(), // message ("아이디 또는 비밀번호가 올바르지 않습니다.")
-        Collections.emptyMap(),                       // details (추가 정보 없음)
+        Map.of("path", request.getRequestURI()),  // details: 요청 경로 등 맥락값
         exception.getClass().getSimpleName(),          // 발생한 예외 클래스 명
         status                                         // status (401)
     );
