@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
@@ -31,6 +32,17 @@ public class SecurityConfig {
             .loginProcessingUrl("/api/auth/login")
             .successHandler(loginSuccessHandler)
             .failureHandler(loginFailureHandler)
+        )
+        // 로그아웃 설정
+        .logout(logout -> logout
+            // 로그아웃 URL 설정
+            .logoutUrl("/api/auth/logout")
+            // 성공 시 리다이렉트 대신 204 응답 반환으로 대체
+            .logoutSuccessHandler(
+                new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
+            // 추가 보안 (세션 무효화 및 쿠키 삭제 (기본값이지만 명시))
+            .invalidateHttpSession(true)
+            .deleteCookies("JSESSIONID")
         )
         // 인증되지 않은 접근 시 리다이렉트 X, 401 에러 반환
         .exceptionHandling(exception -> exception
