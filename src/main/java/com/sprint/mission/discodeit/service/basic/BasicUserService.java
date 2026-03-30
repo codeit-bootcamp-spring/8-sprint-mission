@@ -119,14 +119,18 @@ public class BasicUserService implements UserService {
     String newEmail = userUpdateRequest.newEmail();
     String newPassword = userUpdateRequest.newPassword();
 
-    if (userRepository.existsByUsername(newUsername)) { // username 중복 확인
-      log.warn("[UserService] 사용자 수정 실패 - 중복된 이름: {}", newUsername);
-      throw new UsernameAlreadyExistsException(newUsername);
+    if (newUsername != null && !newUsername.equals(user.getUsername())) {
+      if (userRepository.existsByUsername(newUsername)) { // username 중복 확인
+        log.warn("[UserService] 사용자 수정 실패 - 중복된 이름: {}", newUsername);
+        throw new UsernameAlreadyExistsException(newUsername);
+      }
     }
 
-    if (userRepository.existsByEmail(newEmail)) {
-      log.warn("[UserService] 사용자 수정 실패 - 중복된 이메일: {}", newEmail);
-      throw new UserEmailAlreadyExistsException(newEmail);
+    if (newEmail != null && !newEmail.equals(user.getEmail())) {
+      if (userRepository.existsByEmail(newEmail)) {
+        log.warn("[UserService] 사용자 수정 실패 - 중복된 이메일: {}", newEmail);
+        throw new UserEmailAlreadyExistsException(newEmail);
+      }
     }
 
     BinaryContent newProfile = null;

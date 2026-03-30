@@ -40,9 +40,17 @@ public class AuthController implements AuthApi {
   public ResponseEntity<UserDto> getCurrentUser(
       @AuthenticationPrincipal DiscodeitUserDetails userDetails) {
 
+    if (userDetails == null || userDetails.getUserDto() == null) {
+      return ResponseEntity
+          .status(HttpStatus.UNAUTHORIZED)
+          .build();
+    }
+
+    UserDto userDto = authService.getCurrentUserInfo(userDetails);
+
     return ResponseEntity
         .status(HttpStatus.OK)
-        .body(userDetails.getUserDto());
+        .body(userDto);
   }
 
   @PutMapping("/role")
