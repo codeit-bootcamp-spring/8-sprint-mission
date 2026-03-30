@@ -1,5 +1,7 @@
 package com.sprint.mission.discodeit.config;
 
+import com.sprint.mission.discodeit.handler.LoginFailureHandler;
+import com.sprint.mission.discodeit.handler.LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +26,9 @@ import java.util.stream.IntStream;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           LoginSuccessHandler loginSuccessHandler,
+                                           LoginFailureHandler loginFailureHandler) throws Exception {
         http
                 // CSRF 설정: 쿠키 기반 CSRF 토큰 사용
                 .csrf(csrf -> csrf
@@ -56,6 +60,18 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/messages/*").authenticated()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
+                )
+
+                // form 기반 로그인 활성화
+                .formLogin(form -> form
+                        // 로그인을 처리하는 URL 정의
+                        .loginProcessingUrl("/api/auth/login")
+                        // 로그인 성공 시 처리할 핸들러 정의
+                        .successHandler(loginSuccessHandler)
+                        // 로그인 실패 시 처리할 핸들러 정의
+                        .failureHandler(loginFailureHandler)
+                        // 로그인 페이지는 인증 없이 모두 접근 가능해야 한다.
+                        .permitAll()
                 );
         return http.build();
     }

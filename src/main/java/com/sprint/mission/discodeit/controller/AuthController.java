@@ -1,12 +1,9 @@
 package com.sprint.mission.discodeit.controller;
 
-import com.sprint.mission.discodeit.DTO.dto.UserDto;
-import com.sprint.mission.discodeit.DTO.request.LoginRequest;
 import com.sprint.mission.discodeit.controller.api.AuthApi;
 import com.sprint.mission.discodeit.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
@@ -29,12 +26,5 @@ public class AuthController implements AuthApi {
         log.debug("CSRF 헤더 이름: {}", headerName);
 
         return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping(path = "login")
-    public ResponseEntity<UserDto> login(@RequestBody LoginRequest request) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(authService.login(request));
     }
 }
