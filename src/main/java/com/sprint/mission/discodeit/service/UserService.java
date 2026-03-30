@@ -4,6 +4,7 @@ import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateRequest
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
+import com.sprint.mission.discodeit.entity.UserRole;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,5 +35,6 @@ public interface UserService {
   // 삭제
   void delete(UUID id);
 
-
+  // 권한 변경
+  UserDto updateRole(UUID userId, UserRole newRole);
 }

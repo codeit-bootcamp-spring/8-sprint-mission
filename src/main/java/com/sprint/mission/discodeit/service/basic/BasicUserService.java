@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.entity.UserRole;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
@@ -53,7 +54,8 @@ public class BasicUserService implements UserService {
     String encodedPassword = passwordEncoder.encode(request.password());
 
     // User 생성
-    User user = new User(request.username(), request.email(), encodedPassword, profile);
+    User user = new User(request.username(), request.email(), encodedPassword, profile,
+        UserRole.USER);
 
     // UserStatus 생성 (마지막 접속 시간 = 지금)
     UserStatus status = new UserStatus(user, Instant.now());
@@ -115,6 +117,16 @@ public class BasicUserService implements UserService {
 
     log.info("[User] delete success userId={}", id);
     userRepository.deleteById(id);
+  }
+
+  @Override
+  @Transactional
+  public UserDto updateRole(UUID userId, UserRole newRole) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new UserNotFoundException(userId));
+
+    user.updateRole(newRole);
+    return userMapper.toDto(user);
   }
 
   // 비즈니스 로직 헬퍼 메서드

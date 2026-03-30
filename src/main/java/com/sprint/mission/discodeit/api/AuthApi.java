@@ -1,8 +1,10 @@
 package com.sprint.mission.discodeit.api;
 
 import com.sprint.mission.discodeit.dto.user.UserDto;
+import com.sprint.mission.discodeit.dto.user.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @Tag(name = "Auth", description = "인증 API")
 public interface AuthApi {
@@ -40,4 +43,8 @@ public interface AuthApi {
   })
   @GetMapping("/me")
   ResponseEntity<UserDto> getMe(@AuthenticationPrincipal DiscodeitUserDetails userDetails);
+
+  @Operation(summary = "사용자 권한 수정")
+  @PutMapping("/role")
+  ResponseEntity<UserDto> updateUserRole(@RequestBody UserRoleUpdateRequest request);
 }

@@ -15,6 +15,8 @@ import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
@@ -38,6 +40,10 @@ public class User extends BaseUpdatableEntity {
   @Column(name = "password", nullable = false, length = 60)
   private String password;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "role", nullable = false, length = 20)
+  private UserRole role;
+
   // 프로필 이미지 1:1 단방향
   @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "profile_id", unique = true)
@@ -51,11 +57,13 @@ public class User extends BaseUpdatableEntity {
     this.status = status;
   }
 
-  public User(String username, String email, String password, BinaryContent profile) {
+  public User(String username, String email, String password, BinaryContent profile,
+      UserRole role) {
     this.username = username;
     this.email = email;
     this.password = password;
     this.profile = profile;
+    this.role = role;
   }
 
   public void update(String username, String email, String password, BinaryContent profile) {
@@ -74,6 +82,13 @@ public class User extends BaseUpdatableEntity {
 
     if (profile != this.profile) {
       this.profile = profile;
+    }
+  }
+
+  // 권한 수정
+  public void updateRole(UserRole newRole) {
+    if (newRole != null) {
+      this.role = newRole;
     }
   }
 }
