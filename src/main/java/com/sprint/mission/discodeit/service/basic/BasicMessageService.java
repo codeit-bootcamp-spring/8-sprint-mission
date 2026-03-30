@@ -29,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +46,12 @@ public class BasicMessageService implements MessageService {
   private final MessageMapper messageMapper;
   private final BinaryContentStorage binaryContentStorage;
   private final PageResponseMapper pageResponseMapper;
+
+  public boolean isAuthor(UUID messageId, UUID userId) {
+    return messageRepository.findById(messageId)
+        .map(message -> message.getAuthor().getId().equals(userId))
+        .orElse(false);
+  }
 
   @Transactional
   @Override
@@ -113,6 +120,7 @@ public class BasicMessageService implements MessageService {
         });
   }
 
+  @PreAuthorize("hasRole('ADMIN') or @basicMessageService.isAuthor(#messageId, authentication.principal.userDto.id)")
   @Transactional
   @Override
   public MessageDto update(UUID messageId, MessageUpdateRequest messageUpdateRequest) {
@@ -130,6 +138,7 @@ public class BasicMessageService implements MessageService {
     return messageMapper.toDto(message);
   }
 
+  @PreAuthorize("hasRole('ADMIN') or @basicMessageService.isAuthor(#messageId, authentication.principal.userDto.id)")
   @Transactional
   @Override
   public void delete(UUID messageId) {
