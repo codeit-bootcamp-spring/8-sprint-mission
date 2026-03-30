@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -35,6 +37,15 @@ public interface AuthApi {
       )
   })
   @PostMapping("/login")
-    // 엔드포인트 경로 정의
   ResponseEntity<UserDto> login(@Valid @RequestBody LoginRequest request);
+
+  @Operation(summary = "CSRF 토큰 발급")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "203",
+          description = "토큰 생성 성공 (응답 헤더의 Set-Cookie 확인)"
+      )
+  })
+  @GetMapping("/csrf-token")
+  ResponseEntity<Void> getCsrfToken(CsrfToken csrfToken);
 }
