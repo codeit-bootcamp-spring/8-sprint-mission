@@ -35,10 +35,9 @@ public class BasicReadStatusService implements ReadStatusService {
 
   @Transactional
   @Override
-  public ReadStatusDto create(ReadStatusCreateRequest request) {
-    log.debug("읽음 상태 생성 시작: userId={}, channelId={}", request.userId(), request.channelId());
+  public ReadStatusDto create(UUID userId, ReadStatusCreateRequest request) {
+    log.debug("읽음 상태 생성 시작: userId={}, channelId={}", userId, request.channelId());
 
-    UUID userId = request.userId();
     UUID channelId = request.channelId();
 
     // 1. 사용자 및 채널 존재 확인

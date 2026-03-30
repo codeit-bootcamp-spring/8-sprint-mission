@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.controller.api;
 
+import com.sprint.mission.discodeit.auth.service.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.dto.data.ReadStatusDto;
 import com.sprint.mission.discodeit.dto.request.ReadStatusCreateRequest;
 import com.sprint.mission.discodeit.dto.request.ReadStatusUpdateRequest;
@@ -35,6 +36,7 @@ public interface ReadStatusApi {
       )
   })
   ResponseEntity<ReadStatusDto> create(
+      DiscodeitUserDetails currentUser,
       @Parameter(description = "Message 읽음 상태 생성 정보") ReadStatusCreateRequest request
   );
 
@@ -62,6 +64,6 @@ public interface ReadStatusApi {
       )
   })
   ResponseEntity<List<ReadStatusDto>> findAllByUserId(
-      @Parameter(description = "조회할 User ID") UUID userId
+      @Parameter(description = "조회할 User ID") DiscodeitUserDetails currentUser
   );
 } 

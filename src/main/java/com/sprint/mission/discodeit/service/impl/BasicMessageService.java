@@ -46,11 +46,10 @@ public class BasicMessageService implements MessageService {
 
   @Transactional
   @Override
-  public MessageDto create(MessageCreateRequest messageCreateRequest,
+  public MessageDto create(UUID authorId, MessageCreateRequest messageCreateRequest,
       List<BinaryContentCreateRequest> binaryContentCreateRequests) {
-    log.debug("메시지 생성 시작: request={}", messageCreateRequest);
+    log.debug("메시지 생성 시작: authorId={}, request={}", authorId, messageCreateRequest);
     UUID channelId = messageCreateRequest.channelId();
-    UUID authorId = messageCreateRequest.authorId();
 
     Channel channel = channelRepository.findById(channelId)
         .orElseThrow(() -> ChannelNotFoundException.withId(channelId));

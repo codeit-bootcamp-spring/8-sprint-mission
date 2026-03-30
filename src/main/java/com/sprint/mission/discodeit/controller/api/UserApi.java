@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.controller.api;
 
+import com.sprint.mission.discodeit.auth.service.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.dto.data.UserStatusDto;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
@@ -61,7 +62,7 @@ public interface UserApi {
       )
   })
   ResponseEntity<UserDto> update(
-      @Parameter(description = "수정할 User ID") UUID userId,
+      @Parameter(description = "수정할 User ID") DiscodeitUserDetails currentUser,
       @Parameter(description = "수정할 User 정보") UserUpdateRequest userUpdateRequest,
       @Parameter(description = "수정할 User 프로필 이미지") MultipartFile profile
   );
@@ -103,7 +104,7 @@ public interface UserApi {
       )
   })
   ResponseEntity<UserStatusDto> updateUserStatusByUserId(
-      @Parameter(description = "상태를 변경할 User ID") UUID userId,
+      @Parameter(description = "상태를 변경할 User ID") DiscodeitUserDetails currentUser,
       @Parameter(description = "변경할 User 온라인 상태 정보") UserStatusUpdateRequest request
   );
 }
