@@ -1,5 +1,6 @@
 -- 1. 가장 하위 자식 테이블 (관계 매핑 테이블)
 DROP TABLE IF EXISTS message_attachments;
+DROP TABLE IF EXISTS persistent_logins CASCADE;
 
 -- 2. 외래 키로 다른 테이블을 참조하고 있는 테이블들
 DROP TABLE IF EXISTS messages;
@@ -105,6 +106,14 @@ CREATE TABLE message_attachments
         FOREIGN KEY (attachment_id)
             REFERENCES binary_contents (id)
             ON DELETE CASCADE
+);
+
+CREATE TABLE persistent_logins
+(
+    username  VARCHAR(64)              NOT NULL,
+    series    VARCHAR(64) PRIMARY KEY,
+    token     VARCHAR(64)              NOT NULL,
+    last_used timestamp with time zone NOT NULL
 );
 
 

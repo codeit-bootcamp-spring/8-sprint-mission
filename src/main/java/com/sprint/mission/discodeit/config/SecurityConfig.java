@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.handler.CustomAuthenticationEntryPoint;
 import com.sprint.mission.discodeit.handler.LoginFailureHandler;
 import com.sprint.mission.discodeit.handler.LoginSuccessHandler;
 import com.sprint.mission.discodeit.handler.SpaCsrfTokenRequestHandler;
+import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,10 +22,15 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
@@ -44,8 +50,8 @@ public class SecurityConfig {
       LoginFailureHandler loginFailureHandler,
       CustomAuthenticationEntryPoint authenticationEntryPoint,
       CustomAccessDeniedHandler accessDeniedHandler,
-      SessionRegistry sessionRegistry
-  ) throws Exception {
+      SessionRegistry sessionRegistry,
+      RememberMeServices rememberMeServices) throws Exception {
 
     http
         .headers(headers -> headers
@@ -84,9 +90,12 @@ public class SecurityConfig {
         .sessionManagement(management -> management
             .sessionConcurrency(concurrency -> concurrency
                 .maximumSessions(1)
-                .maxSessionsPreventsLogin(true)
                 .sessionRegistry(sessionRegistry)
             )
+        )
+        .rememberMe(remember -> remember
+            .rememberMeServices(rememberMeServices)
+            .key("discodeit-key")
         )
         .exceptionHandling(ex -> ex
             .authenticationEntryPoint(authenticationEntryPoint)
@@ -104,6 +113,32 @@ public class SecurityConfig {
   @Bean
   public HttpSessionEventPublisher httpSessionEventPublisher() {
     return new HttpSessionEventPublisher();
+  }
+
+  @Bean
+  public JdbcTokenRepositoryImpl tokenRepository(DataSource dataSource) {
+    JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
+    tokenRepository.setDataSource(dataSource);
+
+    return tokenRepository;
+  }
+
+  @Bean
+  public PersistentTokenBasedRememberMeServices persistentTokenBasedRememberMeServices(
+      UserDetailsService userDetailsService, PersistentTokenRepository tokenRepository
+  ) {
+    PersistentTokenBasedRememberMeServices rememberMeServices =
+        new PersistentTokenBasedRememberMeServices(
+            "discodeit-key",
+            userDetailsService,
+            tokenRepository
+        );
+
+    rememberMeServices.setTokenValiditySeconds(60 * 60 * 24 * 7);
+    rememberMeServices.setCookieName("remember-me");
+    rememberMeServices.setParameter("remember-me");
+
+    return rememberMeServices;
   }
 
   @Bean
