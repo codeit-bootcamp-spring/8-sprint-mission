@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 @RequiredArgsConstructor
@@ -19,9 +20,7 @@ public class DiscodeitUserDetails implements UserDetails {
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
-    // TODO: 향후 권한 시스템 도입 시 구현
-    // return List.of(new SimpleGrantedAuthority(user.getRole().getAuthority()));
-    return Collections.emptyList();
+    return Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
   }
 
   @Override
