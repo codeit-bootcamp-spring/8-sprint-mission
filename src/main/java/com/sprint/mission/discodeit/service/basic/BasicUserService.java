@@ -6,7 +6,6 @@ import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentSaveFailedException;
 import com.sprint.mission.discodeit.exception.user.UserEmailAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
@@ -16,7 +15,6 @@ import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -83,7 +81,6 @@ public class BasicUserService implements UserService {
     String encryptedPassword = passwordEncoder.encode(password);
 
     User user = new User(username, email, encryptedPassword, profile);
-    UserStatus userStatus = new UserStatus(user, Instant.now());
 
     userRepository.save(user);
 
@@ -179,7 +176,7 @@ public class BasicUserService implements UserService {
   public List<UserDto> findAll() {
     log.debug("[UserService] 전체 사용자 목록 조회 시작");
 
-    List<UserDto> result = userRepository.findAllWithProfileAndStatus().stream()
+    List<UserDto> result = userRepository.findAllWithProfile().stream()
         .map(userMapper::toDto)
         .toList();
 

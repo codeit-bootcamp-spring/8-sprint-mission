@@ -8,7 +8,6 @@ public record UserDto(
     String username, // 사용자의 이름
     String email,
     BinaryContentDto profile,
-    Boolean online,
     Role role
 ) {
 

@@ -2,10 +2,8 @@ package com.sprint.mission.discodeit.initializer;
 
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -39,9 +37,9 @@ public class AdminInitializer implements ApplicationRunner {
           passwordEncoder.encode("qwer1234"),
           null
       );
-      UserStatus userStatus = new UserStatus(admin, Instant.now());
+
       admin.updateRole(Role.ADMIN);
-      
+
       userRepository.save(admin);
 
       log.info("[Initializer] 어드민 계정 생성 완료: {}", admin.getUsername());

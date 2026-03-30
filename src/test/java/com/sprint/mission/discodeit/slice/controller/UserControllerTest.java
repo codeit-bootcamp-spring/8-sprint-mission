@@ -16,10 +16,10 @@ import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.service.UserStatusService;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,9 +44,6 @@ public class UserControllerTest {
   @MockitoBean
   private UserService userService;
 
-  @MockitoBean
-  private UserStatusService userStatusService;
-
   private UUID userId;
   private UUID profileId;
   private byte[] profileBytes;
@@ -63,7 +60,7 @@ public class UserControllerTest {
     testProfile = new BinaryContent("profile.png", 10L, "image/png");
     testProfileDto = new BinaryContentDto(profileId, "profile.png", 10L, "image/png");
     testUser = new User("testUser", "test@naver.com", "test1234", testProfile);
-    testUserDto = new UserDto(userId, "testUser", "test@naver.com", testProfileDto, true);
+    testUserDto = new UserDto(userId, "testUser", "test@naver.com", testProfileDto, Role.USER);
   }
 
   @Test
@@ -146,7 +143,8 @@ public class UserControllerTest {
         "application/json",
         userJson.getBytes(StandardCharsets.UTF_8));
 
-    testUserDto = new UserDto(userId, "updateTestUser", "test@naver.com", testProfileDto, true);
+    testUserDto = new UserDto(userId, "updateTestUser", "test@naver.com", testProfileDto,
+        Role.USER);
     given(userService.update(eq(userId), eq(userReq), any())).willReturn(testUserDto);
 
     // when & then

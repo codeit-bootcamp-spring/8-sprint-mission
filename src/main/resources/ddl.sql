@@ -4,7 +4,6 @@ DROP TABLE IF EXISTS message_attachments;
 -- 2. 외래 키로 다른 테이블을 참조하고 있는 테이블들
 DROP TABLE IF EXISTS messages;
 DROP TABLE IF EXISTS read_statuses;
-DROP TABLE IF EXISTS user_statuses;
 
 -- 3. 더 이상 자식이 없는 부모 테이블들
 DROP TABLE IF EXISTS users;
@@ -45,20 +44,6 @@ CREATE TABLE users
         FOREIGN KEY (profile_id)
             REFERENCES binary_contents (id)
             ON DELETE SET NULL
-);
-
-CREATE TABLE user_statuses
-(
-    id             uuid PRIMARY KEY,
-    created_at     timestamp with time zone NOT NULL,
-    updated_at     timestamp with time zone,
-    user_id        uuid UNIQUE              NOT NULL,
-    last_active_at timestamp with time zone NOT NULL,
-
-    CONSTRAINT fk_user_statuses_users
-        FOREIGN KEY (user_id)
-            REFERENCES users (id)
-            ON DELETE CASCADE
 );
 
 CREATE TABLE read_statuses

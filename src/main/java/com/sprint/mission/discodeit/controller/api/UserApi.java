@@ -1,9 +1,7 @@
 package com.sprint.mission.discodeit.controller.api;
 
 import com.sprint.mission.discodeit.dto.UserDto;
-import com.sprint.mission.discodeit.dto.UserStatusDto;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
-import com.sprint.mission.discodeit.dto.request.UserStatusUpdateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -63,14 +61,4 @@ public interface UserApi {
       @ApiResponse(responseCode = "200", description = "사용자 정보 수정 성공", content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserDto.class))))
   })
   ResponseEntity<List<UserDto>> findAll();
-
-  @Operation(summary = "사용자 접속 상태 정보 수정")
-  @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "사용자 접속 상태 정보 수정 성공", content = @Content(schema = @Schema(implementation = UserStatusDto.class))),
-      @ApiResponse(responseCode = "404", description = "사용자 접속 상태 조회 불가", content = @Content(examples = @ExampleObject(value = "해당 사용자의 접속 정보를 찾을 수 없습니다.")))
-  })
-  ResponseEntity<UserStatusDto> updateUserStatusByUserId(
-      @Parameter(description = "상태를 변경할 사용자 Id") UUID userId,
-      @Parameter(description = "변경할 사용자 온라인 상태 정보") UserStatusUpdateRequest userStatusUpdateRequest
-  );
 }

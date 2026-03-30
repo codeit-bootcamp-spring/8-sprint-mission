@@ -17,7 +17,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "users")
@@ -49,10 +48,6 @@ public class User extends BaseUpdatableEntity {
   @Enumerated(EnumType.STRING)
   @Column(name = "role", nullable = false)
   private Role role;
-
-  @Setter(AccessLevel.PROTECTED)
-  @OneToOne(mappedBy = "user", orphanRemoval = true, cascade = CascadeType.ALL)
-  private UserStatus status;
 
   public User(String username, String email, String password, BinaryContent profile) {
     this.username = username;

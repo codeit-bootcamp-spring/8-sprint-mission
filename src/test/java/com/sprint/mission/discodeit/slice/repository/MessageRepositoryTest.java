@@ -7,11 +7,9 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -43,9 +41,6 @@ public class MessageRepositoryTest {
   @Autowired
   private ChannelRepository channelRepository;
 
-  @Autowired
-  private UserStatusRepository userStatusRepository;
-
   private User author;
   private Channel channel;
   private Message firstMessage;
@@ -62,8 +57,6 @@ public class MessageRepositoryTest {
     thirdMessage = new Message("third", channel, author, null);
 
     userRepository.save(author);
-    UserStatus status = new UserStatus(author, now);
-    userStatusRepository.save(status);
     channelRepository.save(channel);
 
     ReflectionTestUtils.setField(firstMessage, "createdAt", now.minusSeconds(10));

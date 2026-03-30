@@ -20,6 +20,7 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentSaveFailedException;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
@@ -95,7 +96,7 @@ public class MessageServiceTest {
     messageId = UUID.randomUUID();
     mockChannel = new Channel(ChannelType.PUBLIC, "test", "test channel");
     mockAuthor = new User("testUser", "testUser@naver.com", "test1234", null);
-    mockAuthorDto = new UserDto(authorId, "testUser", "testUser@naver.com", null, true);
+    mockAuthorDto = new UserDto(authorId, "testUser", "testUser@naver.com", null, Role.USER);
     mockMessage = new Message("안녕", mockChannel, mockAuthor, List.of());
     mockMessageDto = new MessageDto(messageId, Instant.now(), Instant.now(), "안녕", channelId,
         mockAuthorDto, List.of());
