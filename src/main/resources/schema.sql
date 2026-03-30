@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS users
     email      varchar(100)             NOT NULL,
     password   varchar(60)              NOT NULL,
     profile_id uuid,
+    role       varchar(20)              NOT NULL,
     -- table level constraints
     CONSTRAINT pk_users_id PRIMARY KEY (id),
     CONSTRAINT uk_users_name UNIQUE (username),
@@ -126,6 +127,7 @@ COMMENT ON COLUMN users.username IS '유저이름';
 COMMENT ON COLUMN users.email IS '유저이메일';
 COMMENT ON COLUMN users.password IS '유저비밀번호';
 COMMENT ON COLUMN users.profile_id IS '유저프로필코드';
+COMMENT ON COLUMN users.role IS '유저 역할';
 
 COMMENT ON COLUMN user_statuses.id IS '유저상태코드';
 COMMENT ON COLUMN user_statuses.created_at IS '유저상태생성시간';

@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.DTO.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.DTO.request.UserCreateRequest;
 import com.sprint.mission.discodeit.DTO.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.UserException.DuplicateEmailException;
@@ -18,6 +19,10 @@ import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +46,7 @@ public class BasicUserService implements UserService {
 
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final SessionRegistry sessionRegistry;
 
     @Override
     @Transactional
@@ -170,6 +176,32 @@ public class BasicUserService implements UserService {
         log.info("Service: 사용자 DB 삭제 완료 - ID: {}", userId);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @Override
+    @Transactional
+    public UserDto updateUserRole(UUID userId, Role newRole) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+
+        String username = user.getUsername();
+        Role oldRole = user.getRole();
+
+        log.info("[UserService] 사용자 권한 변경 시작...");
+        log.info("[UserService] - 사용자: {}", username);
+        log.info("[UserService] - 기존권한: {}", oldRole);
+        log.info("[UserService] - 사용자: {}", newRole);
+
+        user.updateRole(newRole);
+        User updatedUser = userRepository.save(user);
+
+        // 권한이 변경된 사용자의 모든 활성 세션을 무효화
+        invalidatedUserSessions(username);
+
+        log.info("[UserService] 사용자 권한 변경 및 세션 무효화 완료!");
+
+        return userMapper.toDto(updatedUser);
+    }
+
     //중복 코드 제거
     private BinaryContent saveBinaryContent(BinaryContentCreateRequest request) {
         String fileName = request.fileName();
@@ -181,5 +213,47 @@ public class BasicUserService implements UserService {
                 contentType
         );
         return binaryContentRepository.save(binaryContent);
+    }
+
+    // 특정 사용자의 모든 활성 세션을 무효화
+    // 권한 변경, 비밀번호 변경 등 보안상 중요한 변경 시 호출 가능
+    private void invalidatedUserSessions(String username) {
+        try {
+            log.info("[UserService] ****** 세션 무효화 시작 ******");
+            log.info("[UserService] 대상 사용자: {}", username);
+
+            // SessionRegistry에서 모든 주체(principal) 조회
+            List<Object> principals = sessionRegistry.getAllPrincipals();
+            log.info("[UserService] 현재 로그인된 사용자 수: {}", principals.size());
+
+            // 해당 사용자의 모든 세션 정보 찾기
+            for (Object principal : principals) {
+                UserDetails userDetails = (UserDetails) principal;
+                String principalName = userDetails.getUsername();
+
+                log.info("[UserService] 현재 확인중인 Principal: {} + (username: {})", principal, principalName);
+
+                if (username.equals(principalName)) {
+
+                    // 해당 사용자의 모든 세션 정보 가져오기
+                    List<SessionInformation> sessions = sessionRegistry.getAllSessions(principal, false);
+                    log.info("[UserService] 카깃 사용자 발견! 이 사람의 활성 세션 수: " + sessions.size());
+
+                    // 위에 검색된 모든 세션 무효화
+                    for (SessionInformation session : sessions) {
+                        log.info("[UserService] 세션 무효화중... - 세션 ID: {}", session.getSessionId());
+                        session.expireNow();
+                        log.info("[UserService] 세션 무효화 완료! - 만료됨: {}", session.isExpired());
+                    }
+
+                    log.info("[UserService] 사용자 {}의 모든 세션({}개)이 무효화 되었습니다.", username, sessions.size());
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            // 세션 무효화 실패 시, 권한 변경 자체를 실패시키지 않음 (DB 변경은 유지시키겠다)
+            log.error("[UserService] 세션 무효화 중 오류 발생! - {}", e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

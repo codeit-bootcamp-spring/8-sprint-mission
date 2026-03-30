@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.config;
 
+import com.sprint.mission.discodeit.handler.CustomSessionExpiredStrategy;
 import com.sprint.mission.discodeit.handler.LoginFailureHandler;
 import com.sprint.mission.discodeit.handler.LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,11 +10,16 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.*;
 
 import java.util.List;
@@ -27,6 +33,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
+                                           SessionRegistry sessionRegistry,
                                            LoginSuccessHandler loginSuccessHandler,
                                            LoginFailureHandler loginFailureHandler) throws Exception {
         http
@@ -61,6 +68,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 )
+                // 세션 관리 설정
+                .sessionManagement(session -> session
+                        .sessionFixation().migrateSession()
+                        .maximumSessions(1)
+                        .maxSessionsPreventsLogin(false)
+                        .sessionRegistry(sessionRegistry)
+                        .expiredSessionStrategy(new CustomSessionExpiredStrategy())
+                )
 
                 // form 기반 로그인 활성화
                 .formLogin(form -> form
@@ -71,6 +86,16 @@ public class SecurityConfig {
                         // 로그인 실패 시 처리할 핸들러 정의
                         .failureHandler(loginFailureHandler)
                         // 로그인 페이지는 인증 없이 모두 접근 가능해야 한다.
+                        .permitAll()
+                )
+                // Http Basic Authentication(기본 인증) 비활성화 (보안상 위험함)
+                .httpBasic(basic -> basic.disable())
+                .logout(logout -> logout
+                        // 로그아웃을 처리하는 URL 정의
+                        .logoutUrl("/api/auth/logout")
+                        // 로그아웃 성공 시 처리할 핸들러 정의
+                        .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
+                        // 로그아웃 페이지를 인증 없이 모두 접근 가능해야 함
                         .permitAll()
                 );
         return http.build();
@@ -95,6 +120,36 @@ public class SecurityConfig {
         };
     }
 
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        // 세션 레지스트리 구현체를 상속받아 로깅 커스터마이징
+        SessionRegistryImpl sessionRegistry = new SessionRegistryImpl() {
+
+            @Override
+            public void registerNewSession(String sessionId, Object principal) {
+                log.info("[SessionRegistry] 새 세션 등록 - 사용자: {}, 세션ID: {}", principal, sessionId);
+                super.registerNewSession(sessionId, principal);
+            }
+
+            @Override
+            public void removeSessionInformation(String sessionId) {
+                log.info("[SessionRegistry] 기존 세션 제거 - 세션ID: {}", sessionId);
+                super.removeSessionInformation(sessionId);
+            }
+
+            @Override
+            public SessionInformation getSessionInformation(String sessionId) {
+                SessionInformation info = super.getSessionInformation(sessionId);
+                if (info != null) {
+                    log.info("[SessionRegistry] 세션 정보 조회 - 세션ID: {}, 만료됨: {}", sessionId, info.isExpired());
+                }
+                return info;
+            }
+        };
+
+        return sessionRegistry;
+    }
+
     public static class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
         private final CsrfTokenRequestHandler plain = new CsrfTokenRequestAttributeHandler();
         private final CsrfTokenRequestHandler xor = new XorCsrfTokenRequestAttributeHandler();
@@ -113,8 +168,7 @@ public class SecurityConfig {
         public String resolveCsrfTokenValue(HttpServletRequest request, CsrfToken csrfToken) {
             String headerValue = request.getHeader(csrfToken.getHeaderName());
             return (org.springframework.util.StringUtils.hasText(headerValue) ? this.plain : this.xor)
-                    .resolveCsrfTokenValue(request, csrfToken)
-                    ;
+                    .resolveCsrfTokenValue(request, csrfToken);
         }
     }
 }
