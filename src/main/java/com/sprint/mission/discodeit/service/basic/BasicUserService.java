@@ -7,7 +7,6 @@ import com.sprint.mission.discodeit.DTO.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.UserException.DuplicateEmailException;
 import com.sprint.mission.discodeit.exception.UserException.DuplicateUsernameException;
 import com.sprint.mission.discodeit.exception.UserException.UserNotFoundException;

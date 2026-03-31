@@ -25,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.*;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -220,5 +221,10 @@ public class SecurityConfig {
         log.info("[SecurityConfig] MethodSecurityExpressionHandler 설정 완료!");
 
         return handler;
+    }
+
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
     }
 }

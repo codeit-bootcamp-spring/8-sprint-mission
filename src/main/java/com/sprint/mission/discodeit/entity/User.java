@@ -47,10 +47,6 @@ public class User extends BaseUpdatableEntity {
     )
     private BinaryContent profile;
 
-    // 양방향 일대일 관계
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
-    private UserStatus userStatus;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role = Role.USER; // 객체 생성 시 기본적으로 USER 할당
