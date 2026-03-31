@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -31,7 +32,8 @@ public class SecurityConfig {
   public SecurityFilterChain filterChain(HttpSecurity http,
       LoginSuccessHandler loginSuccessHandler,
       LoginFailureHandler loginFailureHandler,
-      SessionRegistry sessionRegistry) throws Exception {
+      SessionRegistry sessionRegistry,
+      UserDetailsService userDetailsService) throws Exception {
     http
         // CSRF 설정 - SPA 환경에 맞게 쿠키 기반 저장소, 커스텀 핸들러 사용
         .csrf(csrf -> csrf
@@ -64,11 +66,24 @@ public class SecurityConfig {
         .sessionManagement(management -> management
             .sessionConcurrency(concurrency -> concurrency
                 .maximumSessions(1)
-                // 기존 세션 유지, 새 로그인 차단
-                .maxSessionsPreventsLogin(true)
+                // 기존 세션 존재 -> 로그인 허용하고, 대신 기존 세션을 만료
+                .maxSessionsPreventsLogin(false)
                 // 저장소 지정
                 .sessionRegistry(sessionRegistry)
             )
+        )
+        // Remember-Me 설정
+        .rememberMe(rememberMe -> rememberMe
+            // 토큰 생성 시 사용할 비밀키
+            .key("discodeit-secret-key")
+            // 7일 유지
+            .tokenValiditySeconds(60 * 60 * 24 * 7)
+            // 세션 만료 시 유저 정보를 가져올 서비스
+            .userDetailsService(userDetailsService)
+            // 로그인 시 체크박스 파라미터 명
+            .rememberMeParameter("remember-me")
+            // 체크 박스 선택 시에만 동작
+            .alwaysRemember(false)
         )
         // 권한 설정
         .authorizeHttpRequests(
