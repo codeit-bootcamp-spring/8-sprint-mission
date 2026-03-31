@@ -20,10 +20,14 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.csrf.*;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
@@ -43,7 +47,7 @@ public class SecurityConfig {
                                            LoginSuccessHandler loginSuccessHandler,
                                            LoginFailureHandler loginFailureHandler,
                                            CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
-                                           CustomAccessDeniedHandler customAccessDeniedHandler) throws Exception {
+                                           CustomAccessDeniedHandler customAccessDeniedHandler, RememberMeServices rememberMeServices) throws Exception {
         http
                 // CSRF 설정: 쿠키 기반 CSRF 토큰 사용
                 .csrf(csrf -> csrf
@@ -90,6 +94,13 @@ public class SecurityConfig {
                                 .sessionRegistry(sessionRegistry)
                                 .expiredSessionStrategy(new CustomSessionExpiredStrategy())
                         )
+                )
+                // Remember-Me 설정
+                .rememberMe(remember -> remember
+                        // bean으로 정의한 Remember-Me 서비스 사용
+                        .rememberMeServices(rememberMeServices)
+                        // 토큰 생성 시 사용할 키(설정 파일등에서 주입받을 수 있으나, 편의상 리터럴 문자열 사용)
+                        .key("discodeit-key")
                 )
 
                 // form 기반 로그인 활성화
@@ -226,5 +237,27 @@ public class SecurityConfig {
     @Bean
     public HttpSessionEventPublisher httpSessionEventPublisher() {
         return new HttpSessionEventPublisher();
+    }
+
+    // Remember-Me 서비스 Bean 설정
+    // 테스트를 위해 1분으로 설정
+    @Bean
+    public PersistentTokenBasedRememberMeServices persistentTokenBasedRememberMeServices(
+            UserDetailsService userDetailsService, PersistentTokenRepository tokenRepository
+    ) {
+        PersistentTokenBasedRememberMeServices rememberMeServices =
+                new PersistentTokenBasedRememberMeServices(
+                        "discodeit-key",
+                        userDetailsService,
+                        tokenRepository
+                );
+
+        rememberMeServices.setTokenValiditySeconds(60);
+        rememberMeServices.setCookieName("remember-me");
+        rememberMeServices.setParameter("remember-me");
+
+        log.info("[SecurityConfig] Remember-Me 설정 완료...");
+
+        return rememberMeServices;
     }
 }
