@@ -6,9 +6,8 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.entity.UserRole;
 import jakarta.persistence.EntityManager;
-import java.time.Instant;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,8 +29,7 @@ class MessageRepositoryTest {
   private EntityManager em;
 
   private User persistUser(String username) {
-    User u = new User(username, username + "@test.com", "pw", null);
-    u.attachStatus(new UserStatus(u, Instant.now()));
+    User u = new User(username, username + "@test.com", "pw", null, UserRole.USER);
     em.persist(u);
     em.flush();
     return u;

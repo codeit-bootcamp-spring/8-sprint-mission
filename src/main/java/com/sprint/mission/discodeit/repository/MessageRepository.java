@@ -16,8 +16,7 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
   // 페이징
   @EntityGraph(attributePaths = {
       "author",
-      "author.profile",
-      "author.status"
+      "author.profile"
   })
   Slice<Message> findAllByChannel_Id(UUID channelId, Pageable pageable);
 

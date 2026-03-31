@@ -15,6 +15,7 @@ import java.util.UUID;
     • email            : 유저 이메일 주소
     • profile          : 프로필 이미지
     • online           : 유저 온라인 여부 (5분 지나지 않아야 온라인)
+    • role             : 유저 권한
  */
 public record UserDto(
     UUID id,

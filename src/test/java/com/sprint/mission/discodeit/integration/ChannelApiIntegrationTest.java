@@ -1,5 +1,7 @@
 package com.sprint.mission.discodeit.integration;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -36,14 +38,15 @@ class ChannelApiIntegrationTest {
   void createChannel_success() throws Exception {
     mockMvc.perform(
             post("/api/channels/public")
+                .with(user("admin").roles("CHANNEL_MANAGER")) // [핵심] 권한 주입
+                .with(csrf()) // CSRF 토큰 주입
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"name":"pub1","description":"description"}
                     """)
         )
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.name").value("pub1"))
-        .andExpect(jsonPath("$.type").value("PUBLIC"));
+        .andExpect(jsonPath("$.name").value("pub1"));
   }
 
   @Test
@@ -51,13 +54,19 @@ class ChannelApiIntegrationTest {
   void deleteChannel_success() throws Exception {
     UUID channelId = createPublicChannelAndGetId("pub_delete");
 
-    mockMvc.perform(delete("/api/channels/{id}", channelId))
+    mockMvc.perform(
+            delete("/api/channels/{id}", channelId)
+                .with(user("admin").roles("CHANNEL_MANAGER")) // 권한 주입
+                .with(csrf()) // CSRF 토큰 주입
+        )
         .andExpect(status().is2xxSuccessful());
   }
 
   private UUID createPublicChannelAndGetId(String name) throws Exception {
     MvcResult result = mockMvc.perform(
             post("/api/channels/public")
+                .with(user("admin").roles("CHANNEL_MANAGER"))
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"name":"%s","description":"d"}

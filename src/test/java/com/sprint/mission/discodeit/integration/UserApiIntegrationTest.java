@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.integration;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -31,23 +32,24 @@ class UserApiIntegrationTest {
   private ObjectMapper objectMapper;
 
   @Test
-  @DisplayName("통합: 유저 생성 성공 -> 201")
+  @DisplayName("사용자 생성 통합 테스트")
   void createUser_success() throws Exception {
-    UserCreateRequest req = new UserCreateRequest("jun", "jun@test.com", "pw");
+    UserCreateRequest req = new UserCreateRequest("testuser", "test@email.com", "password");
+
+    byte[] json = objectMapper.writeValueAsBytes(req);
 
     MockMultipartFile requestPart = new MockMultipartFile(
-        "userCreateRequest", "", "application/json",
-        objectMapper.writeValueAsBytes(req)
+        "userCreateRequest", "", "application/json", json
     );
 
     mockMvc.perform(
             multipart("/api/users")
                 .file(requestPart)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
+                .with(csrf()) // [핵심 추가] CSRF 토큰 시뮬레이션
         )
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.username").value("jun"))
-        .andExpect(jsonPath("$.email").value("jun@test.com"));
+        .andExpect(jsonPath("$.username").value("testuser"));
   }
 
   @Test

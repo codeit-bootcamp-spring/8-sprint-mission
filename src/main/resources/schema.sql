@@ -41,19 +41,7 @@ CREATE TABLE channels
     type        VARCHAR(10) NOT NULL CHECK (type IN ('PUBLIC', 'PRIVATE'))
 );
 
--- 6. user_statuses 테이블
-CREATE TABLE user_statuses
-(
-    id             UUID PRIMARY KEY,
-    created_at     TIMESTAMPTZ NOT NULL,
-    updated_at     TIMESTAMPTZ,
-    user_id        UUID        NOT NULL UNIQUE,
-    last_active_at TIMESTAMPTZ NOT NULL,
-    CONSTRAINT fk_user_statuses_users FOREIGN KEY (user_id)
-        REFERENCES users (id) ON DELETE CASCADE
-);
-
--- 7. read_statuses 테이블
+-- 6. read_statuses 테이블
 CREATE TABLE read_statuses
 (
     id           UUID PRIMARY KEY,
@@ -69,7 +57,7 @@ CREATE TABLE read_statuses
         REFERENCES channels (id) ON DELETE CASCADE
 );
 
--- 8. messages 테이블
+-- 7. messages 테이블
 CREATE TABLE messages
 (
     id         UUID PRIMARY KEY,
@@ -84,7 +72,7 @@ CREATE TABLE messages
         REFERENCES users (id) ON DELETE SET NULL
 );
 
--- 9. message_attachments 테이블
+-- 8. message_attachments 테이블
 CREATE TABLE message_attachments
 (
     message_id    UUID NOT NULL,

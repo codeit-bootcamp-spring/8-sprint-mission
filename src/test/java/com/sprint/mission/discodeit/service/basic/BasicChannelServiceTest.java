@@ -21,6 +21,7 @@ import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.entity.UserRole;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.channel.PrivateChannelUpdateException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
@@ -114,8 +115,8 @@ public class BasicChannelServiceTest {
     Channel savedChannel = new Channel(ChannelType.PRIVATE, null, null);
     given(channelRepository.save(any(Channel.class))).willReturn(savedChannel);
 
-    User user1 = new User("u1", "u1@test.com", "pw", null);
-    User user2 = new User("u2", "u2@test.com", "pw", null);
+    User user1 = new User("u1", "u1@test.com", "pw", null, UserRole.USER);
+    User user2 = new User("u2", "u2@test.com", "pw", null, UserRole.USER);
     given(userRepository.findById(u1)).willReturn(Optional.of(user1));
     given(userRepository.findById(u2)).willReturn(Optional.of(user2));
 

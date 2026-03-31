@@ -1,7 +1,10 @@
 package com.sprint.mission.discodeit.integration;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -51,6 +54,9 @@ class MessageApiIntegrationTest {
             multipart("/api/messages")
                 .file(requestPart)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
+                // 메시지를 작성하는 사용자 정보를 주입
+                .with(user("m1").roles("USER"))
+                .with(csrf())
         )
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.content").value("hello"))
@@ -65,6 +71,8 @@ class MessageApiIntegrationTest {
     mockMvc.perform(
             get("/api/messages")
                 .param("channelId", channelId.toString())
+                // 조회 시에도 인증된 사용자여야 합니다.
+                .with(user("m1").roles("USER"))
         )
         .andExpect(status().isOk());
   }
@@ -81,6 +89,7 @@ class MessageApiIntegrationTest {
             multipart("/api/users")
                 .file(requestPart)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
+                .with(csrf()) // 회원가입도 CSRF 필요
         )
         .andExpect(status().isCreated())
         .andReturn();
@@ -91,8 +100,10 @@ class MessageApiIntegrationTest {
 
   private UUID createPublicChannelAndGetId(String name) throws Exception {
     MvcResult result = mockMvc.perform(
-            org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                .post("/api/channels/public")
+            post("/api/channels/public")
+                // 퍼블릭 채널 생성은 CHANNEL_MANAGER 이상의 권한이 있어야 함
+                .with(user("admin").roles("CHANNEL_MANAGER"))
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"name":"%s","description":"d"}

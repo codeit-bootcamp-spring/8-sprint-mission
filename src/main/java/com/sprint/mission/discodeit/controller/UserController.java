@@ -5,10 +5,7 @@ import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateRequest
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
-import com.sprint.mission.discodeit.dto.userstatus.UserStatusDto;
-import com.sprint.mission.discodeit.dto.userstatus.UserStatusUpdateRequest;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.service.UserStatusService;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
@@ -25,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserController implements UserApi {
 
   private final UserService userService;
-  private final UserStatusService userStatusService;
 
   // 유저 생성
   @Override
@@ -58,15 +54,6 @@ public class UserController implements UserApi {
   @Override
   public ResponseEntity<List<UserDto>> findAll() {
     return ResponseEntity.ok(userService.findAll());
-  }
-
-  // 사용자 온라인 상태 업데이트
-  @Override
-  public ResponseEntity<UserStatusDto> updateUserStatusByUserId(UUID userId,
-      UserStatusUpdateRequest request) {
-    UserStatusDto response = userStatusService.updateByUserId(userId,
-        request.newLastActiveAt());
-    return ResponseEntity.ok(response);
   }
 
   private BinaryContentCreateRequest toBinaryRequest(MultipartFile file) {

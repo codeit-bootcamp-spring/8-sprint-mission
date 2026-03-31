@@ -11,6 +11,6 @@ import org.mapstruct.Mapping;
 )
 public interface UserMapper {
 
-  @Mapping(target = "online", expression = "java(user.getStatus() != null && user.getStatus().isOnline())")
-  UserDto toDto(User user);
+  @Mapping(target = "online", source = "online")
+  UserDto toDto(User user, boolean online);
 }

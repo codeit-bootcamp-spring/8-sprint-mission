@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -15,6 +18,7 @@ import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.entity.UserRole;
 import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
@@ -29,6 +33,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,6 +48,10 @@ public class BasicUserServiceTest {
   BinaryContentService binaryContentService;
   @Mock
   BinaryContentRepository binaryContentRepository;
+  @Mock
+  PasswordEncoder passwordEncoder;
+  @Mock
+  SessionRegistry sessionRegistry;
 
   @InjectMocks
   BasicUserService userService;
@@ -55,20 +65,23 @@ public class BasicUserServiceTest {
     when(userRepository.existsByUsernameOrEmail("jun", "jun@test.com")).thenReturn(false);
 
     // userRepository.save 호출 -> 저장 된 User를 반환한다고, 가정
+    when(passwordEncoder.encode(anyString())).thenReturn("encodedPw");
     when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
     // 어떤 User가 오던 내가 원하는 dto를 반환하도록 스텁
-    UserDto mapped = new UserDto(UUID.randomUUID(), "jun", "jun@test.com", null, false);
-    when(userMapper.toDto(any(User.class))).thenReturn(mapped);
+    UserDto mapped = new UserDto(UUID.randomUUID(), "jun", "jun@test.com", null, true,
+        UserRole.USER);
+    when(userMapper.toDto(any(User.class), anyBoolean())).thenReturn(mapped);
 
     // When
     UserDto result = userService.create(request, null);
 
     // Then
     assertSame(mapped, result);
+    verify(passwordEncoder).encode("pw12345");
     verify(userRepository).existsByUsernameOrEmail("jun", "jun@test.com");
     verify(userRepository).save(any(User.class));
-    verify(userMapper).toDto(any(User.class));
+    verify(userMapper).toDto(any(User.class), anyBoolean());
     // profileRequest가 null이기에 binary쪽 service나 repo는 절대 호출 X
     // 내가 앞에서 verify()로 확인한 것들 말고는 추가로 호출된 게 없어야 한다"
     verifyNoMoreInteractions(binaryContentService, binaryContentRepository);
@@ -99,25 +112,24 @@ public class BasicUserServiceTest {
     UUID userId = UUID.randomUUID();
     UserUpdateRequest request = new UserUpdateRequest("newName", "new@test.com", "newPw", null);
 
-    User user = new User("oldName", "old@test.com", "oldPw", null);
+    User user = new User("oldName", "old@test.com", "oldPw", null, UserRole.USER);
+    ReflectionTestUtils.setField(user, "id", userId);
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(userRepository.findByUsername("newName")).thenReturn(Optional.empty());
-    when(userRepository.findByEmail("new@test.com")).thenReturn(Optional.empty());
+    when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+    when(passwordEncoder.encode(anyString())).thenReturn("newEncodedPw");
 
-    UserDto mapped = new UserDto(userId, "newName", "new@test.com", null, false);
-    when(userMapper.toDto(user)).thenReturn(mapped);
+    UserDto mapped = new UserDto(userId, "newName", "new@test.com", null, true, UserRole.USER);
+    when(userMapper.toDto(eq(user), anyBoolean())).thenReturn(mapped);
 
     // When
     UserDto result = userService.update(userId, request, null);
 
     // Then
-    assertSame(mapped, result);
-    verify(userRepository).findById(userId);
-    verify(userRepository).findByUsername("newName");
-    verify(userRepository).findByEmail("new@test.com");
-    verify(userRepository, never()).save(any(User.class));
-    verify(userMapper).toDto(user);
+    assertEquals("newName", user.getUsername());
+    assertEquals("newEncodedPw", user.getPassword());
+    verify(userMapper).toDto(eq(user), anyBoolean());
 
     assertEquals("newName", user.getUsername());
     assertEquals("new@test.com", user.getEmail());
@@ -145,13 +157,16 @@ public class BasicUserServiceTest {
     UUID userId = UUID.randomUUID();
     UserUpdateRequest request = new UserUpdateRequest("newName", "new@test.com", "newPw", null);
 
-    User me = new User("oldName", "old@test.com", "oldPw", null);
+    User me = new User("oldName", "old@test.com", "oldPw", null, UserRole.USER);
     ReflectionTestUtils.setField(me, "id", userId);
 
-    User other = new User("other", "new@test.com", "pw", null);
+    User other = new User("other", "new@test.com", "pw", null, UserRole.USER);
     ReflectionTestUtils.setField(other, "id", UUID.randomUUID());
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(me));
+
+    // findByUsername은 중복이 없다고 가정
+    when(userRepository.findByUsername("newName")).thenReturn(Optional.empty());
 
     // email 중복 발생
     when(userRepository.findByEmail("new@test.com")).thenReturn(Optional.of(other));
@@ -172,10 +187,10 @@ public class BasicUserServiceTest {
     UUID userId = UUID.randomUUID();
     UserUpdateRequest request = new UserUpdateRequest("newName", "new@test.com", "newPw", null);
 
-    User user = new User("oldName", "old@test.com", "oldPw", null);
+    User user = new User("oldName", "old@test.com", "oldPw", null, UserRole.USER);
     ReflectionTestUtils.setField(user, "id", userId);
 
-    User other = new User("newName", "other@test.com", "pw", null);
+    User other = new User("newName", "other@test.com", "pw", null, UserRole.USER);
     ReflectionTestUtils.setField(other, "id", UUID.randomUUID());
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -188,6 +203,7 @@ public class BasicUserServiceTest {
 
     verify(userRepository).findById(userId);
     verify(userRepository).findByUsername("newName");
+    verify(userRepository, never()).findByEmail(anyString());
     verify(userRepository, never()).save(any(User.class));
     verifyNoInteractions(userMapper);
   }

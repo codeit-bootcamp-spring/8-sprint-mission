@@ -4,9 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.entity.UserRole;
 import jakarta.persistence.EntityManager;
-import java.time.Instant;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,10 +25,7 @@ class UserRepositoryTest {
 
   private User persistUser(String username, String email) {
     BinaryContent profile = new BinaryContent("test.png", 10L, "image/png");
-    User user = new User(username, email, "pw", profile);
-
-    UserStatus status = new UserStatus(user, Instant.now());
-    user.attachStatus(status);
+    User user = new User(username, email, "pw", profile, UserRole.USER);
 
     em.persist(user);
     em.flush();
