@@ -83,6 +83,7 @@ public class BasicUserService implements UserService {
 
   @Override
   @Transactional
+  @PreAuthorize("#userId == authentication.principal.userDto.id")
   public UserDto update(UUID userId, UserUpdateRequest request,
       BinaryContentCreateRequest profileRequest) {
 
@@ -113,6 +114,7 @@ public class BasicUserService implements UserService {
 
   @Override
   @Transactional
+  @PreAuthorize("#id == authentication.principal.userDto.id")
   public void delete(UUID id) {
     log.info("[USER] delete start userId={}", id);
 
