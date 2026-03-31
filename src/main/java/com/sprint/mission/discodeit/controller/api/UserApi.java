@@ -85,27 +85,27 @@ public interface UserApi {
             @Parameter(description = "수정할 User 프로필 이미지") MultipartFile profile
     );
 
-    @Operation(summary = "User 온라인 상태 업데이트", operationId = "updateUserStatusByUserId")
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "해당 User의 UserStatus를 찾을 수 없음",
-                    content = @Content(
-                            examples = @ExampleObject(value = "UserStatus with userId {userId} not found")
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "User 온라인 상태가 성공적으로 업데이트됨",
-                    content = @Content(
-                            schema = @Schema(implementation = UserStatus.class)
-                    )
-            )
-    })
-    ResponseEntity<UserStatusDto> updateUserStateByUserId(
-            @Parameter(description = "상태를 변경할 User ID", required = true) UUID userId,
-            @Parameter(description = "유저 온라인 상태 업데이트 요청", required = true) UserStatusUpdateRequest userStatusUpdateRequest
-    );
+//    @Operation(summary = "User 온라인 상태 업데이트", operationId = "updateUserStatusByUserId")
+//    @ApiResponses(value = {
+//            @ApiResponse(
+//                    responseCode = "404",
+//                    description = "해당 User의 UserStatus를 찾을 수 없음",
+//                    content = @Content(
+//                            examples = @ExampleObject(value = "UserStatus with userId {userId} not found")
+//                    )
+//            ),
+//            @ApiResponse(
+//                    responseCode = "200",
+//                    description = "User 온라인 상태가 성공적으로 업데이트됨",
+//                    content = @Content(
+//                            schema = @Schema(implementation = UserStatus.class)
+//                    )
+//            )
+//    })
+//    ResponseEntity<UserStatusDto> updateUserStateByUserId(
+//            @Parameter(description = "상태를 변경할 User ID", required = true) UUID userId,
+//            @Parameter(description = "유저 온라인 상태 업데이트 요청", required = true) UserStatusUpdateRequest userStatusUpdateRequest
+//    );
 
     @Operation(summary = "User 삭제", operationId = "delete")
     @ApiResponses(value = {

@@ -30,13 +30,10 @@ class UserRepositoryTest {
     private UserRepository userRepository;
     @Autowired
     private TestEntityManager entityManager;
-    @Autowired
-    private UserStatusRepository userStatusRepository;
 
     private User createTestUser(String username, String email) {
         BinaryContent profile = new BinaryContent("test.jpg", 1024L, "image/jpeg");
         User user = new User(username, email, "password1234", profile);
-        UserStatus status = new UserStatus(user, Instant.now());
 
         return user;
     }
@@ -100,32 +97,6 @@ class UserRepositoryTest {
 
         // then
         assertThat(exists).isFalse();
-    }
-
-    @Test
-    @DisplayName("모든 사용자를 조회할 때 userStatus와 함께 조회한다.")
-    void findAll_withUserStatus() {
-        // given
-        User user1 = new User("user1", "user1@codeit.com", "password123", null);
-        User user2 = new User("user2", "user2@codeit.com", "password123", null);
-        userRepository.save(user1);
-        userRepository.save(user2);
-
-        userStatusRepository.save(new UserStatus(user1, Instant.now()));
-        userStatusRepository.save(new UserStatus(user2, Instant.now()));
-
-        entityManager.flush();
-        entityManager.clear();
-
-        // when
-        List<User> users = userRepository.findAll();
-
-        // then
-        assertThat(users).hasSize(2);
-        for (User user : users) {
-            assertThat(Hibernate.isInitialized(user.getUserStatus())).isTrue();
-            assertThat(user.getUserStatus().getUser().getId()).isEqualTo(user.getId());
-        }
     }
 
     @Test

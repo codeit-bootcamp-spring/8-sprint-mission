@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.unitTest;
 
 import com.sprint.mission.discodeit.DTO.dto.UserDto;
-import com.sprint.mission.discodeit.DTO.request.LoginRequest;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.AuthException.AuthUserNotFound;
 import com.sprint.mission.discodeit.exception.AuthException.InvalidPassword;
@@ -27,71 +27,22 @@ import static org.mockito.BDDMockito.given;
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
-  @InjectMocks
-  private BasicAuthService authService;
+    @InjectMocks
+    private BasicAuthService authService;
 
-  @Mock
-  private UserRepository userRepository;
+    @Mock
+    private UserRepository userRepository;
 
-  @Mock
-  private PasswordEncoder passwordEncoder;
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
-  @Mock
-  private UserMapper userMapper;
+    @Mock
+    private UserMapper userMapper;
 
-  private User user;
-  private LoginRequest loginRequest;
+    private User user;
 
-  @BeforeEach
-  void setUp() {
-    user = new User("testUser", "test@example.com", "encodedPassword", null);
-    loginRequest = new LoginRequest("testUser", "password123");
-  }
-
-  @Test
-  @DisplayName("로그인 성공")
-  void login_success() {
-    // given
-    UserDto userDto = new UserDto(UUID.randomUUID(), "testUser", "test@example.com", null, true);
-
-    given(userRepository.findByUsername(loginRequest.username()))
-        .willReturn(Optional.of(user));
-    given(passwordEncoder.matches(loginRequest.password(), user.getPassword()))
-        .willReturn(true);
-    given(userMapper.toDto(user))
-        .willReturn(userDto);
-
-    // when
-    UserDto result = authService.login(loginRequest);
-
-    // then
-    assertThat(result).isNotNull();
-    assertThat(result.username()).isEqualTo(loginRequest.username());
-  }
-
-  @Test
-  @DisplayName("로그인 실패 - 존재하지 않는 사용자")
-  void login_fail_userNotFound() {
-    // given
-    given(userRepository.findByUsername(loginRequest.username()))
-        .willReturn(Optional.empty());
-
-    // when & then
-    assertThatThrownBy(() -> authService.login(loginRequest))
-        .isInstanceOf(AuthUserNotFound.class);
-  }
-
-  @Test
-  @DisplayName("로그인 실패 - 잘못된 비밀번호")
-  void login_fail_invalidPassword() {
-    // given
-    given(userRepository.findByUsername(loginRequest.username()))
-        .willReturn(Optional.of(user));
-    given(passwordEncoder.matches(loginRequest.password(), user.getPassword()))
-        .willReturn(false);
-
-    // when & then
-    assertThatThrownBy(() -> authService.login(loginRequest))
-        .isInstanceOf(InvalidPassword.class);
-  }
+    @BeforeEach
+    void setUp() {
+        user = new User("testUser", "test@example.com", "encodedPassword", null);
+    }
 }

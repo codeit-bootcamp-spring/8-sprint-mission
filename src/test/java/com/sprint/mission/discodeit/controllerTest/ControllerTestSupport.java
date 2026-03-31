@@ -30,6 +30,4 @@ public abstract class ControllerTestSupport {
     protected ChannelService channelService;
     @MockitoBean
     protected MessageService messageService;
-    @MockitoBean
-    protected UserStatusService userStatusService;
 }

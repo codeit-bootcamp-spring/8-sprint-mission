@@ -8,8 +8,6 @@ spring:
       # 최대 업로드 가능 용량
       max-request-size: 20MB
       # 임시 파일 저장 경로
-  config:
-    import: optional:file.env[.properties]
 
   jpa:
     database: postgresql

@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.DTO.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.DTO.request.UserCreateRequest;
 import com.sprint.mission.discodeit.DTO.request.UserStatusUpdateRequest;
 import com.sprint.mission.discodeit.DTO.request.UserUpdateRequest;
+import com.sprint.mission.discodeit.controller.api.UserApi;
 import com.sprint.mission.discodeit.service.UserService;
 import jakarta.validation.Valid;
 
@@ -34,10 +35,9 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/users")
-public class UserController {
+public class UserController implements UserApi {
 
     private final UserService userService;
-    private final UserStatusService userStatusService;
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<UserDto> create(
@@ -80,16 +80,16 @@ public class UserController {
                 .body(userDto);
     }
 
-    @PatchMapping(path = "{userId}/userStatus")
-    public ResponseEntity<UserStatusDto> updateUserStatusByUserId(
-            @PathVariable(value = "userId") UUID userId,
-            @RequestBody UserStatusUpdateRequest userStatusUpdateRequest) {
-        UserStatusDto updatedUserStatusDto = userStatusService.updateByUserId(userId,
-                userStatusUpdateRequest);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(updatedUserStatusDto);
-    }
+//    @PatchMapping(path = "{userId}/userStatus")
+//    public ResponseEntity<UserStatusDto> updateUserStatusByUserId(
+//            @PathVariable(value = "userId") UUID userId,
+//            @RequestBody UserStatusUpdateRequest userStatusUpdateRequest) {
+//        UserStatusDto updatedUserStatusDto = userStatusService.updateByUserId(userId,
+//                userStatusUpdateRequest);
+//        return ResponseEntity
+//                .status(HttpStatus.OK)
+//                .body(updatedUserStatusDto);
+//    }
 
     @DeleteMapping(path = "/{userId}")
     public ResponseEntity<Void> delete(

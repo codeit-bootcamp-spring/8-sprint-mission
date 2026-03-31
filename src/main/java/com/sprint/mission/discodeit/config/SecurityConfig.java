@@ -26,11 +26,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.csrf.*;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
+import javax.sql.DataSource;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -56,7 +58,7 @@ public class SecurityConfig {
                 )
                 // HTTP 요청 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/").permitAll()
+                        .requestMatchers("/", "/index.html").permitAll()
                         .requestMatchers(
                                 "/api/v3/api-docs/**",
                                 "/swagger-ui.html"
@@ -237,6 +239,19 @@ public class SecurityConfig {
     @Bean
     public HttpSessionEventPublisher httpSessionEventPublisher() {
         return new HttpSessionEventPublisher();
+    }
+
+    // Remember-Me 기능을 위한 JdbcTokenRepository Bean 설정
+    // Remember-Me 토큰을 쿠키가 아닌 데이터베이스에 저장하여 Remember-Me 기능을 구현한다.
+    @Bean
+    public JdbcTokenRepositoryImpl tokenRepository(DataSource dataSource) {
+        log.info("[SecurityConfig] JdbcTokenRepository 생성...");
+        JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
+
+        tokenRepository.setDataSource(dataSource);
+
+        log.info("[SecurityConfig] JdbcTokenRepository 설정 완료...");
+        return tokenRepository;
     }
 
     // Remember-Me 서비스 Bean 설정

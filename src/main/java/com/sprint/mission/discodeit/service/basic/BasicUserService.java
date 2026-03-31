@@ -13,7 +13,6 @@ import com.sprint.mission.discodeit.exception.UserException.UserNotFoundExceptio
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,8 +36,6 @@ import java.util.UUID;
 public class BasicUserService implements UserService {
 
     private final UserRepository userRepository;
-
-    private final UserStatusRepository userStatusRepository;
     private final BinaryContentRepository binaryContentRepository;
     private final BinaryContentStorage binaryContentStorage;
 
@@ -77,26 +73,27 @@ public class BasicUserService implements UserService {
         User user = new User(username, email, encodedPassword, profile);
         User savedUser = userRepository.save(user);
 
-        Instant now = Instant.now();
-        UserStatus status = new UserStatus(savedUser, now);
-
-        userStatusRepository.save(status);
-
         log.info("Service: 유저 생성 완료 및 DB 저장 완료 - ID: {}", savedUser.getId());
-        return userMapper.toDto(savedUser);
+
+        return userMapper.toDto(savedUser, false);
     }
 
     @Override
     public UserDto find(UUID userId) {
-        return userRepository.findById(userId)
-                .map(userMapper::toDto)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
+
+        boolean isOnline = isUserOnline(user.getUsername());
+        return userMapper.toDto(user, isOnline);
     }
 
     @Override
     public List<UserDto> findAll() {
         return userRepository.findAll().stream()
-                .map(userMapper::toDto)
+                .map(user -> {
+                    boolean isOnline = isUserOnline(user.getUsername());
+                    return userMapper.toDto(user, isOnline);
+                })
                 .toList();
     }
 
@@ -154,7 +151,9 @@ public class BasicUserService implements UserService {
         user.update(request.newUsername(), request.newEmail(), encodedPassword, newProfile);
 
         log.info("Service: 유저 수정 완료 - ID: {}", userId);
-        return userMapper.toDto(userRepository.save(user));
+
+        boolean isOnline = isUserOnline(user.getUsername());
+        return userMapper.toDto(userRepository.save(user), isOnline);
     }
 
     @Override
@@ -171,6 +170,8 @@ public class BasicUserService implements UserService {
             log.debug("Service - 사용자 프로필 이미지 데이터 삭제 완료");
         }
 
+        invalidatedUserSessions(user.getUsername());
+
         userRepository.delete(user);
         log.info("Service: 사용자 DB 삭제 완료 - ID: {}", userId);
     }
@@ -182,23 +183,16 @@ public class BasicUserService implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
-        String username = user.getUsername();
-        Role oldRole = user.getRole();
-
-        log.info("[UserService] 사용자 권한 변경 시작...");
-        log.info("[UserService] - 사용자: {}", username);
-        log.info("[UserService] - 기존권한: {}", oldRole);
-        log.info("[UserService] - 사용자: {}", newRole);
-
         user.updateRole(newRole);
         User updatedUser = userRepository.save(user);
 
         // 권한이 변경된 사용자의 모든 활성 세션을 무효화
-        invalidatedUserSessions(username);
+        invalidatedUserSessions(user.getUsername());
 
         log.info("[UserService] 사용자 권한 변경 및 세션 무효화 완료!");
 
-        return userMapper.toDto(updatedUser);
+        // 세션이 무효화되어 오프라인 처리
+        return userMapper.toDto(updatedUser, false);
     }
 
     //중복 코드 제거
@@ -254,5 +248,16 @@ public class BasicUserService implements UserService {
             log.error("[UserService] 세션 무효화 중 오류 발생! - {}", e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    // SessionRegistry를 조회하여 유저가 실시간으로 온라인지 확인
+    private boolean isUserOnline(String username) {
+        return sessionRegistry.getAllPrincipals().stream()
+                .filter(principal -> principal instanceof UserDetails)
+                .map(principal -> (UserDetails) principal)
+                .anyMatch(userDetails ->
+                        userDetails.getUsername().equals(username) &&
+                                !sessionRegistry.getAllSessions(userDetails, false).isEmpty()
+                );
     }
 }
