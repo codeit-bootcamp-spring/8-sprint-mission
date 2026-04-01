@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -137,6 +138,7 @@ public class BasicMessageService implements MessageService {
 		 */
 		@Transactional
 		@Override
+		@PreAuthorize("@securityExpressionService.isMessageAuthor(#messageId, authentication)")
 		public MessageDto update(UUID messageId, MessageUpdateRequest request) {
 				String newContent = request.newContent();
 				log.debug("메시지 수정, messageId={}", messageId);
@@ -155,6 +157,7 @@ public class BasicMessageService implements MessageService {
 		 */
 		@Transactional
 		@Override
+		@PreAuthorize("@securityExpressionService.isMessageAuthor(#messageId, authentication)")
 		public void delete(UUID messageId) {
 				log.debug("메시지 삭제 시도, messageId={}", messageId);
 				if (!messageRepository.existsById(messageId)) {

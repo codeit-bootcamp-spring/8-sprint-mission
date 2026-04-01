@@ -101,6 +101,7 @@ public class BasicUserService implements UserService {
 		 */
 		@Transactional
 		@Override
+		@PreAuthorize("@securityExpressionService.isCurrentUser(#userId, authentication)")
 		public UserDto update(UUID userId, UserUpdateRequest userUpdateRequest,
 				Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
 				log.debug("사용자 수정 시도, userId={}", userId);
@@ -164,6 +165,7 @@ public class BasicUserService implements UserService {
 		 */
 		@Transactional
 		@Override
+		@PreAuthorize("@securityExpressionService.isCurrentUser(#userId, authentication)")
 		public void delete(UUID userId) {
 				log.debug("사용자 삭제 시도, userId={}", userId);
 				if (!userRepository.existsById(userId)) {
