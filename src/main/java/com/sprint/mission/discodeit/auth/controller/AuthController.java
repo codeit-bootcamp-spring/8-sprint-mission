@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.auth.dto.AuthSuccessResponse;
 import com.sprint.mission.discodeit.auth.dto.CsrfTokenResponse;
 import com.sprint.mission.discodeit.auth.dto.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.auth.service.DiscodeitUserDetails;
+import com.sprint.mission.discodeit.auth.service.DiscodeitUserDetailsService;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.service.UserService;
@@ -19,7 +20,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -35,7 +35,7 @@ public class AuthController {
 
   private final UserMapper userMapper;
   private final UserService userService;
-  private final UserDetailsService userDetailsService;
+  private final DiscodeitUserDetailsService userDetailsService;
   private final SessionRegistry sessionRegistry;
 
   @GetMapping("/csrf-token")
@@ -55,6 +55,13 @@ public class AuthController {
   @GetMapping("/me")
   public ResponseEntity<AuthSuccessResponse<UserDto>> getUserDetails(
       @AuthenticationPrincipal DiscodeitUserDetails userDetails) {
+
+    if (userDetails == null) {
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      if (authentication != null && authentication.getPrincipal() instanceof DiscodeitUserDetails principal) {
+        userDetails = principal;
+      }
+    }
 
     if (userDetails == null) {
       log.warn("{} 인증되지 않은 사용자가 /me 엔드포인트 접근", AuthConstants.LOG_PREFIX_CSRF_TOKEN);

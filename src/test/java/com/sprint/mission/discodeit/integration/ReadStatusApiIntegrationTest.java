@@ -4,6 +4,8 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -11,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.auth.service.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.dto.data.ChannelDto;
 import com.sprint.mission.discodeit.dto.data.ReadStatusDto;
 import com.sprint.mission.discodeit.dto.data.UserDto;
@@ -18,6 +21,7 @@ import com.sprint.mission.discodeit.dto.request.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.ReadStatusCreateRequest;
 import com.sprint.mission.discodeit.dto.request.ReadStatusUpdateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
+import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.service.ReadStatusService;
 import com.sprint.mission.discodeit.service.UserService;
@@ -30,15 +34,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@WithMockUser(roles = "CHANNEL_MANAGER")
 class ReadStatusApiIntegrationTest {
+  private RequestPostProcessor authenticatedUser(UserDto userDto) {
+    User principalUser = new User(userDto.username(), userDto.email(), "encoded-password", null);
+    ReflectionTestUtils.setField(principalUser, "id", userDto.id());
+    return user(new DiscodeitUserDetails(principalUser));
+  }
+
 
   @Autowired
   private MockMvc mockMvc;
@@ -76,10 +90,7 @@ class ReadStatusApiIntegrationTest {
 
     // 읽음 상태 생성 요청
     Instant lastReadAt = Instant.now();
-    ReadStatusCreateRequest createRequest = new ReadStatusCreateRequest(
-        user.id(),
-        channel.id(),
-        lastReadAt
+    ReadStatusCreateRequest createRequest = new ReadStatusCreateRequest(channel.id(), lastReadAt
     );
 
     String requestBody = objectMapper.writeValueAsString(createRequest);
@@ -87,7 +98,9 @@ class ReadStatusApiIntegrationTest {
     // When & Then
     mockMvc.perform(post("/api/readStatuses")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(requestBody))
+            .content(requestBody)
+            .with(csrf())
+            .with(authenticatedUser(user)))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.id", notNullValue()))
         .andExpect(jsonPath("$.userId", is(user.id().toString())))
@@ -116,23 +129,19 @@ class ReadStatusApiIntegrationTest {
 
     // 첫 번째 읽음 상태 생성 요청 (성공)
     Instant lastReadAt = Instant.now();
-    ReadStatusCreateRequest firstCreateRequest = new ReadStatusCreateRequest(
-        user.id(),
-        channel.id(),
-        lastReadAt
+    ReadStatusCreateRequest firstCreateRequest = new ReadStatusCreateRequest(channel.id(), lastReadAt
     );
 
     String firstRequestBody = objectMapper.writeValueAsString(firstCreateRequest);
     mockMvc.perform(post("/api/readStatuses")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(firstRequestBody))
+            .content(firstRequestBody)
+            .with(csrf())
+            .with(authenticatedUser(user)))
         .andExpect(status().isCreated());
 
     // 두 번째 읽음 상태 생성 요청 (동일 사용자, 동일 채널) - 실패해야 함
-    ReadStatusCreateRequest duplicateCreateRequest = new ReadStatusCreateRequest(
-        user.id(),
-        channel.id(),
-        Instant.now()
+    ReadStatusCreateRequest duplicateCreateRequest = new ReadStatusCreateRequest(channel.id(), Instant.now()
     );
 
     String duplicateRequestBody = objectMapper.writeValueAsString(duplicateCreateRequest);
@@ -140,7 +149,9 @@ class ReadStatusApiIntegrationTest {
     // When & Then
     mockMvc.perform(post("/api/readStatuses")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(duplicateRequestBody))
+            .content(duplicateRequestBody)
+            .with(csrf())
+            .with(authenticatedUser(user)))
         .andExpect(status().isConflict());
   }
 
@@ -165,13 +176,10 @@ class ReadStatusApiIntegrationTest {
 
     // 읽음 상태 생성
     Instant initialLastReadAt = Instant.now().minusSeconds(3600); // 1시간 전
-    ReadStatusCreateRequest createRequest = new ReadStatusCreateRequest(
-        user.id(),
-        channel.id(),
-        initialLastReadAt
+    ReadStatusCreateRequest createRequest = new ReadStatusCreateRequest(channel.id(), initialLastReadAt
     );
 
-    ReadStatusDto createdReadStatus = readStatusService.create(createRequest);
+    ReadStatusDto createdReadStatus = readStatusService.create(user.id(), createRequest);
     UUID readStatusId = createdReadStatus.id();
 
     // 읽음 상태 업데이트 요청
@@ -185,7 +193,8 @@ class ReadStatusApiIntegrationTest {
     // When & Then
     mockMvc.perform(patch("/api/readStatuses/{readStatusId}", readStatusId)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(requestBody))
+            .content(requestBody)
+            .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id", is(readStatusId.toString())))
         .andExpect(jsonPath("$.userId", is(user.id().toString())))
@@ -208,7 +217,8 @@ class ReadStatusApiIntegrationTest {
     // When & Then
     mockMvc.perform(patch("/api/readStatuses/{readStatusId}", nonExistentReadStatusId)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(requestBody))
+            .content(requestBody)
+            .with(csrf()))
         .andExpect(status().isNotFound());
   }
 
@@ -239,25 +249,19 @@ class ReadStatusApiIntegrationTest {
     ChannelDto channel2 = channelService.create(channelRequest2);
 
     // 각 채널에 대한 읽음 상태 생성
-    ReadStatusCreateRequest createRequest1 = new ReadStatusCreateRequest(
-        user.id(),
-        channel1.id(),
-        Instant.now().minusSeconds(3600)
+    ReadStatusCreateRequest createRequest1 = new ReadStatusCreateRequest(channel1.id(), Instant.now().minusSeconds(3600)
     );
 
-    ReadStatusCreateRequest createRequest2 = new ReadStatusCreateRequest(
-        user.id(),
-        channel2.id(),
-        Instant.now()
+    ReadStatusCreateRequest createRequest2 = new ReadStatusCreateRequest(channel2.id(), Instant.now()
     );
 
-    readStatusService.create(createRequest1);
-    readStatusService.create(createRequest2);
+    readStatusService.create(user.id(), createRequest1);
+    readStatusService.create(user.id(), createRequest2);
 
     // When & Then
     mockMvc.perform(get("/api/readStatuses")
-            .param("userId", user.id().toString())
-            .contentType(MediaType.APPLICATION_JSON))
+            .contentType(MediaType.APPLICATION_JSON)
+            .with(authenticatedUser(user)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$", hasSize(2)))
         .andExpect(jsonPath("$[*].channelId",

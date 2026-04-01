@@ -3,6 +3,8 @@ package com.sprint.mission.discodeit.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -10,9 +12,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.auth.service.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.dto.data.ReadStatusDto;
 import com.sprint.mission.discodeit.dto.request.ReadStatusCreateRequest;
 import com.sprint.mission.discodeit.dto.request.ReadStatusUpdateRequest;
+import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.readstatus.ReadStatusNotFoundException;
 import com.sprint.mission.discodeit.service.ReadStatusService;
 import java.time.Instant;
@@ -23,9 +27,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
+@WithMockUser
 @WebMvcTest(ReadStatusController.class)
 class ReadStatusControllerTest {
 
@@ -46,27 +53,24 @@ class ReadStatusControllerTest {
     UUID channelId = UUID.randomUUID();
     Instant lastReadAt = Instant.now();
 
-    ReadStatusCreateRequest createRequest = new ReadStatusCreateRequest(
-        userId,
-        channelId,
-        lastReadAt
-    );
+    User testUser = new User("testuser", "test@example.com", "password", null);
+    ReflectionTestUtils.setField(testUser, "id", userId);
+    DiscodeitUserDetails userDetails = new DiscodeitUserDetails(testUser);
+
+    ReadStatusCreateRequest createRequest = new ReadStatusCreateRequest(channelId, lastReadAt);
 
     UUID readStatusId = UUID.randomUUID();
-    ReadStatusDto createdReadStatus = new ReadStatusDto(
-        readStatusId,
-        userId,
-        channelId,
-        lastReadAt
-    );
+    ReadStatusDto createdReadStatus = new ReadStatusDto(readStatusId, userId, channelId, lastReadAt);
 
-    given(readStatusService.create(any(ReadStatusCreateRequest.class)))
+    given(readStatusService.create(any(UUID.class), any(ReadStatusCreateRequest.class)))
         .willReturn(createdReadStatus);
 
     // When & Then
     mockMvc.perform(post("/api/readStatuses")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(createRequest)))
+            .content(objectMapper.writeValueAsString(createRequest))
+            .with(csrf())
+            .with(user(userDetails)))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.id").value(readStatusId.toString()))
         .andExpect(jsonPath("$.userId").value(userId.toString()))
@@ -79,7 +83,6 @@ class ReadStatusControllerTest {
   void create_Failure_InvalidRequest() throws Exception {
     // Given
     ReadStatusCreateRequest invalidRequest = new ReadStatusCreateRequest(
-        null, // userId가 null (NotNull 위반)
         null, // channelId가 null (NotNull 위반)
         null  // lastReadAt이 null (NotNull 위반)
     );
@@ -87,7 +90,8 @@ class ReadStatusControllerTest {
     // When & Then
     mockMvc.perform(post("/api/readStatuses")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(invalidRequest)))
+            .content(objectMapper.writeValueAsString(invalidRequest))
+            .with(csrf()))
         .andExpect(status().isBadRequest());
   }
 
@@ -115,7 +119,8 @@ class ReadStatusControllerTest {
     // When & Then
     mockMvc.perform(patch("/api/readStatuses/{readStatusId}", readStatusId)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(updateRequest)))
+            .content(objectMapper.writeValueAsString(updateRequest))
+            .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(readStatusId.toString()))
         .andExpect(jsonPath("$.userId").value(userId.toString()))
@@ -138,7 +143,8 @@ class ReadStatusControllerTest {
     // When & Then
     mockMvc.perform(patch("/api/readStatuses/{readStatusId}", nonExistentId)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(updateRequest)))
+            .content(objectMapper.writeValueAsString(updateRequest))
+            .with(csrf()))
         .andExpect(status().isNotFound());
   }
 
@@ -151,6 +157,10 @@ class ReadStatusControllerTest {
     UUID channelId2 = UUID.randomUUID();
     Instant now = Instant.now();
 
+    User testUser = new User("testuser", "test@example.com", "password", null);
+    ReflectionTestUtils.setField(testUser, "id", userId);
+    DiscodeitUserDetails userDetails = new DiscodeitUserDetails(testUser);
+
     List<ReadStatusDto> readStatuses = List.of(
         new ReadStatusDto(UUID.randomUUID(), userId, channelId1, now.minusSeconds(60)),
         new ReadStatusDto(UUID.randomUUID(), userId, channelId2, now)
@@ -160,12 +170,12 @@ class ReadStatusControllerTest {
 
     // When & Then
     mockMvc.perform(get("/api/readStatuses")
-            .param("userId", userId.toString())
-            .contentType(MediaType.APPLICATION_JSON))
+            .contentType(MediaType.APPLICATION_JSON)
+            .with(user(userDetails)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].userId").value(userId.toString()))
         .andExpect(jsonPath("$[0].channelId").value(channelId1.toString()))
         .andExpect(jsonPath("$[1].userId").value(userId.toString()))
         .andExpect(jsonPath("$[1].channelId").value(channelId2.toString()));
   }
-} 
+}

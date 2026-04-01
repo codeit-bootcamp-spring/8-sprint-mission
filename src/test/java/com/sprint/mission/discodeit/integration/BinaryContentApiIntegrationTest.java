@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@WithMockUser(roles = "CHANNEL_MANAGER")
 class BinaryContentApiIntegrationTest {
 
   @Autowired
@@ -79,11 +81,7 @@ class BinaryContentApiIntegrationTest {
     var channel = channelService.create(channelRequest);
 
     // 첨부파일이 있는 메시지 생성
-    MessageCreateRequest messageRequest = new MessageCreateRequest(
-        "첨부파일이 있는 메시지입니다.",
-        channel.id(),
-        user.id()
-    );
+    MessageCreateRequest messageRequest = new MessageCreateRequest("테스트 메시지", channel.id());
 
     byte[] fileContent = "테스트 파일 내용입니다.".getBytes();
     BinaryContentCreateRequest attachmentRequest = new BinaryContentCreateRequest(
@@ -92,7 +90,7 @@ class BinaryContentApiIntegrationTest {
         fileContent
     );
 
-    MessageDto message = messageService.create(messageRequest, List.of(attachmentRequest));
+    MessageDto message = messageService.create(user.id(), messageRequest, List.of(attachmentRequest));
     UUID binaryContentId = message.attachments().get(0).id();
 
     // When & Then
@@ -133,11 +131,7 @@ class BinaryContentApiIntegrationTest {
     );
     var channel = channelService.create(channelRequest);
 
-    MessageCreateRequest messageRequest = new MessageCreateRequest(
-        "첨부파일이 있는 메시지입니다.",
-        channel.id(),
-        user.id()
-    );
+    MessageCreateRequest messageRequest = new MessageCreateRequest("테스트 메시지", channel.id());
 
     // 첫 번째 첨부파일
     BinaryContentCreateRequest attachmentRequest1 = new BinaryContentCreateRequest(
@@ -155,6 +149,7 @@ class BinaryContentApiIntegrationTest {
 
     // 첨부파일 두 개를 가진 메시지 생성
     MessageDto message = messageService.create(
+        user.id(),
         messageRequest,
         List.of(attachmentRequest1, attachmentRequest2)
     );

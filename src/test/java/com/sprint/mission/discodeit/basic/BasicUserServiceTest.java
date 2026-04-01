@@ -59,7 +59,7 @@ class BasicUserServiceTest {
 
     user = new User(username, email, password, null);
     ReflectionTestUtils.setField(user, "id", userId);
-    userDto = new UserDto(userId, username, email, null, true);
+    userDto = new UserDto(userId, username, email, null, true, null);
   }
 
   @Test

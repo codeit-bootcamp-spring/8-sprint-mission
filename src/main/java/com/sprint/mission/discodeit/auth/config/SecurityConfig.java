@@ -20,12 +20,13 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -45,6 +46,14 @@ public class SecurityConfig {
   @Bean
   public SessionRegistry sessionRegistry() {
     return new SessionRegistryImpl();
+  }
+
+  /**
+   * HttpSession 만료 시 이벤트를 통해 SessionRegistry의 SessionInformation도 자동으로 만료 처리한다.
+   */
+  @Bean
+  public HttpSessionEventPublisher httpSessionEventPublisher() {
+    return new HttpSessionEventPublisher();
   }
 
   @Bean
@@ -86,8 +95,11 @@ public class SecurityConfig {
           response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
         }).accessDeniedHandler(customAccessDeniedHandler))
         // 동시 로그인 제한 및 세션 설정
-        .sessionManagement(session -> session.maximumSessions(1).sessionRegistry(sessionRegistry())
-            .expiredSessionStrategy(customSessionExpiredStrategy))
+        .sessionManagement(management -> management
+            .sessionConcurrency(concurrency -> concurrency
+                .maximumSessions(1)
+                .expiredSessionStrategy(customSessionExpiredStrategy)
+                .sessionRegistry(sessionRegistry())))
         // 인증 제공자
         .authenticationProvider(authenticationProvider);
 
