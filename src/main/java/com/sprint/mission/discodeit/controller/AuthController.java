@@ -1,8 +1,8 @@
 package com.sprint.mission.discodeit.controller;
 
-import com.sprint.mission.discodeit.config.auth.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.dto.request.UserRoleUpdateRequest;
+import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -108,6 +109,19 @@ public class GlobalExceptionHandler {
         HttpStatus.BAD_REQUEST.value()
     );
     return ResponseEntity.badRequest().body(body);
+  }
+
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
+    ErrorResponse body = toErrorResponse(
+        Instant.now(),
+        "FORBIDDEN",
+        e.getMessage() != null ? e.getMessage() : "접근 권한이 없습니다.",
+        Collections.emptyMap(),
+        e.getClass().getName(),
+        HttpStatus.FORBIDDEN.value()
+    );
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
   }
 
   @ExceptionHandler(Exception.class)

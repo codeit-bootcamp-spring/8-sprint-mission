@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -149,6 +150,7 @@ public class BasicUserService implements UserService {
 
 		@Transactional
 		@Override
+		@PreAuthorize("hasRole('ADMIN')")
 		public UserDto updateRole(UUID userId, Role newRole) {
 				User user = userRepository.findById(userId)
 						.orElseThrow(() -> new NoSuchElementException("User with id " + userId + " not found"));

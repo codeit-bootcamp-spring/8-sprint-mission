@@ -1,4 +1,4 @@
-package com.sprint.mission.discodeit.config.auth;
+package com.sprint.mission.discodeit.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.response.ErrorResponse;
@@ -11,26 +11,26 @@ import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class LoginFailureHandler implements AuthenticationFailureHandler {
+public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
     private final ObjectMapper objectMapper;
 
     @Override
-    public void onAuthenticationFailure(
+    public void commence(
         HttpServletRequest request,
         HttpServletResponse response,
-        AuthenticationException exception
+        AuthenticationException authException
     ) throws IOException, ServletException {
         ErrorResponse body = new ErrorResponse(
             Instant.now(),
-            "AUTH_FAILED",
-            exception.getMessage(),
+            "UNAUTHORIZED",
+            authException.getMessage(),
             Collections.emptyMap(),
-            exception.getClass().getName(),
+            authException.getClass().getName(),
             HttpServletResponse.SC_UNAUTHORIZED
         );
 
