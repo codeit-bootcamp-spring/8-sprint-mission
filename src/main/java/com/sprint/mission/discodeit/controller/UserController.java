@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -74,7 +73,7 @@ public class UserController {
 						}
 				}
 				UserDto created = userService.create(userCreateRequest, profileRequest);
-				return ResponseEntity.status(HttpStatus.CREATED).body(created);
+				return ResponseEntity.ok(created);
 		}
 
 		/**
@@ -83,7 +82,7 @@ public class UserController {
 		@PostMapping(consumes = "application/json")
 		public ResponseEntity<UserDto> createJson(@RequestBody @Valid UserCreateRequest request) {
 				UserDto created = userService.create(request, Optional.empty());
-				return ResponseEntity.status(HttpStatus.CREATED).body(created);
+				return ResponseEntity.ok(created);
 		}
 
 		/**
