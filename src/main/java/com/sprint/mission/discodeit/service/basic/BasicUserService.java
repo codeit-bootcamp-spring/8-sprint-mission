@@ -181,7 +181,7 @@ public class BasicUserService implements UserService {
 						dto.id(),
 						dto.username(),
 						dto.email(),
-						dto.profileId(),
+						dto.profile(),
 						isUserOnline(dto.id()),
 						dto.role()
 				);

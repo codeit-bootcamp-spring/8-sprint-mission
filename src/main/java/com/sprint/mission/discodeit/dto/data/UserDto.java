@@ -7,7 +7,7 @@ public record UserDto(
 		UUID id,
 		String username,
 		String email,
-		UUID profileId,
+		BinaryContentDto profile,
 		Boolean online,
 		Role role
 ) {

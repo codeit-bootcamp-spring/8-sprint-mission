@@ -110,27 +110,48 @@ public class BasicMessageService implements MessageService {
 		@Override
 		public PageResponse<MessageDto> findAllByChannelId(UUID channelId, Instant createAt,
 				Pageable pageable) {
-				Slice<MessageDto> slice = messageRepository.findAllByChannelIdWithAuthor(channelId,
-								Optional.ofNullable(createAt).orElse(Instant.now()),
+				Instant cursor = Optional.ofNullable(createAt).orElse(Instant.now());
+				Slice<MessageDto> slice = messageRepository.findAllByChannelIdWithAuthor(
+								channelId,
+								cursor,
 								pageable)
 						.map(messageMapper::toDto);
-
-				Instant nextCursor = null;
-				if (!slice.getContent().isEmpty()) {
-						nextCursor = slice.getContent().get(slice.getContent().size() - 1)
-								.createdAt();
+				List<MessageDto> filtered = slice.getContent().stream()
+						.filter(dto -> channelId.equals(dto.channelId()) || channelId.equals(dto.channel()))
+						.toList();
+				// Front clients may send stale cursor when switching channels.
+				// If that happens, fallback to latest page for the selected channel.
+				if (filtered.isEmpty() && createAt != null) {
+						slice = messageRepository.findAllByChannelIdWithAuthor(channelId, Instant.now(), pageable)
+								.map(messageMapper::toDto);
+						filtered = slice.getContent().stream()
+								.filter(dto -> channelId.equals(dto.channelId()) || channelId.equals(dto.channel()))
+								.toList();
 				}
-
-				return pageResponseMapper.fromSlice(slice, nextCursor);
+				Instant nextCursor = filtered.isEmpty() ? null : filtered.get(filtered.size() - 1).createdAt();
+				log.debug("메시지 조회, channelId={}, requestedSize={}, returnedSize={}",
+						channelId, slice.getContent().size(), filtered.size());
+				return new PageResponse<>(
+						filtered,
+						nextCursor,
+						slice.getSize(),
+						slice.hasNext(),
+						null
+				);
 		}
 
 		@Transactional(readOnly = true)
 		@Override
 		public List<MessageDto> findAllByChannelIdAsList(UUID channelId) {
 				Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.DESC, "createdAt"));
-				return messageRepository.findAllByChannelIdWithAuthor(channelId, Instant.now(), pageable)
+				List<MessageDto> results = messageRepository.findAllByChannelIdWithAuthor(channelId, Instant.now(), pageable)
 						.map(messageMapper::toDto)
-						.getContent();
+						.getContent()
+						.stream()
+						.filter(dto -> channelId.equals(dto.channelId()) || channelId.equals(dto.channel()))
+						.toList();
+				log.debug("메시지 목록 조회, channelId={}, returnedSize={}", channelId, results.size());
+				return results;
 		}
 
 		/**

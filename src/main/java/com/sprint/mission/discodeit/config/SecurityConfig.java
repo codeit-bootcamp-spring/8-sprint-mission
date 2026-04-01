@@ -9,6 +9,7 @@ import com.sprint.mission.discodeit.security.RestAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -57,7 +58,7 @@ public class SecurityConfig {
         );
         http.authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/auth/csrf-token").permitAll()
-            .requestMatchers("/api/users").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/users", "/api/users/").permitAll()
             .requestMatchers("/api/auth/login").permitAll()
             .requestMatchers("/api/auth/logout").permitAll()
             .requestMatchers(nonApiRequestMatcher).permitAll()

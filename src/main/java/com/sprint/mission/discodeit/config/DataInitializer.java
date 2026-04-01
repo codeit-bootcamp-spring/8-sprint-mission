@@ -2,15 +2,17 @@ package com.sprint.mission.discodeit.config;
 
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
-import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
+import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
+import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.UserService;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +44,8 @@ public class DataInitializer {
 
   private final UserService userService;
   private final UserRepository userRepository;
+  private final BinaryContentRepository binaryContentRepository;
+  private final BinaryContentStorage binaryContentStorage;
   private final ChannelRepository channelRepository;
   private final ReadStatusRepository readStatusRepository;
   private final Environment environment;
@@ -53,8 +57,23 @@ public class DataInitializer {
     }
     createSeedUsers();
     createAdminIfNotExists();
+    ensureSeedChannelManagers();
     ensureSeedUserProfiles();
     createDefaultChannelAndReadStatuses();
+  }
+
+  private void ensureSeedChannelManagers() {
+    // To make manual testing smoother, seed accounts can create public channels.
+    for (String[] u : SEED_USERS) {
+      String username = u[0];
+      userRepository.findByUsername(username).ifPresent(user -> {
+        if (user.getRole() == Role.USER) {
+          user.updateRole(Role.CHANNEL_MANAGER);
+          userRepository.save(user);
+          log.info("Promoted seed user to CHANNEL_MANAGER: {}", username);
+        }
+      });
+    }
   }
 
   private void createAdminIfNotExists() {
@@ -89,9 +108,14 @@ public class DataInitializer {
               && user.getProfile().getSize() > 10_000;
           if (!hasRealProfile) {
             try {
-              userService.update(user.getId(),
-                  new UserUpdateRequest(user.getUsername(), user.getEmail(), null),
-                  Optional.of(profileRequest));
+              BinaryContent binaryContent = new BinaryContent(
+                  profileRequest.fileName(),
+                  (long) profileRequest.bytes().length,
+                  profileRequest.contentType());
+              binaryContentRepository.save(binaryContent);
+              binaryContentStorage.put(binaryContent.getId(), profileRequest.bytes());
+              user.update(user.getUsername(), user.getEmail(), null, binaryContent);
+              userRepository.save(user);
               log.info("Updated profile for seed user: {}", username);
             } catch (Exception e) {
               log.warn("Could not update profile for {}: {}", username, e.getMessage());
@@ -136,23 +160,41 @@ public class DataInitializer {
   };
 
   private Optional<BinaryContentCreateRequest> loadSeedProfileImage(String username) {
-    String path = "seed-profiles/" + username + ".png";
     try {
-      ClassPathResource resource = new ClassPathResource(path);
+      ClassPathResource pngResource = new ClassPathResource("seed-profiles/" + username + ".png");
+      ClassPathResource svgResource = new ClassPathResource("seed-profiles/" + username + ".svg");
       byte[] bytes;
-      if (resource.exists()) {
-        try (InputStream is = resource.getInputStream()) {
+      String contentType;
+      String fileName;
+      if (pngResource.exists()) {
+        try (InputStream is = pngResource.getInputStream()) {
           bytes = is.readAllBytes();
         }
         if (bytes.length == 0) {
           bytes = MINIMAL_PNG;
         }
+        contentType = "image/png";
+        fileName = username + ".png";
+      } else if (svgResource.exists()) {
+        try (InputStream is = svgResource.getInputStream()) {
+          bytes = is.readAllBytes();
+        }
+        if (bytes.length == 0) {
+          bytes = MINIMAL_PNG;
+          contentType = "image/png";
+          fileName = username + ".png";
+        } else {
+          contentType = "image/svg+xml";
+          fileName = username + ".svg";
+        }
       } else {
         bytes = MINIMAL_PNG;
+        contentType = "image/png";
+        fileName = username + ".png";
       }
       return Optional.of(new BinaryContentCreateRequest(
-          username + ".png",
-          "image/png",
+          fileName,
+          contentType,
           bytes
       ));
     } catch (IOException e) {
@@ -183,4 +225,5 @@ public class DataInitializer {
       });
     }
   }
+
 }

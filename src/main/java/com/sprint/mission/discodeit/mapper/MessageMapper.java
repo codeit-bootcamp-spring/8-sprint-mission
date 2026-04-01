@@ -12,8 +12,11 @@ import org.mapstruct.Mapping;
 public interface MessageMapper {
 
 		@Mapping(target = "channelId", source = "channel.id")
+		@Mapping(target = "channel", source = "channel.id")
 		@Mapping(target = "authorId", source = "author.id")
+		@Mapping(target = "author", source = "author")
 		@Mapping(target = "attachmentIds", expression = "java(toAttachmentIds(message.getAttachments()))")
+		@Mapping(target = "attachments", source = "attachments")
 		MessageDto toDto(Message message);
 
 		default List<UUID> toAttachmentIds(List<BinaryContent> attachments) {

@@ -38,7 +38,7 @@ public class BasicChannelService implements ChannelService {
 		 */
 		@Transactional
 		@Override
-		@PreAuthorize("hasRole('CHANNEL_MANAGER')")
+		@PreAuthorize("hasAnyRole('CHANNEL_MANAGER','USER')")
 		public ChannelDto create(PublicChannelCreateRequest request) {
 				String name = request.name();
 				String description = request.description();
