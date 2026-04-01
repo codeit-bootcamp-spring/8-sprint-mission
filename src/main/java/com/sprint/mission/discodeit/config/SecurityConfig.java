@@ -1,12 +1,14 @@
 package com.sprint.mission.discodeit.config;
 
 import com.sprint.mission.discodeit.config.csrf.SpaCsrfTokenRequestHandler;
+import com.sprint.mission.discodeit.security.DiscodeitUserDetailsService;
 import com.sprint.mission.discodeit.security.LoginFailureHandler;
 import com.sprint.mission.discodeit.security.LoginSuccessHandler;
 import com.sprint.mission.discodeit.security.RestAccessDeniedHandler;
 import com.sprint.mission.discodeit.security.RestAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -26,6 +28,13 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
+@Import({
+    LoginSuccessHandler.class,
+    LoginFailureHandler.class,
+    RestAuthenticationEntryPoint.class,
+    RestAccessDeniedHandler.class,
+    DiscodeitUserDetailsService.class
+})
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
@@ -37,7 +46,8 @@ public class SecurityConfig {
         LoginFailureHandler loginFailureHandler,
         RestAuthenticationEntryPoint restAuthenticationEntryPoint,
         RestAccessDeniedHandler restAccessDeniedHandler,
-        SessionRegistry sessionRegistry
+        SessionRegistry sessionRegistry,
+        DiscodeitUserDetailsService userDetailsService
     ) throws Exception {
         RequestMatcher nonApiRequestMatcher = request -> !request.getRequestURI().startsWith("/api/");
 
@@ -69,9 +79,14 @@ public class SecurityConfig {
         http.sessionManagement(management -> management
             .sessionConcurrency(concurrency -> concurrency
                 .maximumSessions(1)
-                .maxSessionsPreventsLogin(true)
+                .maxSessionsPreventsLogin(false)
                 .sessionRegistry(sessionRegistry)
             )
+        );
+        http.rememberMe(remember -> remember
+            .rememberMeParameter("remember-me")
+            .userDetailsService(userDetailsService)
+            .key("discodeit-remember-me-key")
         );
 
         return http.build();
