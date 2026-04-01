@@ -1,5 +1,8 @@
 package com.sprint.mission.discodeit.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.security.LoginFailureHandler;
+import com.sprint.mission.discodeit.security.LoginSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -14,9 +17,14 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 @EnableWebSecurity
 public class SecurityConfig {
 
+
   @Bean
   public SecurityFilterChain filterChain(
-      HttpSecurity http
+      HttpSecurity http,
+      LoginSuccessHandler loginSuccessHandler,
+      LoginFailureHandler loginFailureHandler,
+      ObjectMapper objectMapper
+
   )
       throws Exception {
     http
@@ -28,6 +36,11 @@ public class SecurityConfig {
             .requestMatchers("/api/auth/**").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
             .anyRequest().authenticated()
+        )
+        .formLogin(login -> login
+            .loginProcessingUrl("/api/auth/login")
+            .successHandler(loginSuccessHandler)
+            .failureHandler(loginFailureHandler)
         );
 
     return http.build();
