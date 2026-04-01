@@ -75,7 +75,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                        .requestMatchers(HttpMethod.PATCH, "/api/users/**").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/users/*").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/users/*").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/channels").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/channels/public").hasRole("CHANNEL_MANAGER")
