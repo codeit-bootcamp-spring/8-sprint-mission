@@ -2,6 +2,7 @@
 DROP TABLE IF EXISTS message_attachments;
 DROP TABLE IF EXISTS messages;
 DROP TABLE IF EXISTS read_statuses;
+DROP TABLE IF EXISTS user_statuses;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS channels;
 DROP TABLE IF EXISTS binary_contents;
@@ -38,6 +39,7 @@ CREATE TABLE IF NOT EXISTS users
     password   VARCHAR(60)              NOT NULL,
     role       VARCHAR(20)              NOT NULL,
     profile_id uuid UNIQUE,
+    CONSTRAINT check_user_role CHECK (role IN ('ADMIN', 'CHANNEL_MANAGER', 'USER')),
     CONSTRAINT fk_users_profile FOREIGN KEY (profile_id) REFERENCES binary_contents (id) ON DELETE SET NULL
 );
 
@@ -61,7 +63,7 @@ CREATE TABLE IF NOT EXISTS messages
     updated_at timestamp with time zone,
     content    text,
     channel_id uuid                     NOT NULL,
-    author_id  uuid                     NOT NULL,
+    author_id  uuid,
     CONSTRAINT fk_messages_channel_id FOREIGN KEY (channel_id) REFERENCES channels (id) ON DELETE CASCADE,
     CONSTRAINT fk_messages_author_id FOREIGN KEY (author_id) REFERENCES users (id) ON DELETE SET NULL
 );
