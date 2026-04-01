@@ -1,9 +1,7 @@
 package com.sprint.mission.discodeit.controller.api;
 
 import com.sprint.mission.discodeit.DTO.dto.UserDto;
-import com.sprint.mission.discodeit.DTO.dto.UserStatusDto;
 import com.sprint.mission.discodeit.DTO.request.UserCreateRequest;
-import com.sprint.mission.discodeit.DTO.request.UserStatusUpdateRequest;
 import com.sprint.mission.discodeit.DTO.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.User;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,12 +12,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "User", description = "User API")
 public interface UserApi {
@@ -84,28 +81,6 @@ public interface UserApi {
             @Parameter(description = "User 변경 요청 정보", required = true) UserUpdateRequest userUpdateRequest,
             @Parameter(description = "수정할 User 프로필 이미지") MultipartFile profile
     );
-
-//    @Operation(summary = "User 온라인 상태 업데이트", operationId = "updateUserStatusByUserId")
-//    @ApiResponses(value = {
-//            @ApiResponse(
-//                    responseCode = "404",
-//                    description = "해당 User의 UserStatus를 찾을 수 없음",
-//                    content = @Content(
-//                            examples = @ExampleObject(value = "UserStatus with userId {userId} not found")
-//                    )
-//            ),
-//            @ApiResponse(
-//                    responseCode = "200",
-//                    description = "User 온라인 상태가 성공적으로 업데이트됨",
-//                    content = @Content(
-//                            schema = @Schema(implementation = UserStatus.class)
-//                    )
-//            )
-//    })
-//    ResponseEntity<UserStatusDto> updateUserStateByUserId(
-//            @Parameter(description = "상태를 변경할 User ID", required = true) UUID userId,
-//            @Parameter(description = "유저 온라인 상태 업데이트 요청", required = true) UserStatusUpdateRequest userStatusUpdateRequest
-//    );
 
     @Operation(summary = "User 삭제", operationId = "delete")
     @ApiResponses(value = {

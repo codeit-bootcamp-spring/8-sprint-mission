@@ -13,6 +13,9 @@ import org.springframework.security.access.expression.method.DefaultMethodSecuri
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -49,7 +52,9 @@ public class SecurityConfig {
                                            LoginSuccessHandler loginSuccessHandler,
                                            LoginFailureHandler loginFailureHandler,
                                            CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
-                                           CustomAccessDeniedHandler customAccessDeniedHandler, RememberMeServices rememberMeServices) throws Exception {
+                                           CustomAccessDeniedHandler customAccessDeniedHandler,
+                                           RememberMeServices rememberMeServices,
+                                           DaoAuthenticationProvider authenticationProvider) throws Exception {
         http
                 // CSRF 설정: 쿠키 기반 CSRF 토큰 사용
                 .csrf(csrf -> csrf
@@ -129,7 +134,9 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
                         .accessDeniedHandler(customAccessDeniedHandler)
-                );
+                )
+                // 인증 프로파이더 설정 (앞서 bean으로 정의된 DaoAuthenticationProvider 사용)
+                .authenticationProvider(authenticationProvider);
         return http.build();
     }
 
@@ -274,5 +281,18 @@ public class SecurityConfig {
         log.info("[SecurityConfig] Remember-Me 설정 완료...");
 
         return rememberMeServices;
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+        authenticationProvider.setPasswordEncoder(passwordEncoder());
+        authenticationProvider.setUserDetailsService(userDetailsService);
+        return authenticationProvider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 }

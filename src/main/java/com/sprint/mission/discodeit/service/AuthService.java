@@ -1,8 +1,8 @@
 package com.sprint.mission.discodeit.service;
 
 import com.sprint.mission.discodeit.DTO.dto.UserDto;
-import org.springframework.security.core.userdetails.UserDetails;
+import com.sprint.mission.discodeit.service.auth.DiscodeitUserDetails;
 
 public interface AuthService {
-    UserDto getCurrentUserInfo(UserDetails userDetails);
+    UserDto getCurrentUserInfo(DiscodeitUserDetails userDetails);
 }

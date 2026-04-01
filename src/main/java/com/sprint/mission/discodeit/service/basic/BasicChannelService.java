@@ -138,6 +138,9 @@ public class BasicChannelService implements ChannelService {
                     return new ChannelNotFoundException(channelId);
                 });
 
+        messageRepository.deleteAllByChannelId(channelId);
+        readStatusRepository.deleteAllByChannelId(channelId);
+
         channelRepository.delete(channel);
         log.info("Service: 채널 삭제 성공 - ID: {}", channelId);
     }

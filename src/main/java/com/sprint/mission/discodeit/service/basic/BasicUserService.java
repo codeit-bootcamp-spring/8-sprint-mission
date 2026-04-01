@@ -18,6 +18,9 @@ import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -97,6 +100,7 @@ public class BasicUserService implements UserService {
                 .toList();
     }
 
+    @PreAuthorize("principal.userDto.id == #userId")
     @Override
     @Transactional
     public UserDto update(UUID userId, UserUpdateRequest request,
@@ -156,6 +160,7 @@ public class BasicUserService implements UserService {
         return userMapper.toDto(userRepository.save(user), isOnline);
     }
 
+    @PreAuthorize("principal.userDto.id == #userId")
     @Override
     @Transactional
     public void delete(UUID userId) {

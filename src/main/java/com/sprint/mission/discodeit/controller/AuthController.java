@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.DTO.request.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.controller.api.AuthApi;
 import com.sprint.mission.discodeit.service.AuthService;
 import com.sprint.mission.discodeit.service.UserService;
+import com.sprint.mission.discodeit.service.auth.DiscodeitUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -36,7 +37,7 @@ public class AuthController implements AuthApi {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserDto> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<UserDto> getCurrentUser(@AuthenticationPrincipal DiscodeitUserDetails userDetails) {
         log.info("[AuthController] 세션 기반 사용자 정보 조회 요청(/me) 접수됨...");
 
         // @AuthenticationPrincipal로 주입받은 userDetails가 null이면 현재 인증되지 않은 상태라고 판단해야 한다.
