@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.mapper.UserMapper;
@@ -71,7 +72,7 @@ public class BasicUserService implements UserService {
 						.orElse(null);
 				String password = passwordEncoder.encode(userCreateRequest.password());
 
-				User user = new User(username, email, password, nullableProfile);
+				User user = new User(username, email, password, Role.USER, nullableProfile);
 				Instant now = Instant.now();
 				UserStatus userStatus = new UserStatus(user, now);
 
@@ -143,6 +144,16 @@ public class BasicUserService implements UserService {
 				}
 				user.update(newUsername, newEmail, newPassword, nullableProfile);
 				log.info("사용자 수정 완료, userId={}, username={}", userId, newUsername);
+				return userMapper.toDto(user);
+		}
+
+		@Transactional
+		@Override
+		public UserDto updateRole(UUID userId, Role newRole) {
+				User user = userRepository.findById(userId)
+						.orElseThrow(() -> new NoSuchElementException("User with id " + userId + " not found"));
+				user.updateRole(newRole);
+				log.info("사용자 권한 변경 완료, userId={}, role={}", userId, newRole);
 				return userMapper.toDto(user);
 		}
 

@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
@@ -29,6 +30,9 @@ import org.springframework.stereotype.Component;
 public class DataInitializer {
 
   private static final String DEFAULT_PASSWORD = "password";
+  private static final String ADMIN_USERNAME = "admin";
+  private static final String ADMIN_EMAIL = "admin@discodeit.com";
+  private static final String ADMIN_PASSWORD = "Admin123!";
   private static final String[][] SEED_USERS = {
       {"buzz", "buzz@codeit.com"},
       {"jessie", "jessie@codeit.com"},
@@ -48,8 +52,28 @@ public class DataInitializer {
       return;
     }
     createSeedUsers();
+    createAdminIfNotExists();
     ensureSeedUserProfiles();
     createDefaultChannelAndReadStatuses();
+  }
+
+  private void createAdminIfNotExists() {
+    if (userRepository.existsByRole(Role.ADMIN)) {
+      return;
+    }
+    try {
+      if (!userRepository.existsByUsername(ADMIN_USERNAME)) {
+        userService.create(
+            new UserCreateRequest(ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD),
+            Optional.empty()
+        );
+      }
+      userRepository.findByUsername(ADMIN_USERNAME).ifPresent(admin ->
+          userService.updateRole(admin.getId(), Role.ADMIN));
+      log.info("Initialized admin account: {}", ADMIN_USERNAME);
+    } catch (Exception e) {
+      log.warn("Could not initialize admin account: {}", e.getMessage());
+    }
   }
 
   private void ensureSeedUserProfiles() {

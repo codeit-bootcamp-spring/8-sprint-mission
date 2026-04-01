@@ -4,23 +4,23 @@ import com.sprint.mission.discodeit.dto.data.UserDto;
 import java.util.Collection;
 import java.util.List;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 @Getter
-@RequiredArgsConstructor
 public class DiscodeitUserDetails implements UserDetails {
     private final UserDto userDto;
     private final String password;
-    private final Collection<? extends GrantedAuthority> authorities = List.of(
-        new SimpleGrantedAuthority("ROLE_USER")
-    );
+
+    public DiscodeitUserDetails(UserDto userDto, String password) {
+        this.userDto = userDto;
+        this.password = password;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+        return List.of(new SimpleGrantedAuthority("ROLE_" + userDto.role().name()));
     }
 
     @Override
