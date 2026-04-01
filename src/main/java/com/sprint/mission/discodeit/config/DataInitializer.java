@@ -68,8 +68,10 @@ public class DataInitializer {
             Optional.empty()
         );
       }
-      userRepository.findByUsername(ADMIN_USERNAME).ifPresent(admin ->
-          userService.updateRole(admin.getId(), Role.ADMIN));
+      userRepository.findByUsername(ADMIN_USERNAME).ifPresent(admin -> {
+        admin.updateRole(Role.ADMIN);
+        userRepository.save(admin);
+      });
       log.info("Initialized admin account: {}", ADMIN_USERNAME);
     } catch (Exception e) {
       log.warn("Could not initialize admin account: {}", e.getMessage());

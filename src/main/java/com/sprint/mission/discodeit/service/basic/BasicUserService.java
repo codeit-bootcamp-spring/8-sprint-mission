@@ -7,14 +7,12 @@ import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.repository.UserStatusRepository;
+import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
-import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -22,6 +20,8 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,11 +32,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class BasicUserService implements UserService {
 
 		private final UserRepository userRepository;
-		private final UserStatusRepository userStatusRepository;
 		private final UserMapper userMapper;
 		private final BinaryContentRepository binaryContentRepository;
 		private final BinaryContentStorage binaryContentStorage;
 		private final PasswordEncoder passwordEncoder;
+		private final SessionRegistry sessionRegistry;
 
 		/**
 		 * 사용자 생성 (이메일/사용자명 중복 시 예외).
@@ -74,26 +74,25 @@ public class BasicUserService implements UserService {
 				String password = passwordEncoder.encode(userCreateRequest.password());
 
 				User user = new User(username, email, password, Role.USER, nullableProfile);
-				Instant now = Instant.now();
-				UserStatus userStatus = new UserStatus(user, now);
-
 				userRepository.save(user);
 				log.info("사용자 생성 완료, id={}, username={}", user.getId(), username);
-				return userMapper.toDto(user);
+				return withOnline(userMapper.toDto(user));
 		}
 
 		@Override
 		public UserDto find(UUID userId) {
 				return userRepository.findById(userId)
 						.map(userMapper::toDto)
+						.map(this::withOnline)
 						.orElseThrow(() -> new NoSuchElementException("User with id " + userId + " not found"));
 		}
 
 		@Override
 		public List<UserDto> findAll() {
-				return userRepository.findAllWithProfileAndStatus()
+				return userRepository.findAllWithProfile()
 						.stream()
 						.map(userMapper::toDto)
+						.map(this::withOnline)
 						.toList();
 		}
 
@@ -145,7 +144,7 @@ public class BasicUserService implements UserService {
 				}
 				user.update(newUsername, newEmail, newPassword, nullableProfile);
 				log.info("사용자 수정 완료, userId={}, username={}", userId, newUsername);
-				return userMapper.toDto(user);
+				return withOnline(userMapper.toDto(user));
 		}
 
 		@Transactional
@@ -155,8 +154,9 @@ public class BasicUserService implements UserService {
 				User user = userRepository.findById(userId)
 						.orElseThrow(() -> new NoSuchElementException("User with id " + userId + " not found"));
 				user.updateRole(newRole);
+				invalidateUserSessions(userId);
 				log.info("사용자 권한 변경 완료, userId={}, role={}", userId, newRole);
-				return userMapper.toDto(user);
+				return withOnline(userMapper.toDto(user));
 		}
 
 		/**
@@ -172,5 +172,39 @@ public class BasicUserService implements UserService {
 				}
 				userRepository.deleteById(userId);
 				log.info("사용자 삭제 완료, userId={}", userId);
+		}
+
+		private UserDto withOnline(UserDto dto) {
+				return new UserDto(
+						dto.id(),
+						dto.username(),
+						dto.email(),
+						dto.profileId(),
+						isUserOnline(dto.id()),
+						dto.role()
+				);
+		}
+
+		private boolean isUserOnline(UUID userId) {
+				for (Object principal : sessionRegistry.getAllPrincipals()) {
+						if (principal instanceof DiscodeitUserDetails details
+								&& userId.equals(details.getUserDto().id())) {
+								List<SessionInformation> sessions = sessionRegistry.getAllSessions(principal, false);
+								if (!sessions.isEmpty()) {
+										return true;
+								}
+						}
+				}
+				return false;
+		}
+
+		private void invalidateUserSessions(UUID userId) {
+				for (Object principal : sessionRegistry.getAllPrincipals()) {
+						if (principal instanceof DiscodeitUserDetails details
+								&& userId.equals(details.getUserDto().id())) {
+								sessionRegistry.getAllSessions(principal, false)
+										.forEach(SessionInformation::expireNow);
+						}
+				}
 		}
 }

@@ -33,7 +33,7 @@ public class AuthController {
 
 		@GetMapping(path = "me")
 		public ResponseEntity<UserDto> me(@AuthenticationPrincipal DiscodeitUserDetails userDetails) {
-				return ResponseEntity.ok(userDetails.getUserDto());
+				return ResponseEntity.ok(userService.find(userDetails.getUserDto().id()));
 		}
 
 		@PutMapping(path = "role")
