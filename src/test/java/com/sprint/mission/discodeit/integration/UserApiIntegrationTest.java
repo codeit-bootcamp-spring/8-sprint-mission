@@ -250,7 +250,8 @@ class UserApiIntegrationTest {
 
     // When & Then
     mockMvc.perform(delete("/api/users/{userId}", userId)
-            .with(csrf()))
+            .with(csrf())
+            .with(authenticatedUser(userId, createdUser.username(), createdUser.email())))
         .andExpect(status().isNoContent());
 
     // 삭제 확인
@@ -267,7 +268,49 @@ class UserApiIntegrationTest {
 
     // When & Then
     mockMvc.perform(delete("/api/users/{userId}", nonExistentUserId)
-            .with(csrf()))
+            .with(csrf())
+            .with(authenticatedUser(nonExistentUserId, "ghost", "ghost@example.com")))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("사용자 업데이트 실패 API 통합 테스트 - 타인 사용자 접근")
+  void updateUser_Failure_Forbidden_WhenDifferentUser() throws Exception {
+    UserCreateRequest ownerCreateRequest = new UserCreateRequest(
+        "owneruser",
+        "owner@example.com",
+        "Password1!"
+    );
+    UserDto owner = userService.create(ownerCreateRequest, Optional.empty());
+
+    UserCreateRequest attackerCreateRequest = new UserCreateRequest(
+        "attackeruser",
+        "attacker@example.com",
+        "Password1!"
+    );
+    UserDto attacker = userService.create(attackerCreateRequest, Optional.empty());
+
+    UserUpdateRequest updateRequest = new UserUpdateRequest(
+        "hacked",
+        "hacked@example.com",
+        "UpdatedPassword1!"
+    );
+
+    MockMultipartFile userUpdateRequestPart = new MockMultipartFile(
+        "userUpdateRequest",
+        "",
+        MediaType.APPLICATION_JSON_VALUE,
+        objectMapper.writeValueAsBytes(updateRequest)
+    );
+
+    mockMvc.perform(multipart("/api/users/{userId}", owner.id())
+            .file(userUpdateRequestPart)
+            .with(request -> {
+              request.setMethod("PATCH");
+              return request;
+            })
+            .with(csrf())
+            .with(authenticatedUser(attacker.id(), attacker.username(), attacker.email())))
+        .andExpect(status().isForbidden());
   }
 }

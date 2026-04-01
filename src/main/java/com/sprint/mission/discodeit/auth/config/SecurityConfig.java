@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.auth.handler.CustomAccessDeniedHandler;
 import com.sprint.mission.discodeit.auth.handler.CustomSessionExpiredStrategy;
 import com.sprint.mission.discodeit.auth.handler.LoginFailureHandler;
 import com.sprint.mission.discodeit.auth.handler.LoginSuccessHandler;
+import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +26,8 @@ import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
@@ -60,7 +63,8 @@ public class SecurityConfig {
   public SecurityFilterChain securityFilterChain(HttpSecurity http,
       LoginSuccessHandler loginSuccessHandler, LoginFailureHandler loginFailureHandler,
       CustomAccessDeniedHandler customAccessDeniedHandler,
-      DaoAuthenticationProvider authenticationProvider) throws Exception {
+      DaoAuthenticationProvider authenticationProvider,
+      PersistentTokenBasedRememberMeServices rememberMeServices) throws Exception {
     http
         // 접근 권한 설정
         .authorizeHttpRequests(
@@ -95,15 +99,46 @@ public class SecurityConfig {
           response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
         }).accessDeniedHandler(customAccessDeniedHandler))
         // 동시 로그인 제한 및 세션 설정
-        .sessionManagement(management -> management
-            .sessionConcurrency(concurrency -> concurrency
-                .maximumSessions(1)
+        .sessionManagement(management -> management.sessionConcurrency(
+            concurrency -> concurrency.maximumSessions(1)
                 .expiredSessionStrategy(customSessionExpiredStrategy)
-                .sessionRegistry(sessionRegistry())))
+                .sessionRegistry(sessionRegistry()))).rememberMe(
+            rememberMe -> rememberMe.key("discodeit").tokenValiditySeconds(7 * 24 * 60 * 60) // 7일
+                .rememberMeServices(rememberMeServices))
         // 인증 제공자
         .authenticationProvider(authenticationProvider);
 
     return http.build();
+  }
+
+  @Bean
+  public JdbcTokenRepositoryImpl tokenRepository(DataSource dataSource) {
+
+    System.out.println("[SecurityConfig] JdbcTokenRepository 생성");
+
+    JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
+    tokenRepository.setDataSource(dataSource);
+
+    System.out.println("[SecurityConfig] JdbcTokenRepository 설정 완료");
+    return tokenRepository;
+  }
+
+  @Bean
+  public PersistentTokenBasedRememberMeServices rememberMeServices(
+      UserDetailsService userDetailsService, JdbcTokenRepositoryImpl tokenRepository) {
+
+    // 토큰을 데이터베이스에 저장하는 방법으로 설정
+    PersistentTokenBasedRememberMeServices rememberMeServices = new PersistentTokenBasedRememberMeServices(
+        "discodeit-key", userDetailsService, tokenRepository);
+
+    // Remember-Me 토큰의 유효 기간을 테스트 용도로 60초 설정 (운영시에는 대개 1주 이상)
+    rememberMeServices.setTokenValiditySeconds(60);
+    rememberMeServices.setCookieName("remember-me");
+    rememberMeServices.setParameter("remember-me");
+
+    System.out.println("[SecurityConfig] Remember-Me 설정 완료!");
+
+    return rememberMeServices;
   }
 
   @Bean
@@ -129,8 +164,7 @@ public class SecurityConfig {
    */
   @Bean
   static MethodSecurityExpressionHandler methodSecurityExpressionHandler(
-      RoleHierarchy roleHierarchy
-  ) {
+      RoleHierarchy roleHierarchy) {
     DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
 
     handler.setRoleHierarchy(roleHierarchy);

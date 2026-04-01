@@ -229,7 +229,8 @@ class MessageApiIntegrationTest {
     mockMvc.perform(patch("/api/messages/{messageId}", messageId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(requestBody)
-            .with(csrf()))
+            .with(csrf())
+            .with(authenticatedUser(user)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id", is(messageId.toString())))
         .andExpect(jsonPath("$.content", is("수정된 메시지 내용입니다.")))
@@ -241,6 +242,12 @@ class MessageApiIntegrationTest {
   void updateMessage_Failure_MessageNotFound() throws Exception {
     // Given
     UUID nonExistentMessageId = UUID.randomUUID();
+    UserCreateRequest userRequest = new UserCreateRequest(
+        "ghost-user",
+        "ghost-user@example.com",
+        "Password1!"
+    );
+    UserDto user = userService.create(userRequest, Optional.empty());
 
     MessageUpdateRequest updateRequest = new MessageUpdateRequest(
         "수정된 메시지 내용입니다."
@@ -252,7 +259,8 @@ class MessageApiIntegrationTest {
     mockMvc.perform(patch("/api/messages/{messageId}", nonExistentMessageId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(requestBody)
-            .with(csrf()))
+            .with(csrf())
+            .with(authenticatedUser(user)))
         .andExpect(status().isNotFound());
   }
 
@@ -285,7 +293,8 @@ class MessageApiIntegrationTest {
 
     // When & Then
     mockMvc.perform(delete("/api/messages/{messageId}", messageId)
-            .with(csrf()))
+            .with(csrf())
+            .with(authenticatedUser(user)))
         .andExpect(status().isNoContent());
 
     // 삭제 확인 - 채널의 메시지 목록 조회 시 삭제된 메시지는 조회되지 않아야 함
@@ -301,10 +310,51 @@ class MessageApiIntegrationTest {
   void deleteMessage_Failure_MessageNotFound() throws Exception {
     // Given
     UUID nonExistentMessageId = UUID.randomUUID();
+    UserCreateRequest userRequest = new UserCreateRequest(
+        "ghost-delete-user",
+        "ghost-delete-user@example.com",
+        "Password1!"
+    );
+    UserDto user = userService.create(userRequest, Optional.empty());
 
     // When & Then
     mockMvc.perform(delete("/api/messages/{messageId}", nonExistentMessageId)
-            .with(csrf()))
+            .with(csrf())
+            .with(authenticatedUser(user)))
         .andExpect(status().isNotFound());
   }
-} 
+
+  @Test
+  @DisplayName("메시지 업데이트 실패 API 통합 테스트 - 타인 메시지 접근")
+  void updateMessage_Failure_Forbidden_WhenDifferentAuthor() throws Exception {
+    PublicChannelCreateRequest channelRequest = new PublicChannelCreateRequest(
+        "테스트 채널",
+        "테스트 채널 설명입니다."
+    );
+    ChannelDto channel = channelService.create(channelRequest);
+
+    UserDto owner = userService.create(new UserCreateRequest(
+        "owner-message-user",
+        "owner-message@example.com",
+        "Password1!"
+    ), Optional.empty());
+
+    UserDto attacker = userService.create(new UserCreateRequest(
+        "attacker-message-user",
+        "attacker-message@example.com",
+        "Password1!"
+    ), Optional.empty());
+
+    MessageDto createdMessage = messageService.create(owner.id(),
+        new MessageCreateRequest("원본 메시지", channel.id()), new ArrayList<>());
+
+    MessageUpdateRequest updateRequest = new MessageUpdateRequest("권한 없는 수정 시도");
+
+    mockMvc.perform(patch("/api/messages/{messageId}", createdMessage.id())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(updateRequest))
+            .with(csrf())
+            .with(authenticatedUser(attacker)))
+        .andExpect(status().isForbidden());
+  }
+}
