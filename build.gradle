@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.sprint.mission'
-version = '1.2-M8'
+version = '2.0-M9'
 
 // 2. Repositories 블록은 최상위 레벨에 위치해야 합니다.
 repositories {
@@ -58,6 +58,9 @@ dependencies {
 
     // AWS S3 SDK 추가
     implementation 'software.amazon.awssdk:s3:2.30.0'
+    
+    // Spring Security 의존성 추가
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
 }
 
