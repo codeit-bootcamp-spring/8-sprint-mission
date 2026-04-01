@@ -16,5 +16,7 @@ public interface MessageRepository extends JpaRepository<Message, UUID>, Message
 
     Optional<Message> findTopByChannelIdOrderByCreatedAtDesc(UUID channelId);
 
+    void deleteAllByAuthorId(UUID authorId);
+
     void deleteAllByChannelId(UUID channelId);
 }

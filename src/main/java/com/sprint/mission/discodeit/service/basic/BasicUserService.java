@@ -12,15 +12,14 @@ import com.sprint.mission.discodeit.exception.UserException.DuplicateUsernameExc
 import com.sprint.mission.discodeit.exception.UserException.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
+import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -41,6 +40,8 @@ public class BasicUserService implements UserService {
     private final UserRepository userRepository;
     private final BinaryContentRepository binaryContentRepository;
     private final BinaryContentStorage binaryContentStorage;
+    private final MessageRepository messageRepository;
+    private final ReadStatusRepository readStatusRepository;
 
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
@@ -177,6 +178,8 @@ public class BasicUserService implements UserService {
 
         invalidatedUserSessions(user.getUsername());
 
+        readStatusRepository.deleteAllByUserId(userId);
+        messageRepository.deleteAllByAuthorId(userId);
         userRepository.delete(user);
         log.info("Service: 사용자 DB 삭제 완료 - ID: {}", userId);
     }
