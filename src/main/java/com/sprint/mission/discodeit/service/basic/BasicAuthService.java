@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.DTO.dto.UserDto;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.exception.UserException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.AuthService;
@@ -41,7 +42,7 @@ public class BasicAuthService implements AuthService {
 
         // Repository를 통해 최신 사용자 정보 조회 (권한 변경 등이 실시간으로 반영됨)
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("[AuthService] 사용자를 찾을 수 없습니다: " + username));
+                .orElseThrow(() -> new UserException.UserNotFoundException(userId));
 
         log.info("[AuthService] 조회된 사용자 정보: {}", user);
 
