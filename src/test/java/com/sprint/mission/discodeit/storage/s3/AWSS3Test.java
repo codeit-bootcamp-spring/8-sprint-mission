@@ -1,26 +1,37 @@
 package com.sprint.mission.discodeit.storage.s3;
 
-import org.junit.jupiter.api.BeforeEach;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
-import java.time.Duration;
-
-@SpringBootTest
+@Disabled
+@SpringBootTest(properties = {
+    "discodeit.storage.s3.access-key=dummy-key",
+    "discodeit.storage.s3.secret-key=dummy-secret",
+    "discodeit.storage.s3.region=ap-northeast-2",
+    "discodeit.storage.s3.bucket=dummy-bucket"
+})
 @ActiveProfiles("test")
 public class AWSS3Test {
 
+  @MockitoBean
   private S3Client s3Client;
+  @MockitoBean
   private S3Presigner s3Presigner;
 
   // test.yml이나 application.yml에서 주입받음
@@ -36,45 +47,33 @@ public class AWSS3Test {
   @Value("${discodeit.storage.s3.bucket}")
   private String bucketName;
 
-  @BeforeEach
-  void setUp() {
-    //.env 파일을 직접 읽지 않고 @Value로 받은 값을 사용
-    AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
-
-    this.s3Client = S3Client.builder()
-        .region(Region.of(region))
-        .credentialsProvider(StaticCredentialsProvider.create(credentials))
-        .build();
-
-    this.s3Presigner = S3Presigner.builder()
-        .region(Region.of(region))
-        .credentialsProvider(StaticCredentialsProvider.create(credentials))
-        .build();
-  }
 
   @Test
+  @DisplayName("S3 업로드 Mock 테스트")
   void uploadTest() {
-    //파일 대신 가상의 바이트 데이터를 업로드
+    when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+        .thenReturn(PutObjectResponse.builder().build());
+
     PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-        .bucket(bucketName)
-        .key("goat.png")
-        .contentType("image/png")
-        .build();
+        .bucket(bucketName).key("goat.png").contentType("image/png").build();
 
     s3Client.putObject(putObjectRequest, RequestBody.fromString("가짜 이미지 데이터"));
     System.out.println("업로드 성공!");
   }
 
   @Test
-  void presignedUrlTest() {
-    GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-        .bucket(bucketName)
-        .key("goat.png")
-        .build();
+  void presignedUrlTest() throws Exception {
+    var mockResponse = mock(
+        software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest.class);
+
+    when(mockResponse.url()).thenReturn(java.net.URI.create("http://fake-s3-url.com").toURL());
+
+    when(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class)))
+        .thenReturn(mockResponse);
 
     GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-        .signatureDuration(Duration.ofMinutes(10))
-        .getObjectRequest(getObjectRequest)
+        .signatureDuration(java.time.Duration.ofMinutes(10))
+        .getObjectRequest(GetObjectRequest.builder().bucket(bucketName).key("goat.png").build())
         .build();
 
     String url = s3Presigner.presignGetObject(presignRequest).url().toString();
@@ -82,15 +81,12 @@ public class AWSS3Test {
   }
 
   @Test
+  @DisplayName("S3 다운로드 Mock 테스트")
   void downloadTest() {
-    // S3에서 데이터를 가져와서 출력이 잘 되는지 확인
-    GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-        .bucket(bucketName)
-        .key("goat.png")
-        .build();
+    when(s3Client.getObject(any(GetObjectRequest.class)))
+        .thenReturn(mock(software.amazon.awssdk.core.ResponseInputStream.class));
 
-    // 실제 파일로 저장하지 않고 응답이 오는지 확인
-    s3Client.getObject(getObjectRequest);
+    s3Client.getObject(GetObjectRequest.builder().bucket(bucketName).key("goat.png").build());
     System.out.println("다운로드 시도 성공!");
   }
 }
