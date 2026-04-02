@@ -6,6 +6,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 @Getter
@@ -17,8 +18,7 @@ public class DiscodeitUserDetails implements UserDetails {
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
-    //나중에 권한 설정에 넣어줘야함
-    return List.of();
+    return List.of(new SimpleGrantedAuthority("ROLE_" + userDto.role().name()));
   }
 
   @Override
