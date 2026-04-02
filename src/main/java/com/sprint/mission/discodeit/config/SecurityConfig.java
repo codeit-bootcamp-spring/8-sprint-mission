@@ -14,6 +14,8 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -21,6 +23,7 @@ import org.springframework.security.web.access.AccessDeniedHandlerImpl;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableWebSecurity
@@ -33,7 +36,8 @@ public class SecurityConfig {
       HttpSecurity http,
       LoginSuccessHandler loginSuccessHandler,
       LoginFailureHandler loginFailureHandler,
-      ObjectMapper objectMapper
+      ObjectMapper objectMapper,
+      SessionRegistry sessionRegistry
 
   )
       throws Exception {
@@ -52,7 +56,8 @@ public class SecurityConfig {
             .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
             .requestMatchers("/actuator/**").permitAll()
             .requestMatchers("/error").permitAll()
-            .requestMatchers("/", "/index.html", "/favicon.ico").permitAll() // 프론트 화면용
+            .requestMatchers("/", "/index.html", "/favicon.ico", "/assets/**")
+            .permitAll() // 프론트 화면용
 
             //그 외의 모든 요청은 로그인을 해야만 접근 가능
             .anyRequest().authenticated()
@@ -75,6 +80,14 @@ public class SecurityConfig {
                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
             // 403 Forbidden
             .accessDeniedHandler(new AccessDeniedHandlerImpl())
+        )
+        .sessionManagement(management -> management
+            .sessionConcurrency(concurrency -> concurrency
+                .maximumSessions(1) // 최대 허용 세션 수
+                .maxSessionsPreventsLogin(false) //true: 두 번째 로그인 차단, false: 첫 번째 세션 만료
+                .sessionRegistry(sessionRegistry)
+            )
+
         );
 
     return http.build();
@@ -103,5 +116,17 @@ public class SecurityConfig {
     DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
     handler.setRoleHierarchy(roleHierarchy);
     return handler;
+  }
+
+  //세션 저장소 빈 등록
+  @Bean
+  public SessionRegistry sessionRegistry() {
+    return new SessionRegistryImpl();
+  }
+
+  // 세션 만료 이벤트 퍼블리셔 빈 등록 (로그아웃 시 SessionRegistry 정리용)
+  @Bean
+  public HttpSessionEventPublisher httpSessionEventPublisher() {
+    return new HttpSessionEventPublisher();
   }
 }
