@@ -9,6 +9,7 @@ import com.sprint.mission.discodeit.service.AuthService;
 import jakarta.transaction.Transactional;
 import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,6 +20,7 @@ public class BasicAuthService implements AuthService {
   private final UserRepository userRepository;
   private final UserMapper userMapper;
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public UserDto updateRole(RoleUpdateRequest request) {
 
