@@ -16,6 +16,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -37,7 +38,8 @@ public class SecurityConfig {
       LoginSuccessHandler loginSuccessHandler,
       LoginFailureHandler loginFailureHandler,
       ObjectMapper objectMapper,
-      SessionRegistry sessionRegistry
+      SessionRegistry sessionRegistry,
+      UserDetailsService discodeitUserDetailsService
 
   )
       throws Exception {
@@ -72,7 +74,7 @@ public class SecurityConfig {
             .logoutSuccessHandler(
                 new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
             .invalidateHttpSession(true) //세션무호화
-            .deleteCookies("JSESSIONID") //쿠키삭제
+            .deleteCookies("JSESSIONID", "remember-me") //쿠키삭제
         )
         .exceptionHandling(ex -> ex
             // 401 Unauthorized
@@ -87,7 +89,13 @@ public class SecurityConfig {
                 .maxSessionsPreventsLogin(false) //true: 두 번째 로그인 차단, false: 첫 번째 세션 만료
                 .sessionRegistry(sessionRegistry)
             )
-
+        )
+        .rememberMe(remember -> remember
+            .key("discodeit-secret-key")             // 토큰 암호화에 사용할 고유 키
+            .rememberMeParameter("remember-me")      // 프론트에서 보낼 파라미터 이름
+            .tokenValiditySeconds(86400 * 7)        // 토큰 유효 기간 (7일)
+            .userDetailsService(discodeitUserDetailsService) // 유저 정보 조회 서비스 연결
+            .alwaysRemember(false)                   // 파라미터가 올 때만 기억하게 설정
         );
 
     return http.build();
