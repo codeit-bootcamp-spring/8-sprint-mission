@@ -1,6 +1,10 @@
 package com.sprint.mission.discodeit.config;
 
-import com.sprint.mission.discodeit.handler.*;
+import com.sprint.mission.discodeit.handler.CustomAccessDeniedHandler;
+import com.sprint.mission.discodeit.handler.CustomAuthenticationEntryPoint;
+import com.sprint.mission.discodeit.handler.LoginFailureHandler;
+import com.sprint.mission.discodeit.handler.LoginSuccessHandler;
+import com.sprint.mission.discodeit.security.jwt.JwtLoginSuccessHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -20,14 +24,12 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
-import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
@@ -49,7 +51,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            SessionRegistry sessionRegistry,
-                                           LoginSuccessHandler loginSuccessHandler,
+                                           JwtLoginSuccessHandler jwtLoginSuccessHandler,
                                            LoginFailureHandler loginFailureHandler,
                                            CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
                                            CustomAccessDeniedHandler customAccessDeniedHandler,
@@ -94,19 +96,16 @@ public class SecurityConfig {
                         .sessionFixation(fixation -> fixation
                                 .migrateSession()
                         )
-                        .sessionConcurrency(concurrency -> concurrency
-                                .maximumSessions(1)
-                                .maxSessionsPreventsLogin(false)
-                                .sessionRegistry(sessionRegistry)
-                                .expiredSessionStrategy(new CustomSessionExpiredStrategy())
-                        )
+                        // JWT 기반 인증에서는 세션이라는 개념 자체가 불필요하므로 STATELESS로 설정한다.
+                        // 참고로 원래 디폴트 설정은 IF_REQUIRED다.
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 // form 기반 로그인 활성화
                 .formLogin(form -> form
                         // 로그인을 처리하는 URL 정의
                         .loginProcessingUrl("/api/auth/login")
                         // 로그인 성공 시 처리할 핸들러 정의
-                        .successHandler(loginSuccessHandler)
+                        .successHandler(jwtLoginSuccessHandler)
                         // 로그인 실패 시 처리할 핸들러 정의
                         .failureHandler(loginFailureHandler)
                         // 로그인 페이지는 인증 없이 모두 접근 가능해야 한다.
