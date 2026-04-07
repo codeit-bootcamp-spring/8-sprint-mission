@@ -3,6 +3,8 @@ package com.sprint.mission.discodeit.security.jwt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.DTO.dto.JwtDTO;
 import com.sprint.mission.discodeit.DTO.dto.UserDto;
+import com.sprint.mission.discodeit.security.jwt.store.JwtSessionRegistry;
+import com.sprint.mission.discodeit.security.jwt.store.JwtTokenEntity;
 import com.sprint.mission.discodeit.service.auth.DiscodeitUserDetails;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

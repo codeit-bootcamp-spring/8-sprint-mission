@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.security.jwt.store.JwtSessionRegistry;
 import com.sprint.mission.discodeit.service.auth.DiscodeitUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
