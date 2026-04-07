@@ -4,6 +4,7 @@ import com.sprint.mission.discodeit.handler.CustomAccessDeniedHandler;
 import com.sprint.mission.discodeit.handler.CustomAuthenticationEntryPoint;
 import com.sprint.mission.discodeit.handler.LoginFailureHandler;
 import com.sprint.mission.discodeit.handler.LoginSuccessHandler;
+import com.sprint.mission.discodeit.security.jwt.JwtAuthenticationFilter;
 import com.sprint.mission.discodeit.security.jwt.JwtLoginSuccessHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,6 +31,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
@@ -53,6 +55,7 @@ public class SecurityConfig {
                                            SessionRegistry sessionRegistry,
                                            JwtLoginSuccessHandler jwtLoginSuccessHandler,
                                            LoginFailureHandler loginFailureHandler,
+                                           JwtAuthenticationFilter jwtAuthenticationFilter,
                                            CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
                                            CustomAccessDeniedHandler customAccessDeniedHandler,
                                            DaoAuthenticationProvider authenticationProvider) throws Exception {
@@ -126,7 +129,15 @@ public class SecurityConfig {
                         .accessDeniedHandler(customAccessDeniedHandler)
                 )
                 // 인증 프로파이더 설정 (앞서 bean으로 정의된 DaoAuthenticationProvider 사용)
-                .authenticationProvider(authenticationProvider);
+                .authenticationProvider(authenticationProvider)
+                /**
+                 * 설명. JWT 인증 필터를 UsernamePasswordAuthenticationFilter 바로 앞단에 배치한다.
+                 * 이렇게 배치하는 이유는, 요청에 Authorization 헤더가 있을 경우 JWT 토큰으로 먼저 인증을 시도하고,
+                 * JWT 인증이 성공하면 SecurityContext에 인증 정보를 설정하여
+                 * 후속 필터들이 이미 인증된 상태로 처리되도록 하기 위함이다.
+                 * 만약 JWT 토큰이 없거나 유효하지 않다면 UsernamePasswordAuthenticationFilter가 폼 로그인을 처리할 수 있다.
+                 */
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
