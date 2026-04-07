@@ -61,13 +61,14 @@ discodeit:
     username: ${DISCODEIT_ADMIN_USERNAME:admin}
     email: ${DISCODEIT_ADMIN_EMAIL:admin@example.com}
     password: ${DISCODEIT_ADMIN_PASSWORD:admin1234}
-  jwt:
-    access-token:
-      secret: discodeit-mission-number-10-access-token-secret-key-0000
-      exp: 3600000 #1시간
-    refresh-token:
-      secret: discodeit-mission-number-10-refresh-token-secret-key-1234
-      exp: 604800000 #1주일
+jwt:
+  access-token:
+    secret: "discodeit-mission-number-10-access-token-secret-key-0000"
+    exp: 3600000
+  refresh-token:
+    secret: "discodeit-mission-number-10-refresh-token-secret-key-1234"
+    exp: 604800000
+
 
 
 logging:

@@ -46,8 +46,8 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
       response.setCharacterEncoding("UTF-8");
 
       UserDto userDto = userDetails.getUserDto();
-      JwtDto jwtDto = new JwtDto(userDto, accessToken);
-      
+      JwtDto jwtDto = new JwtDto(userDto, accessToken, refreshToken);
+
       objectMapper.writeValue(response.getWriter(), jwtDto);
 
     } catch (JOSEException e) {

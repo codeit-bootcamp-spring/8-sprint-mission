@@ -116,6 +116,41 @@ public class JwtTokenProvider {
     }
   }
 
+  private boolean validateToken(String token, JWSVerifier verifier, String expectedType) {
+    try {
+      SignedJWT signedJWT = SignedJWT.parse(token);
+
+      // 서명 검증
+      if (!signedJWT.verify(verifier)) {
+        log.debug("{} 토큰 서명 검증 실패", expectedType);
+        return false;
+      }
+
+      // 토큰 타입 체크 (access인지 refresh인지)
+      String tokenType = (String) signedJWT.getJWTClaimsSet().getClaim("type");
+      if (!expectedType.equals(tokenType)) {
+        log.debug("토큰 타입 불일치: 기대값={}, 실제값={}", expectedType, tokenType);
+        return false;
+      }
+
+      // 만료 시간 체크
+      Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+      if (expirationTime == null || expirationTime.before(new Date())) {
+        log.debug("{} 토큰 만료됨", expectedType);
+        return false;
+      }
+
+      return true;
+    } catch (Exception e) {
+      log.debug("{} 토큰 검증 중 예외 발생: {}", expectedType, e.getMessage());
+      return false;
+    }
+  }
+
+  public boolean validateRefreshToken(String token) {
+    return validateToken(token, refreshTokenVerifier, "refresh");
+  }
+
   public String getUsernameFromToken(String token) {
     try {
       SignedJWT signedJWT = SignedJWT.parse(token);
