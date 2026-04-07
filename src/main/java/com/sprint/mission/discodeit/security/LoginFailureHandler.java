@@ -1,42 +1,34 @@
 package com.sprint.mission.discodeit.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.exception.ErrorResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class LoginFailureHandler implements AuthenticationFailureHandler {
 
   private final ObjectMapper objectMapper;
 
-
   @Override
-  public void onAuthenticationFailure(
-      HttpServletRequest request,
-      HttpServletResponse response,
-      AuthenticationException exception
-  )
-      throws IOException, ServletException {
-
-    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
-    response.setContentType("application/json");
+  public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
+      AuthenticationException exception) throws IOException, ServletException {
+    log.error("Authentication failed: {}", exception.getMessage(), exception);
+    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     response.setCharacterEncoding("UTF-8");
 
-    Map<String, String> errorData = Map.of(
-        "error", "Invalid username or password",
-        "message", exception.getMessage()
-    );
-
-    String result = objectMapper.writeValueAsString(errorData);
-    response.getWriter().write(result);
+    ErrorResponse errorResponse = new ErrorResponse(exception, HttpServletResponse.SC_UNAUTHORIZED);
+    response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
   }
-
 }

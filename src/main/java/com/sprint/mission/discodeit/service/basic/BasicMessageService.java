@@ -111,8 +111,8 @@ public class BasicMessageService implements MessageService {
     return pageResponseMapper.fromSlice(slice, nextCursor);
   }
 
+  @PreAuthorize("principal.userDto.id == @basicMessageService.find(#messageId).author.id")
   @Transactional
-  @PreAuthorize("principal.userDto.id() == @basicMessageService.find(#messageId).author.id() or hasRole('ADMIN')")
   @Override
   public MessageDto update(UUID messageId, MessageUpdateRequest request) {
     log.debug("메시지 수정 시작: id={}, request={}", messageId, request);
@@ -124,8 +124,8 @@ public class BasicMessageService implements MessageService {
     return messageMapper.toDto(message);
   }
 
+  @PreAuthorize("principal.userDto.id == @basicMessageService.find(#messageId).author.id")
   @Transactional
-  @PreAuthorize("principal.userDto.id() == @basicMessageService.find(#messageId).author.id() or hasRole('ADMIN')")
   @Override
   public void delete(UUID messageId) {
     log.debug("메시지 삭제 시작: id={}", messageId);

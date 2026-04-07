@@ -1,4 +1,4 @@
-package com.sprint.mission.discodeit.config;
+package com.sprint.mission.discodeit.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,19 +17,31 @@ public class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
   @Override
   public void handle(HttpServletRequest request, HttpServletResponse response,
       Supplier<CsrfToken> csrfToken) {
-
-    //BREACH 공격 방지를 위해 XOR 핸들러 사용
+    /*
+     * Always use XorCsrfTokenRequestAttributeHandler to provide BREACH protection of
+     * the CsrfToken when it is rendered in the response body.
+     */
     this.xor.handle(request, response, csrfToken);
-
-    // 토큰을 즉시 로드해서 쿠키에 구워지도록 강제함
+    /*
+     * Render the token value to a cookie by causing the deferred token to be loaded.
+     */
     csrfToken.get();
   }
 
   @Override
   public String resolveCsrfTokenValue(HttpServletRequest request, CsrfToken csrfToken) {
     String headerValue = request.getHeader(csrfToken.getHeaderName());
-
-    //헤더(X-XSRF-TOKEN)에 값이 있으면 plain 방식으로, 없으면 xor 방식으로 토큰값을 찾아냄
+    /*
+     * If the request contains a request header, use CsrfTokenRequestAttributeHandler
+     * to resolve the CsrfToken. This applies when a single-page application includes
+     * the header value automatically, which was obtained via a cookie containing the
+     * raw CsrfToken.
+     *
+     * In all other cases (e.g. if the request contains a request parameter), use
+     * XorCsrfTokenRequestAttributeHandler to resolve the CsrfToken. This applies
+     * when a server-side rendered form includes the _csrf request parameter as a
+     * hidden input.
+     */
     return (StringUtils.hasText(headerValue) ? this.plain : this.xor).resolveCsrfTokenValue(request,
         csrfToken);
   }
