@@ -78,3 +78,16 @@ info:
   multipart:
     max-file-size: ${spring.servlet.multipart.max-file-size}
     max-request-size: ${spring.servlet.multipart.max-request-size}
+
+# 커스텀 프로퍼티 추가
+jwt:
+  access-token:
+    secret: M8xZy3vTrmkrZfZMIpYKZKD2IvPocpIV9UiJlrSXQD4=
+    exp: 900000        # 15분(ms)
+  refresh-token:
+    secret: M8xZy3vTrmkrZfZMIpYKZKD2IvPocpIV9UiJlrSXQD4=
+    exp: 3600000       # 1시간(ms)
+    
+# 개발 환경 권장 쿠키 설정 가이드(메모)
+# - 개발: Secure=false, SameSite=Lax, Path=/
+# - 운영: Secure=true(HTTPS), SameSite=Lax/Strict, Path=/
