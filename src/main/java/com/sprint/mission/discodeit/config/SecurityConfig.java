@@ -53,7 +53,6 @@ public class SecurityConfig {
                                            LoginFailureHandler loginFailureHandler,
                                            CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
                                            CustomAccessDeniedHandler customAccessDeniedHandler,
-                                           RememberMeServices rememberMeServices,
                                            DaoAuthenticationProvider authenticationProvider) throws Exception {
         http
                 // CSRF 설정: 쿠키 기반 CSRF 토큰 사용
@@ -102,14 +101,6 @@ public class SecurityConfig {
                                 .expiredSessionStrategy(new CustomSessionExpiredStrategy())
                         )
                 )
-                // Remember-Me 설정
-                .rememberMe(remember -> remember
-                        // bean으로 정의한 Remember-Me 서비스 사용
-                        .rememberMeServices(rememberMeServices)
-                        // 토큰 생성 시 사용할 키(설정 파일등에서 주입받을 수 있으나, 편의상 리터럴 문자열 사용)
-                        .key("discodeit-key")
-                )
-
                 // form 기반 로그인 활성화
                 .formLogin(form -> form
                         // 로그인을 처리하는 URL 정의
@@ -166,36 +157,6 @@ public class SecurityConfig {
                 .requestMatchers("/favicon.ico", "/error")
                 // 정적 리소스
                 .requestMatchers("/static/**", "/css/**", "/js/**");
-    }
-
-    @Bean
-    public SessionRegistry sessionRegistry() {
-        // 세션 레지스트리 구현체를 상속받아 로깅 커스터마이징
-        SessionRegistryImpl sessionRegistry = new SessionRegistryImpl() {
-
-            @Override
-            public void registerNewSession(String sessionId, Object principal) {
-                log.info("[SessionRegistry] 새 세션 등록 - 사용자: {}, 세션ID: {}", principal, sessionId);
-                super.registerNewSession(sessionId, principal);
-            }
-
-            @Override
-            public void removeSessionInformation(String sessionId) {
-                log.info("[SessionRegistry] 기존 세션 제거 - 세션ID: {}", sessionId);
-                super.removeSessionInformation(sessionId);
-            }
-
-            @Override
-            public SessionInformation getSessionInformation(String sessionId) {
-                SessionInformation info = super.getSessionInformation(sessionId);
-                if (info != null) {
-                    log.info("[SessionRegistry] 세션 정보 조회 - 세션ID: {}, 만료됨: {}", sessionId, info.isExpired());
-                }
-                return info;
-            }
-        };
-
-        return sessionRegistry;
     }
 
     public static class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
