@@ -105,5 +105,23 @@ public class JwtTokenProvider {
     return cookie;
   }
 
+  public boolean validateAccessToken(String token) {
+    try {
+      SignedJWT signedJWT = SignedJWT.parse(token);
+      return signedJWT.verify(accessTokenVerifier) &&
+          signedJWT.getJWTClaimsSet().getExpirationTime().after(new Date());
+    } catch (Exception e) {
+      log.error("Invalid Access Token: {}", e.getMessage());
+      return false;
+    }
+  }
 
+  public String getUsernameFromToken(String token) {
+    try {
+      SignedJWT signedJWT = SignedJWT.parse(token);
+      return signedJWT.getJWTClaimsSet().getSubject();
+    } catch (Exception e) {
+      return null;
+    }
+  }
 }
