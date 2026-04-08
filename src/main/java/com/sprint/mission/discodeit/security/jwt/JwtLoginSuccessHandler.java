@@ -3,6 +3,8 @@ package com.sprint.mission.discodeit.security.jwt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.DTO.dto.JwtDTO;
 import com.sprint.mission.discodeit.DTO.dto.UserDto;
+import com.sprint.mission.discodeit.security.jwt.store.JwtInformation;
+import com.sprint.mission.discodeit.security.jwt.store.JwtRegistry;
 import com.sprint.mission.discodeit.security.jwt.store.JwtSessionRegistry;
 import com.sprint.mission.discodeit.security.jwt.store.JwtTokenEntity;
 import com.sprint.mission.discodeit.service.auth.DiscodeitUserDetails;
@@ -30,6 +32,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
     private final ObjectMapper objectMapper;
     private final JwtTokenProvider tokenProvider;
     private final JwtSessionRegistry jwtSessionRegistry;
+    private final JwtRegistry jwtRegistry;
 
     /**
      * 로그인 성공 핸들러 생성자.
@@ -38,11 +41,12 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
      * @param tokenProvider      JWT 생성/쿠키 유틸리티
      * @param jwtSessionRegistry 토큰 상태 저장소(동시 로그인 제한, 회전 상태 기록 등)
      */
-    public JwtLoginSuccessHandler(ObjectMapper objectMapper, JwtTokenProvider tokenProvider, JwtSessionRegistry jwtSessionRegistry) {
+    public JwtLoginSuccessHandler(ObjectMapper objectMapper, JwtTokenProvider tokenProvider, JwtSessionRegistry jwtSessionRegistry, JwtRegistry jwtRegistry) {
         log.info("[JwtLoginSuccessHandler] 생성자 호출됨: 응답 JSON 직렬화를 위한 매퍼, JWT 생성/쿠키 유틸리티, 토큰 상태 저장소 주입");
         this.objectMapper = objectMapper;
         this.tokenProvider = tokenProvider;
         this.jwtSessionRegistry = jwtSessionRegistry;
+        this.jwtRegistry = jwtRegistry;
     }
 
     /**
@@ -74,6 +78,15 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
                 log.info("[JwtLoginSuccessHandler] 새 토큰 발급 시작");
                 String accessToken = tokenProvider.generateAccessToken(userDetails);
                 String refreshToken = tokenProvider.generateRefreshToken(userDetails);
+
+                JwtInformation information = new JwtInformation(
+                        userDetails.getUserDto(),
+                        accessToken,
+                        refreshToken
+                );
+
+                jwtRegistry.registerJwtInformation(information);
+                log.info("[JwtLoginSuccessHandler] JwtRegistry에 새 토큰 등록 완료");
 
                 // 토큰 메타데이터 저장 (toEntity로 중복 제거)
                 log.info("[JwtLoginSuccessHandler] 토큰 메타데이터 저장 시작");

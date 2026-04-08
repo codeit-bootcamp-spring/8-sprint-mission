@@ -85,7 +85,7 @@ public class JwtSessionRegistry {
      * 특정 jti의 토큰을 즉시 폐기한다.
      * 로그아웃 등에서 사용된다.
      */
-    public void revokedByJti(String jti) {
+    public void revokeByJti(String jti) {
         log.info("[JwtSessionRegistry] revokeByJti 호출됨: jti={}", jti);
         jwtTokenRepository.findById(jti).ifPresent(t -> {
             t.setRevoked(true);

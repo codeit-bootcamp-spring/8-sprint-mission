@@ -4,7 +4,10 @@ import com.sprint.mission.discodeit.DTO.dto.JwtDTO;
 import com.sprint.mission.discodeit.DTO.dto.UserDto;
 import com.sprint.mission.discodeit.DTO.request.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.controller.api.AuthApi;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.security.jwt.JwtTokenProvider;
+import com.sprint.mission.discodeit.security.jwt.store.JwtInformation;
+import com.sprint.mission.discodeit.security.jwt.store.JwtRegistry;
 import com.sprint.mission.discodeit.security.jwt.store.JwtSessionRegistry;
 import com.sprint.mission.discodeit.security.jwt.store.JwtTokenEntity;
 import com.sprint.mission.discodeit.service.AuthService;
@@ -21,6 +24,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Slf4j
 @RequiredArgsConstructor
 @RestController
@@ -31,6 +36,8 @@ public class AuthController implements AuthApi {
     private final JwtTokenProvider jwtTokenProvider;
     private final DiscodeitUserDetailsService userDetailsService;
     private final JwtSessionRegistry jwtSessionRegistry;
+
+    private final JwtRegistry jwtRegistry;
 
     @GetMapping("/csrf-token")
     public ResponseEntity<Void> getCsrfToken(CsrfToken csrfToken) {
@@ -71,6 +78,12 @@ public class AuthController implements AuthApi {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
+        if (!jwtRegistry.hasActiveJwtInformationByRefreshToken(refreshToken)) {
+            log.warn("[AuthController] JwtRegistry에 없는 리프레시 토큰 재사용 시도 차단");
+            jwtTokenProvider.expireRefreshCookie(response);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
         // 쿠키 값이 유효하면 쿠키 값을 추출한다.
         String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
         String oldRefreshJti = jwtTokenProvider.getTokenId(refreshToken);
@@ -96,7 +109,16 @@ public class AuthController implements AuthApi {
                 jwtTokenProvider.expireRefreshCookie(response);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
+
             jwtSessionRegistry.markReplaced(oldRefreshJti, newRefreshJti);
+
+            JwtInformation newInformation = new JwtInformation(
+                    userDetails.getUserDto(),
+                    newAccessToken,
+                    newRefreshToken
+            );
+            jwtRegistry.rotateJwtInformation(refreshToken, newInformation);
+            log.info("[AuthController] JwtRegistry 토큰 교체(로테이션) 완료");
 
             // 신규 토큰 메타데이터 저장
             JwtTokenEntity accessEntity = jwtTokenProvider.toEntity(newAccessToken);
@@ -125,10 +147,17 @@ public class AuthController implements AuthApi {
         log.info("[AuthController] 사용자 권한 변경 요청 접수됨...");
         log.info("[AuthController] 요청 데이터: {}", userRoleUpdateRequest);
 
+        UUID userId = userRoleUpdateRequest.userId();
+        Role newRole = userRoleUpdateRequest.newRole();
+
         // 서비스의 실행 결과에 따른 응답 결정
         try {
-            UserDto userDto = userService.updateUserRole(userRoleUpdateRequest.userId(), userRoleUpdateRequest.newRole());
+            UserDto userDto = userService.updateUserRole(userId, newRole);
             log.info("[AuthController] 권한 변경 성공! - {}", userDto);
+
+            // 권한 변경으로 인해 해당 유저의 인메모리 세션 무효화(강제 로그아웃)
+            jwtRegistry.invalidateJwtInformationByUserId(userId);
+            log.info("[AuthController] 권한 변경으로 인한 유저[{}]의 모든 세션 강제 종료", userId);
 
             return ResponseEntity.ok(userDto);
         } catch (IllegalArgumentException e) {

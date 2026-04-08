@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.security.jwt.store.JwtRegistry;
 import com.sprint.mission.discodeit.security.jwt.store.JwtSessionRegistry;
 import com.sprint.mission.discodeit.service.auth.DiscodeitUserDetailsService;
 import jakarta.servlet.FilterChain;
@@ -39,6 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final ObjectMapper objectMapper;
     // 토큰 폐기 여부 확인용 저장소
     private final JwtSessionRegistry jwtSessionRegistry;
+    private final JwtRegistry jwtRegistry;
 
     /**
      * JWT 인증 필터 생성자.
@@ -51,13 +53,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public JwtAuthenticationFilter(JwtTokenProvider tokenProvider,
                                    DiscodeitUserDetailsService userDetailsService,
                                    ObjectMapper objectMapper,
-                                   JwtSessionRegistry jwtSessionRegistry) {
+                                   JwtSessionRegistry jwtSessionRegistry,
+                                   JwtRegistry jwtRegistry) {
         log.info("[JwtAuthenticationFilter] 생성자 호출됨: 필터 초기화");
 
         this.tokenProvider = tokenProvider;
         this.userDetailsService = userDetailsService;
         this.objectMapper = objectMapper;
         this.jwtSessionRegistry = jwtSessionRegistry;
+        this.jwtRegistry = jwtRegistry;
     }
 
     /**
@@ -79,14 +83,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // Access 토큰 유효성 검사(토큰 타입 검증, 만료 시간 검증, 서명 무결성 검증)
                 if (tokenProvider.validateAccessToken(token)) {
+                    // 토큰의 상태를 검사하는 로직
+                    if (!jwtRegistry.hasActiveJwtInformationByAccessToken(token)) {
+                        log.info("[JwtAuthenticationFilter] 토큰이 JwtRegistry에 존재하지 않는다 (세션 만료 또는 로그아웃됨)");
+                        sendUnauthorized(response, "Session expired (logout or concurrent login)");
+                        return;
+                    }
 
                     // 토큰이 서버 측에서 폐기(revoked)되었는지 확인한다.
                     String jti = tokenProvider.getTokenId(token);
 
                     if (jwtSessionRegistry.isRevoked(jti)) {
-                        log.info("[JwtAuthentication] 토큰이 폐기됨(revoked): jti={}", jti);
+                        log.info("[JwtAuthenticationFilter] 토큰이 폐기됨(revoked): jti={}", jti);
                         sendUnauthorized(response, "Token revoked");
-
                         return;
                     }
 
@@ -139,7 +148,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bear ")) {
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
         return null;
@@ -164,6 +173,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 응답 바디 전송
         response.getWriter().write(responseBody);
     }
-
-
 }

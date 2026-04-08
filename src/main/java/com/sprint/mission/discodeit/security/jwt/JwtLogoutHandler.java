@@ -1,0 +1,66 @@
+package com.sprint.mission.discodeit.security.jwt;
+
+import com.nimbusds.jwt.SignedJWT;
+import com.sprint.mission.discodeit.security.jwt.store.JwtRegistry;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+import java.util.UUID;
+
+@Slf4j
+@Component
+public class JwtLogoutHandler implements LogoutHandler {
+
+    private final JwtTokenProvider tokenProvider;
+    private final JwtRegistry jwtRegistry;
+
+    /**
+     * 로그아웃 핸들러 생성자.
+     *
+     * @param tokenProvider 만료된 리프레시 쿠키를 생성하기 위한 프로바이더
+     */
+    public JwtLogoutHandler(JwtTokenProvider tokenProvider,
+                            JwtRegistry jwtRegistry) {
+        log.info("[JwtLogoutHandler] 생성자 호출됨: 만료된 리프레시 쿠키 생성 + 세션 레지스트리 주입");
+        this.tokenProvider = tokenProvider;
+        this.jwtRegistry = jwtRegistry;
+    }
+
+    @Override
+    public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+
+        log.info("[JwtLogoutHandler] 로그아웃 처리 시작: 리프레시 쿠키 만료 응답 추가");
+
+        if (request.getCookies() != null) {
+            Arrays.stream(request.getCookies())
+                    .filter(cookie -> cookie.getName().equals(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME))
+                    .findFirst()
+                    .ifPresent(cookie -> {
+                        try {
+                            String refreshToken = cookie.getValue();
+
+                            SignedJWT signedJWT = SignedJWT.parse(refreshToken);
+                            Object userIdClaim = signedJWT.getJWTClaimsSet().getClaim("userId");
+                            if (userIdClaim != null) {
+                                UUID userId = UUID.fromString(userIdClaim.toString());
+
+                                jwtRegistry.invalidateJwtInformationByUserId(userId);
+                                log.info("[JwtLogoutHandler] RT 무효화 완료: userId={}", userId);
+                            }
+                        } catch (Exception e) {
+                            log.warn("[JwtLogoutHandler] RT 무효화 중 예외 발생: {}", e.getMessage());
+                        }
+                    });
+        }
+
+        // 리프레시 토큰을 즉시 만료시키는 쿠키를 응답에 추가한다 (클라이언트가 보관한 RT 제거)
+        tokenProvider.expireRefreshCookie(response);
+
+        log.info("[JwtLogoutHandler] 로그아웃 처리 완료: 만료 쿠키 전송");
+    }
+}
