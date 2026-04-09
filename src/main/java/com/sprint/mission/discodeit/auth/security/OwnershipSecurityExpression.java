@@ -8,7 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-@Component("ownershipSecurityExpression")
+@Component
 @RequiredArgsConstructor
 public class OwnershipSecurityExpression {
 
@@ -25,7 +25,8 @@ public class OwnershipSecurityExpression {
     }
 
     UUID currentUserId = currentUserId();
-    return currentUserId != null && messageRepository.existsByIdAndAuthorId(messageId, currentUserId);
+    return currentUserId != null && messageRepository.existsByIdAndAuthorId(messageId,
+        currentUserId);
   }
 
   private UUID currentUserId() {
