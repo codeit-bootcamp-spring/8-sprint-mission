@@ -12,8 +12,7 @@ public class MessageSecurity {
   private final MessageRepository messageRepository;
 
   public boolean isAuthor(UUID messageId, UUID currentUserId) {
-    return messageRepository.findById(messageId)
-        .map(message -> message.getAuthor().getId().equals(currentUserId))
-        .orElse(false); // 메시지가 없으면 권한 없음 처리
+    // 객체를 조회하지 않고, DB에서 데이터 존재 여부만 리턴해준다.
+    return messageRepository.existsByIdAndAuthorId(messageId, currentUserId);
   }
 }

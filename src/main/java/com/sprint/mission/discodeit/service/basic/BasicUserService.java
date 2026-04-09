@@ -133,19 +133,28 @@ public class BasicUserService implements UserService {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new UserNotFoundException(userId));
 
+    // 권한이 이전과 같으면 로직 수행 X -> 즉시 반환
+    if (user.getRole().equals(newRole)) {
+      log.info("동일한 권한으로의 변경 요청 - userId: {}", userId);
+      return userMapper.toDto(user, isUserOnline(user.getId()));
+    }
+
+    // 변경 전 권한 (로그용)
+    UserRole oldRole = user.getRole();
+
     user.updateRole(newRole);
 
-    // 권한 변경 -> 세션 강제 만료
-    List<Object> allPrincipals = sessionRegistry.getAllPrincipals();
-    for (Object principal : allPrincipals) {
-      if (principal instanceof DiscodeitUserDetails userDetails) {
-        if (userDetails.getUserDto().id().equals(userId)) {
-          // 해당 유저의 모든 세션 찾아 만료 처리
-          sessionRegistry.getAllSessions(principal, false)
-              .forEach(SessionInformation::expireNow);
-        }
-      }
-    }
+    log.info("[AUTH_CHANGE] 권한 변경 - userId: {}, {} → {}", userId, oldRole, newRole);
+
+    // Stream을 사용 -> 권한 변경 대상 유저의 세션을 강제로 만료 처리한다.
+    sessionRegistry.getAllPrincipals().stream()
+        .filter(DiscodeitUserDetails.class::isInstance) // UserDetails 타입만 필터링
+        .map(DiscodeitUserDetails.class::cast)
+        .filter(userDetails -> userDetails.getUserDto().id()
+            .equals(userId)) // 현재 권한이 변경된 userId와 동일한 세션 정보만 남긴다.
+        .flatMap(userDetails -> sessionRegistry.getAllSessions(userDetails, false).stream())
+        .forEach(SessionInformation::expireNow); // 각 세션들 만료 처리
+
     return userMapper.toDto(user, isUserOnline(user.getId()));
   }
 

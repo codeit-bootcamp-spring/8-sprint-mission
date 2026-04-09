@@ -2,8 +2,10 @@ package com.sprint.mission.discodeit.config;
 
 import com.sprint.mission.discodeit.security.LoginFailureHandler;
 import com.sprint.mission.discodeit.security.LoginSuccessHandler;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
@@ -27,6 +29,9 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
+
+  @Value("${discodeit.security.remember-me.key}")
+  private String rememberMeKey;
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http,
@@ -55,7 +60,11 @@ public class SecurityConfig {
                 new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
             // 추가 보안 (세션 무효화 및 쿠키 삭제 (기본값이지만 명시))
             .invalidateHttpSession(true)
-            .deleteCookies("JSESSIONID")
+            .deleteCookies(
+                "JSESSIONID",
+                "remember-me",
+                "XSRF-TOKEN"
+            )
         )
         // 인증되지 않은 접근 시 리다이렉트 X, 401 에러 반환
         .exceptionHandling(exception -> exception
@@ -75,7 +84,7 @@ public class SecurityConfig {
         // Remember-Me 설정
         .rememberMe(rememberMe -> rememberMe
             // 토큰 생성 시 사용할 비밀키
-            .key("discodeit-secret-key")
+            .key(rememberMeKey)
             // 7일 유지
             .tokenValiditySeconds(60 * 60 * 24 * 7)
             // 세션 만료 시 유저 정보를 가져올 서비스
@@ -91,7 +100,9 @@ public class SecurityConfig {
                 .requestMatchers("/", "/index.html").permitAll()
                 .requestMatchers("/api/auth/csrf-token", "/api/auth/login", "/api/auth/logout")
                 .permitAll() // 인증 API
-                .requestMatchers("/api/users").permitAll() // 회원가입
+                .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // 회원가입
+                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/actuator/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
         );
     return http.build();
@@ -134,6 +145,6 @@ public class SecurityConfig {
   public WebSecurityCustomizer webSecurityCustomizer() {
     return (web) -> web.ignoring()
         .requestMatchers("/assets/**", "/favicon.ico", "/static/**", "/swagger-ui/**",
-            "/v3/api-docs/**", "/actuator/**");
+            "/v3/api-docs/**");
   }
 }

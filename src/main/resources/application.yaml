@@ -34,7 +34,7 @@ management:
     web:
       exposure:
         # 외부로 노출할 엔드포인트 지정
-        include: health,info,metrics,loggers
+        include: health,info
   endpoint:
     health:
       show-details: when-authorized
@@ -72,3 +72,7 @@ discodeit:
       presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600}
     local:
       root-path: C:\myWs\uploadedFiles
+
+  security:
+    remember-me:
+      key: ${REMEMBER_ME_KEY:discodeit-secret-key}
