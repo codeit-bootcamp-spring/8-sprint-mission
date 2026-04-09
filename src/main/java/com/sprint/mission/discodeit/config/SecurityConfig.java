@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.security.LoginFailureHandler;
 import com.sprint.mission.discodeit.security.LoginSuccessHandler;
 import java.util.List;
 import java.util.stream.IntStream;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +34,9 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+  @Value("${discodeit.security.remember-me-key}")
+  private String rememberMeKey;
 
   @Bean
   public CommandLineRunner debugFilterChain(SecurityFilterChain filterChain) {
@@ -108,7 +112,7 @@ public class SecurityConfig {
             )
         )
         .rememberMe(remember -> remember
-            .key("discodeit-secret-key")             // 토큰 암호화에 사용할 고유 키
+            .key(rememberMeKey)             // 토큰 암호화에 사용할 고유 키
             .rememberMeParameter("remember-me")      // 프론트에서 보낼 파라미터 이름
             .tokenValiditySeconds(86400 * 7)        // 토큰 유효 기간 (7일)
             .userDetailsService(discodeitUserDetailsService) // 유저 정보 조회 서비스 연결
