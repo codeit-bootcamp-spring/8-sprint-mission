@@ -55,10 +55,5 @@ discodeit:
       bucket: ${AWS_S3_BUCKET}
       presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600} # (기본값: 10분)
 
-logging:
-  level:
-    root: info
-    org.springframework.security: trace
-
 security:
   remember-me-key: ${REMEMBER_ME_KEY}
