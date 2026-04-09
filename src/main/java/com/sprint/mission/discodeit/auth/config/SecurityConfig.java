@@ -44,7 +44,7 @@ public class SecurityConfig {
   private final String[] PUBLIC_URLS = {"/", "/index.html", "/favicon.ico", "/assets/**", "/error",
       "/swagger-ui/**", "/v3/api-docs/**", "/api/auth/login", "/api/auth/logout"};
 
-  @Value("${app.security.remember-me.key}")
+  @Value("${security.remember-me-key}")
   private String rememberMeKey;
 
   @Bean
