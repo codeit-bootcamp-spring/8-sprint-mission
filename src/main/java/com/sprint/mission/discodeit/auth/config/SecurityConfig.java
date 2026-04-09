@@ -9,6 +9,7 @@ import com.sprint.mission.discodeit.auth.handler.LoginFailureHandler;
 import com.sprint.mission.discodeit.auth.handler.LoginSuccessHandler;
 import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -20,7 +21,6 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -31,7 +31,6 @@ import org.springframework.security.web.authentication.rememberme.PersistentToke
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
-@EnableWebSecurity
 @EnableMethodSecurity
 @Configuration
 @RequiredArgsConstructor
@@ -40,6 +39,9 @@ public class SecurityConfig {
   private final SpaCsrfTokenRequestHandler spaCsrfTokenRequestHandler;
   private final CustomSessionExpiredStrategy customSessionExpiredStrategy;
   private final ObjectMapper objectMapper;
+
+  @Value("${app.security.remember-me.key}")
+  private String rememberMeKey;
 
   @Bean
   public BCryptPasswordEncoder bCryptPasswordEncoder() {
@@ -103,7 +105,7 @@ public class SecurityConfig {
             concurrency -> concurrency.maximumSessions(1)
                 .expiredSessionStrategy(customSessionExpiredStrategy)
                 .sessionRegistry(sessionRegistry()))).rememberMe(
-            rememberMe -> rememberMe.key("discodeit").tokenValiditySeconds(7 * 24 * 60 * 60) // 7일
+            rememberMe -> rememberMe.key(rememberMeKey).tokenValiditySeconds(7 * 24 * 60 * 60) // 7일
                 .rememberMeServices(rememberMeServices))
         // 인증 제공자
         .authenticationProvider(authenticationProvider);
@@ -129,7 +131,7 @@ public class SecurityConfig {
 
     // 토큰을 데이터베이스에 저장하는 방법으로 설정
     PersistentTokenBasedRememberMeServices rememberMeServices = new PersistentTokenBasedRememberMeServices(
-        "discodeit-key", userDetailsService, tokenRepository);
+        rememberMeKey, userDetailsService, tokenRepository);
 
     // Remember-Me 토큰의 유효 기간을 테스트 용도로 60초 설정 (운영시에는 대개 1주 이상)
     rememberMeServices.setTokenValiditySeconds(60);
