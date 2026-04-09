@@ -9,6 +9,7 @@ import com.sprint.mission.discodeit.auth.handler.LoginFailureHandler;
 import com.sprint.mission.discodeit.auth.handler.LoginSuccessHandler;
 import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +35,7 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 @EnableMethodSecurity
 @Configuration
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
   private final SpaCsrfTokenRequestHandler spaCsrfTokenRequestHandler;
@@ -116,12 +118,12 @@ public class SecurityConfig {
   @Bean
   public JdbcTokenRepositoryImpl tokenRepository(DataSource dataSource) {
 
-    System.out.println("[SecurityConfig] JdbcTokenRepository 생성");
+    log.info("[SecurityConfig] JdbcTokenRepository 생성");
 
     JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
     tokenRepository.setDataSource(dataSource);
 
-    System.out.println("[SecurityConfig] JdbcTokenRepository 설정 완료");
+    log.info("[SecurityConfig] JdbcTokenRepository 설정 완료");
     return tokenRepository;
   }
 
@@ -138,7 +140,7 @@ public class SecurityConfig {
     rememberMeServices.setCookieName("remember-me");
     rememberMeServices.setParameter("remember-me");
 
-    System.out.println("[SecurityConfig] Remember-Me 설정 완료!");
+    log.info("[SecurityConfig] Remember-Me 설정 완료!");
 
     return rememberMeServices;
   }
