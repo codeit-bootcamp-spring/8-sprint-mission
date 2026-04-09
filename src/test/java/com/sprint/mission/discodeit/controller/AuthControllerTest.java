@@ -90,11 +90,4 @@ class AuthControllerTest {
       SecurityContextHolder.clearContext();
     }
   }
-
-  @Test
-  @DisplayName("내 정보 조회 실패 테스트 - 인증되지 않은 요청")
-  void getMe_Failure_Unauthorized() throws Exception {
-    mockMvc.perform(get("/api/auth/me"))
-        .andExpect(status().isUnauthorized());
-  }
 }

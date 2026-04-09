@@ -11,7 +11,6 @@ import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -54,20 +53,8 @@ public class AuthController {
 
   @GetMapping("/me")
   public ResponseEntity<AuthSuccessResponse<UserDto>> getUserDetails(
-      @AuthenticationPrincipal DiscodeitUserDetails userDetails) {
-
-    if (userDetails == null) {
-      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-      if (authentication != null && authentication.getPrincipal() instanceof DiscodeitUserDetails principal) {
-        userDetails = principal;
-      }
-    }
-
-    if (userDetails == null) {
-      log.warn("{} 인증되지 않은 사용자가 /me 엔드포인트 접근", AuthConstants.LOG_PREFIX_CSRF_TOKEN);
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
-
+      @AuthenticationPrincipal DiscodeitUserDetails userDetails
+  ) {
     UserDto userDto = userMapper.toDto(userDetails.getUser());
     AuthSuccessResponse<UserDto> response = new AuthSuccessResponse<>(userDto);
 

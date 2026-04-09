@@ -41,6 +41,8 @@ public class SecurityConfig {
   private final SpaCsrfTokenRequestHandler spaCsrfTokenRequestHandler;
   private final CustomSessionExpiredStrategy customSessionExpiredStrategy;
   private final ObjectMapper objectMapper;
+  private final String[] PUBLIC_URLS = {"/", "/index.html", "/favicon.ico", "/assets/**", "/error",
+      "/swagger-ui/**", "/v3/api-docs/**", "/api/auth/login", "/api/auth/logout"};
 
   @Value("${app.security.remember-me.key}")
   private String rememberMeKey;
@@ -72,11 +74,12 @@ public class SecurityConfig {
     http
         // 접근 권한 설정
         .authorizeHttpRequests(
-            auth -> auth.requestMatchers("/", "/index.html", "/favicon.ico", "/assets/**", "/error",
-                    "/swagger-ui/**", "/v3/api-docs/**", "/api/auth/login", "/api/auth/logout")
-                .permitAll().requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
+            auth -> auth
+                .requestMatchers(PUBLIC_URLS).permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // 회원가입
-                .anyRequest().authenticated())
+                .anyRequest().authenticated()
+        )
         // CSRF 설정
         .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             .csrfTokenRequestHandler(spaCsrfTokenRequestHandler)
