@@ -11,6 +11,7 @@ import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
@@ -33,6 +34,7 @@ public class BasicUserService implements UserService {
   private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentStorage binaryContentStorage;
   private final PasswordEncoder passwordEncoder;
+  private final JwtRegistry jwtRegistry;
 
   @Transactional
   @Override
@@ -138,7 +140,9 @@ public class BasicUserService implements UserService {
         .orElse(user.getPassword());
     user.update(newUsername, newEmail, encodedPassword, nullableProfile);
 
-    log.info("사용자 수정 완료: id={}", userId);
+    jwtRegistry.invalidateJwtInformationByUserId(userId);
+
+    log.info("사용자 수정 완료 및 세션 무효화: id={}", userId);
     return userMapper.toDto(user);
   }
 
@@ -153,6 +157,9 @@ public class BasicUserService implements UserService {
     }
 
     userRepository.deleteById(userId);
-    log.info("사용자 삭제 완료: id={}", userId);
+
+    jwtRegistry.invalidateJwtInformationByUserId(userId);
+
+    log.info("사용자 삭제 완료 및 세션 무효화: id={}", userId);
   }
 }

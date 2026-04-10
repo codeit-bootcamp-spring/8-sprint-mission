@@ -14,17 +14,30 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class JwtLogoutHandler implements LogoutHandler {
 
+  private final JwtRegistry jwtRegistry;
+  private final JwtTokenProvider jwtTokenProvider;
+
   @Override
   public void logout(
       HttpServletRequest request,
       HttpServletResponse response,
       Authentication authentication
   ) {
-    Cookie cookie = new Cookie("REFRESH_TOKEN", null);
+    if (request.getCookies() != null) {
+      for (Cookie cookie : request.getCookies()) {
+        if (cookie.getName().equals(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME)) {
+          String refreshToken = cookie.getValue();
+          jwtRegistry.invalidateJwtInformationByRefreshToken(refreshToken);
+          log.info("로그아웃: 레지스트리에서 리프레시 토큰 무효화 완료");
+          break;
+        }
+      }
+    }
+
+    Cookie cookie = new Cookie(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME, null);
     cookie.setPath("/");
     cookie.setHttpOnly(true);
-    cookie.setMaxAge(0);       // 0초 뒤 만료 =즉시 삭제
-
+    cookie.setMaxAge(0);
     response.addCookie(cookie);
   }
 }

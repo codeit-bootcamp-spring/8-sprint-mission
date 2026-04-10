@@ -23,4 +23,7 @@ public interface JwtRegistry {
 
   // 청소 (스케줄러에서 활용)
   void clearExpiredJwtInformation();
+
+  //로그아웃 시 리프레시 토큰으로 무효화하기 위해 추가
+  void invalidateJwtInformationByRefreshToken(String refreshToken);
 }

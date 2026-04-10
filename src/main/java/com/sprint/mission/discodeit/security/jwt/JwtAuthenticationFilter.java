@@ -22,6 +22,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final JwtTokenProvider jwtTokenProvider;
   private final UserDetailsService userDetailsService;
+  private final JwtRegistry jwtRegistry;
 
   @Override
   protected void doFilterInternal(
@@ -33,13 +34,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     String token = resolveToken(request);
 
     if (StringUtils.hasText(token) && jwtTokenProvider.validateAccessToken(token)) {
-      String username = jwtTokenProvider.getUsernameFromToken(token);
-      UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-      UsernamePasswordAuthenticationToken authentication =
-          new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+      if (jwtRegistry.hasActiveJwtInformationByAccessToken(token)) {
+        String username = jwtTokenProvider.getUsernameFromToken(token);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-      SecurityContextHolder.getContext().setAuthentication(authentication);
+        UsernamePasswordAuthenticationToken authentication =
+            new UsernamePasswordAuthenticationToken(userDetails, null,
+                userDetails.getAuthorities());
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+      } else {
+        log.warn("유효하지 않은 토큰입니다. -무효화된 세션-");
+      }
     }
 
     filterChain.doFilter(request, response);
