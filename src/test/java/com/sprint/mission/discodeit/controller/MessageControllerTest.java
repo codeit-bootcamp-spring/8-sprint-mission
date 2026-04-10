@@ -21,6 +21,8 @@ import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.exception.message.MessageNotFoundException;
+import com.sprint.mission.discodeit.security.LoginFailureHandler;
+import com.sprint.mission.discodeit.security.LoginSuccessHandler;
 import com.sprint.mission.discodeit.service.MessageService;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -29,16 +31,20 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(MessageController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class MessageControllerTest {
 
   @Autowired
@@ -78,15 +84,16 @@ class MessageControllerTest {
 
     UUID messageId = UUID.randomUUID();
     Instant now = Instant.now();
-    
+
     UserDto author = new UserDto(
         authorId,
         "testuser",
         "test@example.com",
         null,
-        true
+        true,
+        null
     );
-    
+
     BinaryContentDto attachmentDto = new BinaryContentDto(
         UUID.randomUUID(),
         "test.jpg",
@@ -151,19 +158,20 @@ class MessageControllerTest {
     UUID messageId = UUID.randomUUID();
     UUID channelId = UUID.randomUUID();
     UUID authorId = UUID.randomUUID();
-    
+
     MessageUpdateRequest updateRequest = new MessageUpdateRequest(
         "수정된 메시지 내용입니다."
     );
 
     Instant now = Instant.now();
-    
+
     UserDto author = new UserDto(
         authorId,
         "testuser",
         "test@example.com",
         null,
-        true
+        true,
+        null
     );
 
     MessageDto updatedMessage = new MessageDto(
@@ -195,7 +203,7 @@ class MessageControllerTest {
   void updateMessage_Failure_MessageNotFound() throws Exception {
     // Given
     UUID nonExistentMessageId = UUID.randomUUID();
-    
+
     MessageUpdateRequest updateRequest = new MessageUpdateRequest(
         "수정된 메시지 내용입니다."
     );
@@ -245,15 +253,16 @@ class MessageControllerTest {
     UUID authorId = UUID.randomUUID();
     Instant cursor = Instant.now();
     Pageable pageable = PageRequest.of(0, 50, Sort.Direction.DESC, "createdAt");
-    
+
     UserDto author = new UserDto(
         authorId,
         "testuser",
         "test@example.com",
         null,
-        true
+        true,
+        null
     );
-    
+
     List<MessageDto> messages = List.of(
         new MessageDto(
             UUID.randomUUID(),
@@ -274,7 +283,7 @@ class MessageControllerTest {
             new ArrayList<>()
         )
     );
-    
+
     PageResponse<MessageDto> pageResponse = new PageResponse<>(
         messages,
         cursor.minusSeconds(30), // nextCursor 값
