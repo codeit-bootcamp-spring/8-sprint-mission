@@ -82,12 +82,13 @@ info:
 # 커스텀 프로퍼티 추가
 jwt:
   access-token:
-    secret: M8xZy3vTrmkrZfZMIpYKZKD2IvPocpIV9UiJlrSXQD4=
+    secret: ${JWT_ACCESS_TOKEN}
     exp: 900000        # 15분(ms)
   refresh-token:
-    secret: M8xZy3vTrmkrZfZMIpYKZKD2IvPocpIV9UiJlrSXQD4=
+    secret: ${JWT_REFRESH_TOKEN}
     exp: 3600000       # 1시간(ms)
-    
+  max-active-count: 1
+
 # 개발 환경 권장 쿠키 설정 가이드(메모)
 # - 개발: Secure=false, SameSite=Lax, Path=/
 # - 운영: Secure=true(HTTPS), SameSite=Lax/Strict, Path=/

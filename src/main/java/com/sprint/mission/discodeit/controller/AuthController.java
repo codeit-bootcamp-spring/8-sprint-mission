@@ -145,20 +145,11 @@ public class AuthController implements AuthApi {
     @PutMapping("/role")
     public ResponseEntity<UserDto> updateUserRole(@RequestBody UserRoleUpdateRequest userRoleUpdateRequest) {
         log.info("[AuthController] 사용자 권한 변경 요청 접수됨...");
-        log.info("[AuthController] 요청 데이터: {}", userRoleUpdateRequest);
 
-        UUID userId = userRoleUpdateRequest.userId();
-        Role newRole = userRoleUpdateRequest.newRole();
-
-        // 서비스의 실행 결과에 따른 응답 결정
         try {
-            UserDto userDto = userService.updateUserRole(userId, newRole);
+            UserDto userDto = userService.updateUserRole(userRoleUpdateRequest.userId(), userRoleUpdateRequest.newRole());
+
             log.info("[AuthController] 권한 변경 성공! - {}", userDto);
-
-            // 권한 변경으로 인해 해당 유저의 인메모리 세션 무효화(강제 로그아웃)
-            jwtRegistry.invalidateJwtInformationByUserId(userId);
-            log.info("[AuthController] 권한 변경으로 인한 유저[{}]의 모든 세션 강제 종료", userId);
-
             return ResponseEntity.ok(userDto);
         } catch (IllegalArgumentException e) {
             log.error("[AuthController] - 권한 변경 실패! - {}", e.getMessage());
