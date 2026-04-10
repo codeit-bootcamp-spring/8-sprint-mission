@@ -4,6 +4,7 @@ import com.sprint.mission.discodeit.handler.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,6 +46,12 @@ import java.util.stream.IntStream;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    @Value("${auth.remember-me.validity-seconds}")
+    private int tokenValiditySeconds;
+
+    @Value("${auth.remember-me.key}")
+    private String rememberMeKey;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
@@ -107,7 +114,7 @@ public class SecurityConfig {
                         // bean으로 정의한 Remember-Me 서비스 사용
                         .rememberMeServices(rememberMeServices)
                         // 토큰 생성 시 사용할 키(설정 파일등에서 주입받을 수 있으나, 편의상 리터럴 문자열 사용)
-                        .key("discodeit-key")
+                        .key(rememberMeKey)
                 )
 
                 // form 기반 로그인 활성화
@@ -269,12 +276,12 @@ public class SecurityConfig {
     ) {
         PersistentTokenBasedRememberMeServices rememberMeServices =
                 new PersistentTokenBasedRememberMeServices(
-                        "discodeit-key",
+                        rememberMeKey,
                         userDetailsService,
                         tokenRepository
                 );
 
-        rememberMeServices.setTokenValiditySeconds(60);
+        rememberMeServices.setTokenValiditySeconds(tokenValiditySeconds);
         rememberMeServices.setCookieName("remember-me");
         rememberMeServices.setParameter("remember-me");
 

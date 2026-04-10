@@ -78,3 +78,9 @@ info:
   multipart:
     max-file-size: ${spring.servlet.multipart.max-file-size}
     max-request-size: ${spring.servlet.multipart.max-request-size}
+
+auth:
+  remember-me:
+    key: discodeit-key
+    validity-seconds: 604800
+
