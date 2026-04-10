@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.handler.LoginFailureHandler;
 import com.sprint.mission.discodeit.handler.LoginSuccessHandler;
 import com.sprint.mission.discodeit.handler.SpaCsrfTokenRequestHandler;
 import javax.sql.DataSource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -39,6 +40,9 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+  @Value("${spring.security.remember-me.key}")
+  private String rememberMeKey;
+
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
@@ -71,7 +75,6 @@ public class SecurityConfig {
             .requestMatchers("/api/auth/csrf-token").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
             .requestMatchers("/api/auth/login").permitAll()
-            .requestMatchers("/api/auth/logout").permitAll()
             .anyRequest().authenticated()
         )
         .formLogin(login -> login
@@ -85,7 +88,6 @@ public class SecurityConfig {
             .logoutUrl("/api/auth/logout")
             .logoutSuccessHandler(
                 new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
-            .permitAll()
         )
         .sessionManagement(management -> management
             .sessionConcurrency(concurrency -> concurrency
@@ -95,7 +97,7 @@ public class SecurityConfig {
         )
         .rememberMe(remember -> remember
             .rememberMeServices(rememberMeServices)
-            .key("discodeit-key")
+            .key(rememberMeKey)
         )
         .exceptionHandling(ex -> ex
             .authenticationEntryPoint(authenticationEntryPoint)
@@ -129,7 +131,7 @@ public class SecurityConfig {
   ) {
     PersistentTokenBasedRememberMeServices rememberMeServices =
         new PersistentTokenBasedRememberMeServices(
-            "discodeit-key",
+            rememberMeKey,
             userDetailsService,
             tokenRepository
         );

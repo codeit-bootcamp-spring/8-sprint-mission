@@ -2,12 +2,16 @@ package com.sprint.mission.discodeit.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.dto.response.ErrorResponse;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
@@ -15,6 +19,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class LoginFailureHandler implements AuthenticationFailureHandler {
@@ -25,31 +30,29 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
   public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
       AuthenticationException exception) throws IOException, ServletException {
 
-    response.setContentType("application/json");
-    response.setCharacterEncoding("UTF-8");
+    log.warn("[LoginFailureHandler]: 로그인 실패 - exception={}, message={}",
+        exception.getClass().getSimpleName(), exception.getMessage());
+
+    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+    response.setCharacterEncoding(StandardCharsets.UTF_8.name());
     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-    String errorCode;
-    String errorMessage;
+    ErrorCode errorCode;
 
     if (exception instanceof BadCredentialsException) {
-      errorCode = "INVALID_CREDENTIALS";
-      errorMessage = "아이디 또는 비밀번호가 올바르지 않습니다.";
+      errorCode = ErrorCode.INVALID_CREDENTIALS;
     } else if (exception instanceof DisabledException) {
-      errorCode = "ACCOUNT_DISABLED";
-      errorMessage = "비활성화된 계정입니다.";
+      errorCode = ErrorCode.ACCOUNT_DISABLED;
     } else if (exception instanceof LockedException) {
-      errorCode = "ACCOUNT_LOCKED";
-      errorMessage = "잠긴 계정입니다.";
+      errorCode = ErrorCode.ACCOUNT_LOCKED;
     } else {
-      errorCode = "LOGIN_FAILED";
-      errorMessage = "로그인에 실패했습니다.";
+      errorCode = ErrorCode.LOGIN_FAILED;
     }
 
     ErrorResponse errorResponse = new ErrorResponse(
         Instant.now(),
-        errorCode,
-        errorMessage,
+        errorCode.name(),
+        errorCode.getMessage(),
         null,
         exception.getClass().getSimpleName(),
         HttpServletResponse.SC_UNAUTHORIZED
