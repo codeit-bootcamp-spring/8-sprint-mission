@@ -254,7 +254,6 @@ public class BasicUserService implements UserService {
         } catch (Exception e) {
             // 세션 무효화 실패 시, 권한 변경 자체를 실패시키지 않음 (DB 변경은 유지시키겠다)
             log.error("[UserService] 세션 무효화 중 오류 발생! - {}", e.getMessage());
-            e.printStackTrace();
         }
     }
 
