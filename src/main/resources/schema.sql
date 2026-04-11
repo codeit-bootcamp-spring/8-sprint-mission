@@ -108,12 +108,17 @@ CREATE TABLE message_attachments
             ON DELETE CASCADE
 );
 
-CREATE TABLE persistent_logins
+-- JWT 토큰 상태 테이블
+DROP TABLE IF EXISTS tbl_jwt_token CASCADE;
+CREATE TABLE IF NOT EXISTS tbl_jwt_token
 (
-    username  VARCHAR(64)              NOT NULL,
-    series    VARCHAR(64) PRIMARY KEY,
-    token     VARCHAR(64)              NOT NULL,
-    last_used timestamp with time zone NOT NULL
+    jti         VARCHAR(64) PRIMARY KEY,
+    username    VARCHAR(255)             NOT NULL,
+    token_type  VARCHAR(16)              NOT NULL CHECK (token_type IN ('access', 'refresh')),
+    issued_at   timestamp with time zone NOT NULL,
+    expires_at  timestamp with time zone NOT NULL,
+    revoked     BOOLEAN                  NOT NULL DEFAULT FALSE,
+    replaced_by VARCHAR(64)
 );
 
 
