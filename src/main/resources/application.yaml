@@ -8,8 +8,6 @@ spring:
       # 최대 업로드 가능 용량
       max-request-size: 20MB
       # 임시 파일 저장 경로
-  config:
-    import: optional:file.env[.properties]
 
   jpa:
     database: postgresql
@@ -31,6 +29,10 @@ discodeit:
       region: ${AWS_S3_REGION}
       bucket: ${AWS_S3_BUCKET}
       presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600} # (기본값: 10분)
+  admin:
+    username: ${DISCODEIT_ADMIN_USERNAME}
+    password: ${DISCODEIT_ADMIN_PASSWORD}
+    email: ${DISCODEIT_ADMIN_EMAIL}
 
   session:
     timeout: 5
@@ -80,3 +82,9 @@ info:
   multipart:
     max-file-size: ${spring.servlet.multipart.max-file-size}
     max-request-size: ${spring.servlet.multipart.max-request-size}
+
+auth:
+  remember-me:
+    key: discodeit-key
+    validity-seconds: 604800
+

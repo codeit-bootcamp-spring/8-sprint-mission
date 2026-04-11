@@ -43,25 +43,12 @@ CREATE TABLE IF NOT EXISTS users
     email      varchar(100)             NOT NULL,
     password   varchar(60)              NOT NULL,
     profile_id uuid,
+    role       varchar(20)              NOT NULL,
     -- table level constraints
     CONSTRAINT pk_users_id PRIMARY KEY (id),
     CONSTRAINT uk_users_name UNIQUE (username),
     CONSTRAINT uk_users_email UNIQUE (email),
     CONSTRAINT fk_users_profile_id FOREIGN KEY (profile_id) REFERENCES binary_contents (id) ON DELETE SET NULL
-);
-
-CREATE TABLE IF NOT EXISTS user_statuses
-(
-    -- column level constraints
-    id             uuid                     NOT NULL,
-    created_at     timestamp with time zone NOT NULL,
-    updated_at     timestamp with time zone,
-    user_id        uuid                     NOT NULL,
-    last_active_at timestamp with time zone NOT NULL,
-    -- table level constraints
-    CONSTRAINT pk_user_statuses_id PRIMARY KEY (id),
-    CONSTRAINT fk_user_statuses_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT uk_user_statuses_user_id UNIQUE (user_id)
 );
 
 CREATE TABLE IF NOT EXISTS messages
@@ -126,12 +113,7 @@ COMMENT ON COLUMN users.username IS '유저이름';
 COMMENT ON COLUMN users.email IS '유저이메일';
 COMMENT ON COLUMN users.password IS '유저비밀번호';
 COMMENT ON COLUMN users.profile_id IS '유저프로필코드';
-
-COMMENT ON COLUMN user_statuses.id IS '유저상태코드';
-COMMENT ON COLUMN user_statuses.created_at IS '유저상태생성시간';
-COMMENT ON COLUMN user_statuses.updated_at IS '유저상태갱신시간';
-COMMENT ON COLUMN user_statuses.user_id IS '상위 유저 코드';
-COMMENT ON COLUMN user_statuses.last_active_at IS '마지막활성화시간';
+COMMENT ON COLUMN users.role IS '유저 역할';
 
 COMMENT ON COLUMN channels.id IS '채널코드';
 COMMENT ON COLUMN channels.created_at IS '채널생성시간';

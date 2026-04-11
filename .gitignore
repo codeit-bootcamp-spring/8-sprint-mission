@@ -61,10 +61,7 @@ application.properties
 application-*.properties
 
 ### 파일 업로드 디렉토리 ###
-uploads/
-files/
-images/
-temp/
+.discodeit/storage/
 
 ### OS별 시스템 파일들 ###
 .DS_Store          # macOS
