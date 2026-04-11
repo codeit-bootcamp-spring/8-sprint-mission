@@ -35,10 +35,9 @@ public class BasicReadStatusService implements ReadStatusService {
 
   @Transactional
   @Override
-  public ReadStatusDto create(ReadStatusCreateRequest request) {
-    log.debug("읽음 상태 생성 시작: userId={}, channelId={}", request.userId(), request.channelId());
+  public ReadStatusDto create(UUID userId, ReadStatusCreateRequest request) {
+    log.debug("읽음 상태 생성 시작: userId={}, channelId={}", userId, request.channelId());
 
-    UUID userId = request.userId();
     UUID channelId = request.channelId();
 
     // 1. 사용자 및 채널 존재 확인
@@ -64,6 +63,7 @@ public class BasicReadStatusService implements ReadStatusService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public ReadStatusDto find(UUID readStatusId) {
     log.debug("읽음 상태 조회 시작: id={}", readStatusId);
     ReadStatusDto dto = readStatusRepository.findById(readStatusId)
@@ -74,6 +74,7 @@ public class BasicReadStatusService implements ReadStatusService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<ReadStatusDto> findAllByUserId(UUID userId) {
     log.debug("사용자별 읽음 상태 목록 조회 시작: userId={}", userId);
     List<ReadStatusDto> dtos = readStatusRepository.findAllByUserId(userId).stream()

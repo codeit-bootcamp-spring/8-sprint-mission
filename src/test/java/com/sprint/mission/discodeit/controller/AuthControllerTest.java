@@ -1,120 +1,93 @@
 package com.sprint.mission.discodeit.controller;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.auth.controller.AuthController;
+import com.sprint.mission.discodeit.auth.service.DiscodeitUserDetails;
+import com.sprint.mission.discodeit.auth.service.DiscodeitUserDetailsService;
 import com.sprint.mission.discodeit.dto.data.UserDto;
-import com.sprint.mission.discodeit.dto.request.LoginRequest;
-import com.sprint.mission.discodeit.exception.user.InvalidCredentialsException;
-import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
-import com.sprint.mission.discodeit.service.AuthService;
+import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.mapper.UserMapper;
+import com.sprint.mission.discodeit.service.UserService;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.DefaultCsrfToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(AuthController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
 
   @Autowired
   private MockMvc mockMvc;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  @MockitoBean
+  private UserMapper userMapper;
 
   @MockitoBean
-  private AuthService authService;
+  private UserService userService;
+
+  @MockitoBean
+  private SessionRegistry sessionRegistry;
+
+  // 기존 AuthService 기반 테스트를 UserDetailsService 구조로 전환하기 위한 mock
+  @MockitoBean
+  private DiscodeitUserDetailsService customUserDetailsService;
 
   @Test
-  @DisplayName("로그인 성공 테스트")
-  void login_Success() throws Exception {
-    // Given
-    LoginRequest loginRequest = new LoginRequest(
-        "testuser",
-        "Password1!"
-    );
+  @DisplayName("CSRF 토큰 조회 성공 테스트")
+  void getCsrfToken_Success() throws Exception {
+    CsrfToken csrfToken = new DefaultCsrfToken("X-XSRF-TOKEN", "_csrf", "token-value");
 
-    UUID userId = UUID.randomUUID();
-    UserDto loggedInUser = new UserDto(
-        userId,
-        "testuser",
-        "test@example.com",
-        null,
-        true
-    );
-
-    given(authService.login(any(LoginRequest.class))).willReturn(loggedInUser);
-
-    // When & Then
-    mockMvc.perform(post("/api/auth/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(loginRequest)))
+    mockMvc.perform(get("/api/auth/csrf-token")
+            .requestAttr(CsrfToken.class.getName(), csrfToken)
+            .requestAttr("_csrf", csrfToken))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.id").value(userId.toString()))
-        .andExpect(jsonPath("$.username").value("testuser"))
-        .andExpect(jsonPath("$.email").value("test@example.com"))
-        .andExpect(jsonPath("$.online").value(true));
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.data.token").value("token-value"))
+        .andExpect(jsonPath("$.data.headerName").value("X-XSRF-TOKEN"))
+        .andExpect(jsonPath("$.data.parameterName").value("_csrf"));
   }
 
   @Test
-  @DisplayName("로그인 실패 테스트 - 존재하지 않는 사용자")
-  void login_Failure_UserNotFound() throws Exception {
-    // Given
-    LoginRequest loginRequest = new LoginRequest(
-        "nonexistentuser",
-        "Password1!"
+  @DisplayName("내 정보 조회 성공 테스트")
+  void getMe_Success() throws Exception {
+    UUID userId = UUID.randomUUID();
+    User user = new User("testuser", "test@example.com", "encoded-password", null);
+    UserDto userDto = new UserDto(userId, "testuser", "test@example.com", null, true, null);
+    DiscodeitUserDetails userDetails = new DiscodeitUserDetails(user);
+    Authentication authentication = new UsernamePasswordAuthenticationToken(
+        userDetails,
+        null,
+        userDetails.getAuthorities()
     );
 
-    given(authService.login(any(LoginRequest.class)))
-        .willThrow(UserNotFoundException.withUsername("nonexistentuser"));
+    given(userMapper.toDto(user)).willReturn(userDto);
 
-    // When & Then
-    mockMvc.perform(post("/api/auth/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(loginRequest)))
-        .andExpect(status().isNotFound());
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+    try {
+      mockMvc.perform(get("/api/auth/me"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.success").value(true))
+          .andExpect(jsonPath("$.data.id").value(userId.toString()))
+          .andExpect(jsonPath("$.data.username").value("testuser"))
+          .andExpect(jsonPath("$.data.email").value("test@example.com"))
+          .andExpect(jsonPath("$.data.online").value(true));
+    } finally {
+      SecurityContextHolder.clearContext();
+    }
   }
-
-  @Test
-  @DisplayName("로그인 실패 테스트 - 잘못된 비밀번호")
-  void login_Failure_InvalidCredentials() throws Exception {
-    // Given
-    LoginRequest loginRequest = new LoginRequest(
-        "testuser",
-        "WrongPassword1!"
-    );
-
-    given(authService.login(any(LoginRequest.class)))
-        .willThrow(InvalidCredentialsException.wrongPassword());
-
-    // When & Then
-    mockMvc.perform(post("/api/auth/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(loginRequest)))
-        .andExpect(status().isUnauthorized());
-  }
-
-  @Test
-  @DisplayName("로그인 실패 테스트 - 유효하지 않은 요청")
-  void login_Failure_InvalidRequest() throws Exception {
-    // Given
-    LoginRequest invalidRequest = new LoginRequest(
-        "", // 사용자 이름 비어있음 (NotBlank 위반)
-        ""  // 비밀번호 비어있음 (NotBlank 위반)
-    );
-
-    // When & Then
-    mockMvc.perform(post("/api/auth/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(invalidRequest)))
-        .andExpect(status().isBadRequest());
-  }
-} 
+}

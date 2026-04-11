@@ -11,7 +11,7 @@ spring:
     open-in-view: false
   profiles:
     # dev, prod
-    active: prod
+    active: dev
 
 
 management:
@@ -45,7 +45,7 @@ info:
 
 discodeit:
   storage:
-    type: ${STORAGE_TYPE:local}  # local | s3 (기본값: local)
+    type: local  # local | s3 (기본값: local)
     local:
       root-path: ${STORAGE_LOCAL_ROOT_PATH:.discodeit/storage}
     s3:
@@ -55,6 +55,5 @@ discodeit:
       bucket: ${AWS_S3_BUCKET}
       presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600} # (기본값: 10분)
 
-logging:
-  level:
-    root: info
+security:
+  remember-me-key: ${REMEMBER_ME_KEY}

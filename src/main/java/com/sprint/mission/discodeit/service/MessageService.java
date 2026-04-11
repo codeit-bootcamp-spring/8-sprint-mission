@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface MessageService {
 
-  MessageDto create(MessageCreateRequest messageCreateRequest,
+  MessageDto create(UUID authorId, MessageCreateRequest messageCreateRequest,
       List<BinaryContentCreateRequest> binaryContentCreateRequests);
 
   MessageDto find(UUID messageId);

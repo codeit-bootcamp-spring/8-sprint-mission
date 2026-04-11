@@ -110,7 +110,7 @@ class BasicMessageServiceTest {
         Instant.now(),
         content,
         channelId,
-        new UserDto(authorId, "testUser", "test@example.com", null, true),
+        new UserDto(authorId, "testUser", "test@example.com", null, true, null),
         List.of(attachmentDto)
     );
   }
@@ -119,7 +119,7 @@ class BasicMessageServiceTest {
   @DisplayName("메시지 생성 성공")
   void createMessage_Success() {
     // given
-    MessageCreateRequest request = new MessageCreateRequest(content, channelId, authorId);
+    MessageCreateRequest request = new MessageCreateRequest(content, channelId);
     BinaryContentCreateRequest attachmentRequest = new BinaryContentCreateRequest("test.txt",
         "text/plain", new byte[100]);
     List<BinaryContentCreateRequest> attachmentRequests = List.of(attachmentRequest);
@@ -135,7 +135,7 @@ class BasicMessageServiceTest {
     given(messageMapper.toDto(any(Message.class))).willReturn(messageDto);
 
     // when
-    MessageDto result = messageService.create(request, attachmentRequests);
+    MessageDto result = messageService.create(authorId, request, attachmentRequests);
 
     // then
     assertThat(result).isEqualTo(messageDto);
@@ -147,11 +147,11 @@ class BasicMessageServiceTest {
   @DisplayName("존재하지 않는 채널에 메시지 생성 시도 시 실패")
   void createMessage_WithNonExistentChannel_ThrowsException() {
     // given
-    MessageCreateRequest request = new MessageCreateRequest(content, channelId, authorId);
+    MessageCreateRequest request = new MessageCreateRequest(content, channelId);
     given(channelRepository.findById(eq(channelId))).willReturn(Optional.empty());
 
     // when & then
-    assertThatThrownBy(() -> messageService.create(request, List.of()))
+    assertThatThrownBy(() -> messageService.create(authorId, request, List.of()))
         .isInstanceOf(ChannelNotFoundException.class);
   }
 
@@ -159,12 +159,12 @@ class BasicMessageServiceTest {
   @DisplayName("존재하지 않는 작성자로 메시지 생성 시도 시 실패")
   void createMessage_WithNonExistentAuthor_ThrowsException() {
     // given
-    MessageCreateRequest request = new MessageCreateRequest(content, channelId, authorId);
+    MessageCreateRequest request = new MessageCreateRequest(content, channelId);
     given(channelRepository.findById(eq(channelId))).willReturn(Optional.of(channel));
     given(userRepository.findById(eq(authorId))).willReturn(Optional.empty());
 
     // when & then
-    assertThatThrownBy(() -> messageService.create(request, List.of()))
+    assertThatThrownBy(() -> messageService.create(authorId, request, List.of()))
         .isInstanceOf(UserNotFoundException.class);
   }
 
@@ -225,7 +225,7 @@ class BasicMessageServiceTest {
         message1CreatedAt,
         content + "1",
         channelId,
-        new UserDto(authorId, "testUser", "test@example.com", null, true),
+        new UserDto(authorId, "testUser", "test@example.com", null, true, null),
         List.of(attachmentDto)
     );
 
@@ -235,7 +235,7 @@ class BasicMessageServiceTest {
         message2CreatedAt,
         content + "2",
         channelId,
-        new UserDto(authorId, "testUser", "test@example.com", null, true),
+        new UserDto(authorId, "testUser", "test@example.com", null, true, null),
         List.of(attachmentDto)
     );
 
@@ -281,7 +281,7 @@ class BasicMessageServiceTest {
         message3CreatedAt,
         content + "3",
         channelId,
-        new UserDto(authorId, "testUser", "test@example.com", null, true),
+        new UserDto(authorId, "testUser", "test@example.com", null, true, null),
         List.of(attachmentDto)
     );
     List<MessageDto> secondPageDtos = List.of(messageDto3);

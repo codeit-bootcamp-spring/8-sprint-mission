@@ -9,14 +9,13 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
 
+  @Query("SELECT u FROM User u LEFT JOIN FETCH u.profile WHERE u.username = :username")
   Optional<User> findByUsername(String username);
 
   boolean existsByEmail(String email);
 
   boolean existsByUsername(String username);
 
-  @Query("SELECT u FROM User u "
-      + "LEFT JOIN FETCH u.profile "
-      + "JOIN FETCH u.status")
-  List<User> findAllWithProfileAndStatus();
+  @Query("SELECT u FROM User u LEFT JOIN FETCH u.profile")
+  List<User> findAllWithProfile();
 }

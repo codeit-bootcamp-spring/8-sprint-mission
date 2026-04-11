@@ -3,12 +3,12 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://${POSTGRES_URL_DEV}/${POSTGRES_DB_DEV}
+    url: jdbc:postgresql://localhost:54321/${POSTGRES_DB_DEV}
     username: ${POSTGRES_USER_DEV}
     password: ${POSTGRES_PASSWORD_DEV}
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
 
     properties:
       hibernate:
@@ -20,6 +20,8 @@ logging:
     com.sprint.mission.discodeit: debug
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
+    org.springframework.security: trace
+    org.springframework.web: debug
 
 management:
   endpoint:
