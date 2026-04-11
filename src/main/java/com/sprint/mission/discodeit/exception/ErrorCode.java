@@ -8,6 +8,17 @@ public enum ErrorCode {
   // 공통
   INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다."),
 
+  // 인증 관련
+  AUTHENTICATION_REQUIRED(HttpStatus.UNAUTHORIZED, "인증이 필요합니다. 로그인 후 이용해주세요."),
+  INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "아이디 또는 비밀번호가 올바르지 않습니다."),
+  ACCOUNT_DISABLED(HttpStatus.UNAUTHORIZED, "비활성화된 계정입니다."),
+  ACCOUNT_LOCKED(HttpStatus.UNAUTHORIZED, "잠긴 계정입니다."),
+  LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "로그인에 실패했습니다."),
+  UNEXPECTED_PRINCIPAL_TYPE(HttpStatus.INTERNAL_SERVER_ERROR, "인증 객체 타입이 올바르지 않습니다."),
+
+  // 인가 관련
+  ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 리소스에 접근할 권한이 없습니다."),
+
   // User 관련
   USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
   DUPLICATE_USER(HttpStatus.CONFLICT, "사용자가 이미 존재합니다."),

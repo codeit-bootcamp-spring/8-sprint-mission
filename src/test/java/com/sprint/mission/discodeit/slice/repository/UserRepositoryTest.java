@@ -93,7 +93,7 @@ public class UserRepositoryTest {
     userRepository.save(user3);
 
     // when
-    List<User> result = userRepository.findAllWithProfileAndStatus();
+    List<User> result = userRepository.findAllWithProfile();
 
     // then
     assertThat(result.size()).isEqualTo(3);
@@ -109,7 +109,7 @@ public class UserRepositoryTest {
     userRepository.deleteAll();
 
     // when
-    List<User> result = userRepository.findAllWithProfileAndStatus();
+    List<User> result = userRepository.findAllWithProfile();
 
     // then
     assertThat(result).isEmpty();

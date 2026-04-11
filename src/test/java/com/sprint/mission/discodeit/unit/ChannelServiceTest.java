@@ -17,6 +17,7 @@ import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.channel.PrivateChannelUpdateException;
@@ -108,8 +109,8 @@ public class ChannelServiceTest {
       given(userRepository.findAllById(eq(participants))).willReturn(List.of(user1, user2));
 
       List<UserDto> participantsDto = List.of(
-          new UserDto(participants.get(0), "user1", "user1@naver.com", null, true),
-          new UserDto(participants.get(1), "user2", "user2@naver.com", null, true)
+          new UserDto(participants.get(0), "user1", "user1@naver.com", null, Role.USER),
+          new UserDto(participants.get(1), "user2", "user2@naver.com", null, Role.USER)
       );
 
       ChannelDto privateDto = new ChannelDto(channelId, ChannelType.PRIVATE, null, null,

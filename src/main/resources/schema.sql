@@ -1,10 +1,10 @@
 -- 1. 가장 하위 자식 테이블 (관계 매핑 테이블)
 DROP TABLE IF EXISTS message_attachments;
+DROP TABLE IF EXISTS persistent_logins CASCADE;
 
 -- 2. 외래 키로 다른 테이블을 참조하고 있는 테이블들
 DROP TABLE IF EXISTS messages;
 DROP TABLE IF EXISTS read_statuses;
-DROP TABLE IF EXISTS user_statuses;
 
 -- 3. 더 이상 자식이 없는 부모 테이블들
 DROP TABLE IF EXISTS users;
@@ -39,25 +39,12 @@ CREATE TABLE users
     email      varchar(100) UNIQUE      NOT NULL,
     password   varchar(60)              NOT NULL,
     profile_id uuid UNIQUE,
+    role       varchar(20)              NOT NULL,
 
     CONSTRAINT fk_users_binary_contents
         FOREIGN KEY (profile_id)
             REFERENCES binary_contents (id)
             ON DELETE SET NULL
-);
-
-CREATE TABLE user_statuses
-(
-    id             uuid PRIMARY KEY,
-    created_at     timestamp with time zone NOT NULL,
-    updated_at     timestamp with time zone,
-    user_id        uuid UNIQUE              NOT NULL,
-    last_active_at timestamp with time zone NOT NULL,
-
-    CONSTRAINT fk_user_statuses_users
-        FOREIGN KEY (user_id)
-            REFERENCES users (id)
-            ON DELETE CASCADE
 );
 
 CREATE TABLE read_statuses
@@ -119,6 +106,14 @@ CREATE TABLE message_attachments
         FOREIGN KEY (attachment_id)
             REFERENCES binary_contents (id)
             ON DELETE CASCADE
+);
+
+CREATE TABLE persistent_logins
+(
+    username  VARCHAR(64)              NOT NULL,
+    series    VARCHAR(64) PRIMARY KEY,
+    token     VARCHAR(64)              NOT NULL,
+    last_used timestamp with time zone NOT NULL
 );
 
 

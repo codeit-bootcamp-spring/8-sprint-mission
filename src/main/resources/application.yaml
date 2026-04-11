@@ -18,6 +18,15 @@ spring:
     hibernate:
       ddl-auto: none
 
+  security:
+    remember-me:
+      key: ${REMEMBER_ME_KEY}
+
+admin:
+  username: ${ADMIN_USERNAME}
+  password: ${ADMIN_PASSWORD}
+  email: ${ADMIN_EMAIL}
+
 discodeit:
   storage:
     type: ${STORAGE_TYPE:local}

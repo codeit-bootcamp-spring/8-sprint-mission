@@ -1,15 +1,18 @@
 package com.sprint.mission.discodeit.repository;
 
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
 
+  @EntityGraph(attributePaths = {"profile"})
   Optional<User> findByUsername(String username);
 
   boolean existsByUsername(String username);
@@ -17,7 +20,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
   boolean existsByEmail(String email);
 
   @Query("SELECT u FROM User u " +
-      "LEFT JOIN FETCH u.profile " +  // profile이 null이어도 가져옴
-      "LEFT JOIN FETCH u.status")
-  List<User> findAllWithProfileAndStatus();
+      "LEFT JOIN FETCH u.profile " // profile이 null이어도 가져옴
+  )
+  List<User> findAllWithProfile();
+
+  boolean existsByRole(Role role);
 }

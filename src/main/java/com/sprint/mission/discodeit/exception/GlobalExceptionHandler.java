@@ -7,6 +7,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -41,6 +42,25 @@ public class GlobalExceptionHandler {
         "VALIDATION_FAILED",
         "입력 데이터 검증에 실패했습니다",
         fieldErrors,
+        ex.getClass().getSimpleName(),
+        status.value()
+    );
+
+    return ResponseEntity.status(status).body(errorResponse);
+  }
+
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
+    log.warn("권한 부족 액세스 거부: {}", ex.getMessage());
+
+    ErrorCode errorCode = ErrorCode.ACCESS_DENIED;
+    HttpStatus status = errorCode.getStatus();
+
+    ErrorResponse errorResponse = new ErrorResponse(
+        Instant.now(),
+        errorCode.name(),
+        errorCode.getMessage(),
+        null,
         ex.getClass().getSimpleName(),
         status.value()
     );

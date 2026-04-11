@@ -18,6 +18,7 @@ import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentSaveFailedException;
 import com.sprint.mission.discodeit.exception.user.UserEmailAlreadyExistsException;
@@ -82,7 +83,7 @@ public class UserServiceTest {
     mockProfileDto = new BinaryContentDto(profileId, "profile.png", (long) profileBytes.length,
         "image/png");
     mockUser = new User(username, email, password, mockProfile);
-    mockUserDto = new UserDto(userId, username, email, mockProfileDto, true);
+    mockUserDto = new UserDto(userId, username, email, mockProfileDto, Role.USER);
   }
 
   @Nested
@@ -252,7 +253,7 @@ public class UserServiceTest {
       });
 
       UserDto updatedDto = new UserDto(userId, userReq.newUsername(), userReq.newEmail(),
-          mockProfileDto, true);
+          mockProfileDto, Role.USER);
 
       given(userMapper.toDto(any(User.class))).willReturn(updatedDto);
 
