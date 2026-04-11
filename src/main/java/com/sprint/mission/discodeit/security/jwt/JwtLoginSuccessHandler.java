@@ -5,7 +5,6 @@ import com.sprint.mission.discodeit.DTO.dto.JwtDTO;
 import com.sprint.mission.discodeit.DTO.dto.UserDto;
 import com.sprint.mission.discodeit.security.jwt.store.JwtInformation;
 import com.sprint.mission.discodeit.security.jwt.store.JwtRegistry;
-import com.sprint.mission.discodeit.security.jwt.store.JwtSessionRegistry;
 import com.sprint.mission.discodeit.security.jwt.store.JwtTokenEntity;
 import com.sprint.mission.discodeit.service.auth.DiscodeitUserDetails;
 import jakarta.servlet.ServletException;
@@ -19,44 +18,21 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-/**
- * 폼 로그인 성공 시 JWT(Access/Refresh) 발급과 응답 바디/쿠키 구성까지 담당하는 핸들러.
- * 기존 세션 기반의 LoginSuccessHandler를 대체한다.
- * 동시 로그인 제한을 위해 기존 토큰을 모두 폐기한 후 새 토큰을 발급한다.
- * Access Token은 응답 바디(JwtDto)로, Refresh Token은 HttpOnly 쿠키로 내려보낸다.
- */
 @Slf4j
 @Component
 public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final ObjectMapper objectMapper;
     private final JwtTokenProvider tokenProvider;
-    private final JwtSessionRegistry jwtSessionRegistry;
     private final JwtRegistry jwtRegistry;
 
-    /**
-     * 로그인 성공 핸들러 생성자.
-     *
-     * @param objectMapper       응답 JSON 직렬화를 위한 매퍼
-     * @param tokenProvider      JWT 생성/쿠키 유틸리티
-     * @param jwtSessionRegistry 토큰 상태 저장소(동시 로그인 제한, 회전 상태 기록 등)
-     */
-    public JwtLoginSuccessHandler(ObjectMapper objectMapper, JwtTokenProvider tokenProvider, JwtSessionRegistry jwtSessionRegistry, JwtRegistry jwtRegistry) {
+    public JwtLoginSuccessHandler(ObjectMapper objectMapper, JwtTokenProvider tokenProvider, JwtRegistry jwtRegistry) {
         log.info("[JwtLoginSuccessHandler] 생성자 호출됨: 응답 JSON 직렬화를 위한 매퍼, JWT 생성/쿠키 유틸리티, 토큰 상태 저장소 주입");
         this.objectMapper = objectMapper;
         this.tokenProvider = tokenProvider;
-        this.jwtSessionRegistry = jwtSessionRegistry;
         this.jwtRegistry = jwtRegistry;
     }
 
-    /**
-     * 인증 성공 시 호출된다.
-     * 사용자 로그인이 성공적으로 완료되면 기존 동시 로그인 제한 정책에 따라 해당 사용자의
-     * 기존 토큰들을 모두 폐기하고, 새로운 액세스 토큰과 리프레시 토큰을 발급한다. (Token Rotation)
-     * 발급된 토큰들의 메타데이터는 세션 레지스트리(JwtSessionRegistry)에 저장되며,
-     * 리프레시 토큰은 HttpOnly 쿠키로 설정하여 보안을 강화한다.
-     * 최종적으로 엑세스 토큰과 사용자 정보를 포함한 JwtDTO를 JSON 형태로 클라이언트에게 응답한다.
-     */
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
@@ -70,9 +46,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
         // Principal 유효성 확인 및 캐스팅
         if (authentication.getPrincipal() instanceof DiscodeitUserDetails userDetails) {
             try {
-                // 동일 계정 기존 토큰 전부 무효화(동시 로그인 제한)
                 log.info("[jwtLoginSuccessHandler] 기존 토큰 무효화 시작 - username={}", userDetails.getUsername());
-                jwtSessionRegistry.revokeAllByUsername(userDetails.getUsername());
 
                 // 새 Access/Refresh 발급
                 log.info("[JwtLoginSuccessHandler] 새 토큰 발급 시작");
@@ -92,8 +66,6 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
                 log.info("[JwtLoginSuccessHandler] 토큰 메타데이터 저장 시작");
                 JwtTokenEntity accessEntity = tokenProvider.toEntity(accessToken);
                 JwtTokenEntity refreshEntity = tokenProvider.toEntity(refreshToken);
-                jwtSessionRegistry.register(accessEntity);
-                jwtSessionRegistry.register(refreshEntity);
 
                 // 리프레시 쿠키 설정
                 log.info("[JwtLoginSuccessHandler] 리프레시 쿠키 설정 시작");

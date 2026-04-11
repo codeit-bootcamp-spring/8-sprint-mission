@@ -1,6 +1,9 @@
 package com.sprint.mission.discodeit.DTO.dto;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * JWT 응답 DTO

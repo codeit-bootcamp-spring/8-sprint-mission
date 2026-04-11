@@ -2,7 +2,6 @@ package com.sprint.mission.discodeit.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.security.jwt.store.JwtRegistry;
-import com.sprint.mission.discodeit.security.jwt.store.JwtSessionRegistry;
 import com.sprint.mission.discodeit.service.auth.DiscodeitUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -38,29 +37,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final DiscodeitUserDetailsService userDetailsService;
     // 에러 응답 작성용
     private final ObjectMapper objectMapper;
-    // 토큰 폐기 여부 확인용 저장소
-    private final JwtSessionRegistry jwtSessionRegistry;
     private final JwtRegistry jwtRegistry;
 
-    /**
-     * JWT 인증 필터 생성자.
-     *
-     * @param tokenProvider      토큰 검증 및 claims 추출 유틸리티
-     * @param userDetailsService 사용자 로딩 서비스
-     * @param objectMapper       에러 응답 작성용
-     * @param jwtSessionRegistry 토큰 폐기 여부 확인용 저장소
-     */
     public JwtAuthenticationFilter(JwtTokenProvider tokenProvider,
                                    DiscodeitUserDetailsService userDetailsService,
                                    ObjectMapper objectMapper,
-                                   JwtSessionRegistry jwtSessionRegistry,
                                    JwtRegistry jwtRegistry) {
         log.info("[JwtAuthenticationFilter] 생성자 호출됨: 필터 초기화");
 
         this.tokenProvider = tokenProvider;
         this.userDetailsService = userDetailsService;
         this.objectMapper = objectMapper;
-        this.jwtSessionRegistry = jwtSessionRegistry;
         this.jwtRegistry = jwtRegistry;
     }
 
@@ -87,15 +74,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     if (!jwtRegistry.hasActiveJwtInformationByAccessToken(token)) {
                         log.info("[JwtAuthenticationFilter] 토큰이 JwtRegistry에 존재하지 않는다 (세션 만료 또는 로그아웃됨)");
                         sendUnauthorized(response, "Session expired (logout or concurrent login)");
-                        return;
-                    }
-
-                    // 토큰이 서버 측에서 폐기(revoked)되었는지 확인한다.
-                    String jti = tokenProvider.getTokenId(token);
-
-                    if (jwtSessionRegistry.isRevoked(jti)) {
-                        log.info("[JwtAuthenticationFilter] 토큰이 폐기됨(revoked): jti={}", jti);
-                        sendUnauthorized(response, "Token revoked");
                         return;
                     }
 

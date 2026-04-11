@@ -4,13 +4,9 @@ import com.sprint.mission.discodeit.DTO.dto.JwtDTO;
 import com.sprint.mission.discodeit.DTO.dto.UserDto;
 import com.sprint.mission.discodeit.DTO.request.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.controller.api.AuthApi;
-import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.security.jwt.JwtTokenProvider;
 import com.sprint.mission.discodeit.security.jwt.store.JwtInformation;
 import com.sprint.mission.discodeit.security.jwt.store.JwtRegistry;
-import com.sprint.mission.discodeit.security.jwt.store.JwtSessionRegistry;
-import com.sprint.mission.discodeit.security.jwt.store.JwtTokenEntity;
-import com.sprint.mission.discodeit.service.AuthService;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.auth.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.service.auth.DiscodeitUserDetailsService;
@@ -19,12 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -35,8 +27,6 @@ public class AuthController implements AuthApi {
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
     private final DiscodeitUserDetailsService userDetailsService;
-    private final JwtSessionRegistry jwtSessionRegistry;
-
     private final JwtRegistry jwtRegistry;
 
     @GetMapping("/csrf-token")
@@ -86,7 +76,6 @@ public class AuthController implements AuthApi {
 
         // 쿠키 값이 유효하면 쿠키 값을 추출한다.
         String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
-        String oldRefreshJti = jwtTokenProvider.getTokenId(refreshToken);
 
         // 사용자 로드
         DiscodeitUserDetails userDetails = (DiscodeitUserDetails) userDetailsService.loadUserByUsername(username);
@@ -96,22 +85,6 @@ public class AuthController implements AuthApi {
             String newAccessToken = jwtTokenProvider.generateAccessToken(userDetails);
             String newRefreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
 
-            // 회전 처리: 이전 리프레시 무효화 및 교체 표시
-            String newRefreshJti = jwtTokenProvider.getTokenId(newRefreshToken);
-
-            /**
-             * 이전 RT가 이미 폐기된 경우(동시 로그인 정책 등) 재사용을 차단한다.
-             * 동일 계정 재로그인 시 기존 토큰들이 revoke 처리되므로,
-             * 기존 브라우저가 가진 RT로 재발급을 시도하면 여기서 차단해야 자동 로그아웃이 보장된다.
-             */
-            if (jwtSessionRegistry.isRevoked(oldRefreshJti)) {
-                // 쿠키도 만료 처리: 클라이언트 보관 RT 제거
-                jwtTokenProvider.expireRefreshCookie(response);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-            jwtSessionRegistry.markReplaced(oldRefreshJti, newRefreshJti);
-
             JwtInformation newInformation = new JwtInformation(
                     userDetails.getUserDto(),
                     newAccessToken,
@@ -119,12 +92,6 @@ public class AuthController implements AuthApi {
             );
             jwtRegistry.rotateJwtInformation(refreshToken, newInformation);
             log.info("[AuthController] JwtRegistry 토큰 교체(로테이션) 완료");
-
-            // 신규 토큰 메타데이터 저장
-            JwtTokenEntity accessEntity = jwtTokenProvider.toEntity(newAccessToken);
-            JwtTokenEntity refreshEntity = jwtTokenProvider.toEntity(newRefreshToken);
-            jwtSessionRegistry.register(accessEntity);
-            jwtSessionRegistry.register(refreshEntity);
 
             // 리프레시 쿠키 교체
             // HTTP 응답 헤더(Set-Cookie)에 리프레시 쿠키를 추가한다.

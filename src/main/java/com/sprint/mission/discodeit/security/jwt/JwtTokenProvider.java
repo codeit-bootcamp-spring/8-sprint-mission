@@ -342,13 +342,6 @@ public class JwtTokenProvider {
         }
     }
 
-    /**
-     * 토큰에서 JWT ID(jit)를 추출한다.
-     * 토큰 상태 저장소(JwtSessionRegistry)에서 폐기 여부를 판단할 때 사용한다.
-     *
-     * @param token JWT 문자열
-     * @return jti 값
-     */
     public String getTokenId(String token) {
         try {
             log.info("[TokenProvider] getTokenId 호출됨: jti 추출 시작");

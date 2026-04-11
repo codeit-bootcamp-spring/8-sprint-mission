@@ -31,13 +31,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
-import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.csrf.*;
-import org.springframework.security.web.session.HttpSessionEventPublisher;
 
-import javax.sql.DataSource;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -95,9 +90,6 @@ public class SecurityConfig {
                 // 세션 관리 설정
                 // 동일한 계정으로 동시 로그인할 수 없도록 설정
                 .sessionManagement(session -> session
-                        .sessionFixation(fixation -> fixation
-                                .migrateSession()
-                        )
                         // JWT 기반 인증에서는 세션이라는 개념 자체가 불필요하므로 STATELESS로 설정한다.
                         // 참고로 원래 디폴트 설정은 IF_REQUIRED다.
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -213,46 +205,6 @@ public class SecurityConfig {
         log.info("[SecurityConfig] MethodSecurityExpressionHandler 설정 완료!");
 
         return handler;
-    }
-
-    @Bean
-    public HttpSessionEventPublisher httpSessionEventPublisher() {
-        return new HttpSessionEventPublisher();
-    }
-
-    // Remember-Me 기능을 위한 JdbcTokenRepository Bean 설정
-    // Remember-Me 토큰을 쿠키가 아닌 데이터베이스에 저장하여 Remember-Me 기능을 구현한다.
-    @Bean
-    public JdbcTokenRepositoryImpl tokenRepository(DataSource dataSource) {
-        log.info("[SecurityConfig] JdbcTokenRepository 생성...");
-        JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
-
-        tokenRepository.setDataSource(dataSource);
-
-        log.info("[SecurityConfig] JdbcTokenRepository 설정 완료...");
-        return tokenRepository;
-    }
-
-    // Remember-Me 서비스 Bean 설정
-    // 테스트를 위해 1분으로 설정
-    @Bean
-    public PersistentTokenBasedRememberMeServices persistentTokenBasedRememberMeServices(
-            UserDetailsService userDetailsService, PersistentTokenRepository tokenRepository
-    ) {
-        PersistentTokenBasedRememberMeServices rememberMeServices =
-                new PersistentTokenBasedRememberMeServices(
-                        "discodeit-key",
-                        userDetailsService,
-                        tokenRepository
-                );
-
-        rememberMeServices.setTokenValiditySeconds(60);
-        rememberMeServices.setCookieName("remember-me");
-        rememberMeServices.setParameter("remember-me");
-
-        log.info("[SecurityConfig] Remember-Me 설정 완료...");
-
-        return rememberMeServices;
     }
 
     @Bean
