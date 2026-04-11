@@ -11,7 +11,6 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.sprint.mission.discodeit.entity.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.exception.user.InvalidTokenException;
-import com.sprint.mission.discodeit.security.jwt.store.JwtTokenEntity;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
@@ -224,29 +223,6 @@ public class JwtTokenProvider {
       Date exp = signedJWT.getJWTClaimsSet().getExpirationTime();
 
       return exp;
-    } catch (Exception e) {
-      throw new InvalidTokenException();
-    }
-  }
-
-  public JwtTokenEntity toEntity(String token) {
-    try {
-      // 토큰 파싱
-      SignedJWT signedJWT = SignedJWT.parse(token);
-
-      // 토큰 클레임 추출
-      String jti = signedJWT.getJWTClaimsSet().getJWTID();
-      String username = signedJWT.getJWTClaimsSet().getSubject();
-      String tokenType = (String) signedJWT.getJWTClaimsSet().getClaim("type");
-      OffsetDateTime issuedAt = OffsetDateTime.ofInstant(
-          signedJWT.getJWTClaimsSet().getIssueTime().toInstant(), ZoneOffset.UTC);
-      OffsetDateTime expiresAt = OffsetDateTime.ofInstant(
-          signedJWT.getJWTClaimsSet().getExpirationTime().toInstant(), ZoneOffset.UTC);
-
-      // 추출된 토큰 메타데이터를 JwtTokenEntity 객체로 변환
-      JwtTokenEntity entity = new JwtTokenEntity(jti, username, tokenType, issuedAt, expiresAt);
-
-      return entity;
     } catch (Exception e) {
       throw new InvalidTokenException();
     }
