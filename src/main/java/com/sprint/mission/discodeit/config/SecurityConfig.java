@@ -1,7 +1,12 @@
 package com.sprint.mission.discodeit.config;
 
+import com.sprint.mission.discodeit.security.DiscodeitUserDetailsService;
 import com.sprint.mission.discodeit.security.LoginFailureHandler;
-import com.sprint.mission.discodeit.security.LoginSuccessHandler;
+import com.sprint.mission.discodeit.security.jwt.JwtAuthenticationFilter;
+import com.sprint.mission.discodeit.security.jwt.JwtLoginSuccessHandler;
+import com.sprint.mission.discodeit.security.jwt.JwtLogoutHandler;
+import com.sprint.mission.discodeit.security.jwt.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,31 +19,32 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
-import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.session.SessionRegistryImpl;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.HttpStatusAccessDeniedHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
   @Value("${discodeit.security.remember-me.key}")
   private String rememberMeKey;
 
+  private final JwtTokenProvider jwtTokenProvider;
+  private final DiscodeitUserDetailsService userDetailsService;
+
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http,
-      LoginSuccessHandler loginSuccessHandler,
-      LoginFailureHandler loginFailureHandler,
-      SessionRegistry sessionRegistry,
-      UserDetailsService userDetailsService) throws Exception {
+      JwtLoginSuccessHandler successHandler,
+      JwtLogoutHandler logoutHandler,
+      LoginFailureHandler failureHandler) throws Exception {
     http
         // CSRF 설정 - SPA 환경에 맞게 쿠키 기반 저장소, 커스텀 핸들러 사용
         .csrf(csrf -> csrf
@@ -48,57 +54,32 @@ public class SecurityConfig {
         // formLogin 활성화, 경로 설정
         .formLogin(login -> login
             .loginProcessingUrl("/api/auth/login")
-            .successHandler(loginSuccessHandler)
-            .failureHandler(loginFailureHandler)
+            .successHandler(successHandler)
+            .failureHandler(failureHandler)
         )
         // 로그아웃 설정
         .logout(logout -> logout
             // 로그아웃 URL 설정
             .logoutUrl("/api/auth/logout")
-            // 성공 시 리다이렉트 대신 204 응답 반환으로 대체
-            .logoutSuccessHandler(
-                new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
-            // 추가 보안 (세션 무효화 및 쿠키 삭제 (기본값이지만 명시))
-            .invalidateHttpSession(true)
-            .deleteCookies(
-                "JSESSIONID",
-                "remember-me",
-                "XSRF-TOKEN"
-            )
+            .addLogoutHandler(logoutHandler)
+            .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
         )
+        .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService),
+            UsernamePasswordAuthenticationFilter.class)
         // 인증되지 않은 접근 시 리다이렉트 X, 401 에러 반환
         .exceptionHandling(exception -> exception
             .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
             .accessDeniedHandler(new HttpStatusAccessDeniedHandler(HttpStatus.FORBIDDEN))
         )
-        // 세션 관리 고도화
-        .sessionManagement(management -> management
-            .sessionConcurrency(concurrency -> concurrency
-                .maximumSessions(1)
-                // 기존 세션 존재 -> 로그인 허용하고, 대신 기존 세션을 만료
-                .maxSessionsPreventsLogin(false)
-                // 저장소 지정
-                .sessionRegistry(sessionRegistry)
-            )
-        )
-        // Remember-Me 설정
-        .rememberMe(rememberMe -> rememberMe
-            // 토큰 생성 시 사용할 비밀키
-            .key(rememberMeKey)
-            // 7일 유지
-            .tokenValiditySeconds(60 * 60 * 24 * 7)
-            // 세션 만료 시 유저 정보를 가져올 서비스
-            .userDetailsService(userDetailsService)
-            // 로그인 시 체크박스 파라미터 명
-            .rememberMeParameter("remember-me")
-            // 체크 박스 선택 시에만 동작
-            .alwaysRemember(false)
+        // 세션 생성 방지
+        .sessionManagement(session -> session
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         )
         // 권한 설정
         .authorizeHttpRequests(
             auth -> auth
                 .requestMatchers("/", "/index.html").permitAll()
-                .requestMatchers("/api/auth/csrf-token", "/api/auth/login", "/api/auth/logout")
+                .requestMatchers("/api/auth/csrf-token", "/api/auth/login", "/api/auth/logout", "/api/auth/refresh")
                 .permitAll() // 인증 API
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // 회원가입
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
@@ -123,17 +104,6 @@ public class SecurityConfig {
     DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
     handler.setRoleHierarchy(roleHierarchy);
     return handler;
-  }
-
-  // 세션 추적용 저장소 빈
-  @Bean
-  public SessionRegistry sessionRegistry() {
-    return new SessionRegistryImpl();
-  }
-
-  @Bean
-  public HttpSessionEventPublisher httpSessionEventPublisher() {
-    return new HttpSessionEventPublisher();
   }
 
   @Bean

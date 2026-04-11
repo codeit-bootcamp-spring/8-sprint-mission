@@ -16,7 +16,8 @@ public enum ErrorCode {
   READ_STATUS_ALREADY_EXISTS("이미 존재하는 ReadStatus 입니다."),
   READ_STATUS_NOT_FOUND("ReadStatus를 찾을 수 없습니다."),
   USER_STATUS_ALREADY_EXISTS("해당 User에 대한 UserStatus가 이미 존재합니다."),
-  USER_STATUS_NOT_FOUND("UserStatus를 찾을 수 없습니다.");
+  USER_STATUS_NOT_FOUND("UserStatus를 찾을 수 없습니다."),
+  INVALID_TOKEN("유효하지 않은 토큰입니다.");
 
   private final String message;
 
