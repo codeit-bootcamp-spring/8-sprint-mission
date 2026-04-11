@@ -15,6 +15,7 @@ public enum ErrorCode {
   ACCOUNT_LOCKED(HttpStatus.UNAUTHORIZED, "잠긴 계정입니다."),
   LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "로그인에 실패했습니다."),
   UNEXPECTED_PRINCIPAL_TYPE(HttpStatus.INTERNAL_SERVER_ERROR, "인증 객체 타입이 올바르지 않습니다."),
+  INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다."),
 
   // 인가 관련
   ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 리소스에 접근할 권한이 없습니다."),

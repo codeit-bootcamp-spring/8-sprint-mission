@@ -27,6 +27,14 @@ admin:
   password: ${ADMIN_PASSWORD}
   email: ${ADMIN_EMAIL}
 
+jwt:
+  access-token:
+    secret: ${JWT_ACCESS_TOKEN}
+    exp: 900000        # 15분(ms)
+  refresh-token:
+    secret: ${JWT_REFRESH_TOKEN}
+    exp: 3600000       # 1시간(ms)
+
 discodeit:
   storage:
     type: ${STORAGE_TYPE:local}

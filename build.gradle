@@ -37,6 +37,7 @@ dependencies {
 
     // Security
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'com.nimbusds:nimbus-jose-jwt:10.3'
 
     // DB
     runtimeOnly 'org.postgresql:postgresql'
