@@ -40,7 +40,7 @@ public interface AuthApi {
       @ApiResponse(responseCode = "200", description = "토큰 재발급 성공"),
       @ApiResponse(responseCode = "401", description = "유효하지 않은 리프레시 토큰")
   })
-  @PostMapping("/auth/refresh")
+  @PostMapping("/refresh")
   ResponseEntity<JwtDto> refresh(
       @CookieValue(name = "REFRESH_TOKEN", required = false) String refreshToken, HttpServletResponse response
   );
