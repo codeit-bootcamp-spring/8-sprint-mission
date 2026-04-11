@@ -52,14 +52,10 @@ public class JwtTokenProvider {
     try {
       // 페이로드 만들기: 토큰에 담을 정보 조각들(Claims)을 정의
       JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-          .subject(
-              userId.toString())                                                // 'sub' 클레임: 토큰의 주인 (유저 ID)
-          .claim("role",
-              role)                                                // 커스텀 클레임: 유저의 권한 목록 포함
-          .issueTime(
-              new Date())                                                     // 'iat' 클레임: 토큰 발행 시각
-          .expirationTime(
-              new Date(System.currentTimeMillis() + validitySeconds))  // 'exp' 클레임: 만료 시각 지정
+          .subject(userId.toString())                                                // 'sub' 클레임: 토큰의 주인 (유저 ID)
+          .claim("role", role)                                                // 커스텀 클레임: 유저의 권한 목록 포함
+          .issueTime(new Date())                                                     // 'iat' 클레임: 토큰 발행 시각
+          .expirationTime(new Date(System.currentTimeMillis() + validitySeconds))  // 'exp' 클레임: 만료 시각 지정
           .build();
 
       // Header(토큰의 메타데이터) 만들기: 이 토큰을 어떤 알고리즘으로 암호화 했는지
@@ -77,7 +73,7 @@ public class JwtTokenProvider {
       signedJWT.sign(signer);
 
       // 직렬화: 객체를 전송하기 쉬운 '한 줄의 문자열'로 변환하여 반환
-      // 결과값(예시): eyJhbGci... (헤더).eyJzdWIi... (페이로드).SflKxwR... (서명)
+      // 결과값(예시): eyaDbGci... (헤더).eyaVbGci... (페이로드).SflKxwR... (서명)
       return signedJWT.serialize();
 
     } catch (JOSEException e) {
