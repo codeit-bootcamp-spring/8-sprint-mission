@@ -33,7 +33,7 @@ public class InMemoryJwtRegistry implements JwtRegistry {
   }
 
   @Override
-  public void rotateJwtInformation() {
+  public void rotateJwtInformation(String refreshToken, JwtInformation newJwtInformation) {
 
   }
 

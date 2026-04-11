@@ -6,7 +6,6 @@ import com.sprint.mission.discodeit.handler.LoginFailureHandler;
 import com.sprint.mission.discodeit.handler.SpaCsrfTokenRequestHandler;
 import com.sprint.mission.discodeit.security.jwt.JwtAuthenticationFilter;
 import com.sprint.mission.discodeit.security.jwt.JwtLoginSuccessHandler;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -33,9 +32,6 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-
-  @Value("${spring.security.remember-me.key}")
-  private String rememberMeKey;
 
   @Bean
   public PasswordEncoder passwordEncoder() {
@@ -68,6 +64,7 @@ public class SecurityConfig {
             .requestMatchers("/api/auth/csrf-token").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
             .requestMatchers("/api/auth/login").permitAll()
+            .requestMatchers("/api/auth/refresh").permitAll()
             .anyRequest().authenticated()
         )
         .formLogin(login -> login
