@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +40,7 @@ public class BasicChannelService implements ChannelService {
 
   @Override
   @Transactional
+  @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   public ChannelDto createPublicChannel(ChannelCreatePublicRequest request) {
     log.info("[Channel] create public channel start name={}, description={}", request.name(),
         request.description());
@@ -90,6 +92,7 @@ public class BasicChannelService implements ChannelService {
 
   @Override
   @Transactional
+  @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   public ChannelDto updateChannel(UUID channelId, ChannelUpdateRequest request) {
 
     log.info("[Channel] update channel start name={}, description={}", request.newName(),
@@ -111,6 +114,7 @@ public class BasicChannelService implements ChannelService {
 
   @Override
   @Transactional
+  @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   public void deleteChannel(UUID id) {
 
     log.info("[Channel] delete channel start channelId={}", id);
@@ -120,9 +124,7 @@ public class BasicChannelService implements ChannelService {
     }
 
     // 채널의 메시지와 첨부파일 삭제
-    messageRepository.findAllByChannel_Id(id).forEach(message -> {
-      messageRepository.delete(message);
-    });
+    messageRepository.findAllByChannel_Id(id).forEach(messageRepository::delete);
 
     // ReadStatus 삭제
     readStatusRepository.deleteAllByChannel_Id(id);

@@ -6,7 +6,7 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.entity.UserRole;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.util.List;
@@ -27,8 +27,7 @@ class ChannelRepositoryTest {
   private EntityManager em;
 
   private User persistUser(String username) {
-    User u = new User(username, username + "@test.com", "testPass", null);
-    u.attachStatus(new UserStatus(u, Instant.now()));
+    User u = new User(username, username + "@test.com", "testPass", null, UserRole.USER);
     em.persist(u);
     em.flush();
     return u;

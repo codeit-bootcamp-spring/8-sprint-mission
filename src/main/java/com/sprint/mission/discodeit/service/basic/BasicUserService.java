@@ -7,20 +7,24 @@ import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.entity.UserRole;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.UserService;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +38,8 @@ public class BasicUserService implements UserService {
   private final UserMapper userMapper;
   private final BinaryContentService binaryContentService;
   private final BinaryContentRepository binaryContentRepository;
+  private final PasswordEncoder passwordEncoder;
+  private final SessionRegistry sessionRegistry;
 
   @Override
   @Transactional
@@ -47,36 +53,37 @@ public class BasicUserService implements UserService {
     // 프로필 생성
     BinaryContent profile = createBinaryContent(profileRequest);
 
+    // 비밀번호 암호화
+    String encodedPassword = passwordEncoder.encode(request.password());
+
     // User 생성
-    User user = new User(request.username(), request.email(), request.password(), profile);
-
-    // UserStatus 생성 (마지막 접속 시간 = 지금)
-    UserStatus status = new UserStatus(user, Instant.now());
-
-    user.attachStatus(status);
+    User user = new User(request.username(), request.email(), encodedPassword, profile,
+        UserRole.USER);
 
     User savedUser = userRepository.save(user);
 
     log.info("[User] create success userId={}", savedUser.getId());
-    return userMapper.toDto(savedUser);
+    return userMapper.toDto(user, isUserOnline(user.getId()));
   }
 
   @Override
   public UserDto findUser(UUID id) {
-    return userRepository.findById(id)
-        .map(userMapper::toDto)
+    User user = userRepository.findById(id)
         .orElseThrow(() -> new UserNotFoundException(id));
+
+    return userMapper.toDto(user, isUserOnline(user.getId()));
   }
 
   @Override
   public List<UserDto> findAll() {
     return userRepository.findAll().stream()
-        .map(userMapper::toDto)
+        .map(user -> userMapper.toDto(user, isUserOnline(user.getId())))
         .toList();
   }
 
   @Override
   @Transactional
+  @PreAuthorize("#userId == authentication.principal.userDto.id")
   public UserDto update(UUID userId, UserUpdateRequest request,
       BinaryContentCreateRequest profileRequest) {
 
@@ -92,15 +99,22 @@ public class BasicUserService implements UserService {
     // 프로필 이미지 교체
     BinaryContent newProfile = createBinaryContent(profileRequest);
 
+    // 비밀번호 암호화
+    String passwordToUpdate = user.getPassword();
+    if (request.newPassword() != null && !request.newPassword().isBlank()) {
+      passwordToUpdate = passwordEncoder.encode(request.newPassword());
+    }
+
     // 필드 업데이트 및 저장
-    user.update(request.newUsername(), request.newEmail(), request.newPassword(), newProfile);
+    user.update(request.newUsername(), request.newEmail(), passwordToUpdate, newProfile);
 
     log.info("[User] update success userId={}", user.getId());
-    return userMapper.toDto(user);
+    return userMapper.toDto(user, isUserOnline(user.getId()));
   }
 
   @Override
   @Transactional
+  @PreAuthorize("#id == authentication.principal.userDto.id")
   public void delete(UUID id) {
     log.info("[USER] delete start userId={}", id);
 
@@ -112,11 +126,43 @@ public class BasicUserService implements UserService {
     userRepository.deleteById(id);
   }
 
+  @Override
+  @Transactional
+  @PreAuthorize("hasRole('ADMIN')")
+  public UserDto updateRole(UUID userId, UserRole newRole) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new UserNotFoundException(userId));
+
+    user.updateRole(newRole);
+
+    // 권한 변경 -> 세션 강제 만료
+    List<Object> allPrincipals = sessionRegistry.getAllPrincipals();
+    for (Object principal : allPrincipals) {
+      if (principal instanceof DiscodeitUserDetails userDetails) {
+        if (userDetails.getUserDto().id().equals(userId)) {
+          // 해당 유저의 모든 세션 찾아 만료 처리
+          sessionRegistry.getAllSessions(principal, false)
+              .forEach(SessionInformation::expireNow);
+        }
+      }
+    }
+    return userMapper.toDto(user, isUserOnline(user.getId()));
+  }
+
   // 비즈니스 로직 헬퍼 메서드
   private void validateNewUser(String username, String email) {
     if (userRepository.existsByUsernameOrEmail(username, email)) {
       throw new UserAlreadyExistsException(username, email);
     }
+  }
+
+  // 온라인 여부 판단 (세션 레지스트리 활용)
+  private boolean isUserOnline(UUID userId) {
+    return sessionRegistry.getAllPrincipals().stream()
+        .filter(p -> p instanceof DiscodeitUserDetails)
+        .map(p -> (DiscodeitUserDetails) p)
+        .anyMatch(userDetails -> userDetails.getUserDto().id().equals(userId) &&
+            !sessionRegistry.getAllSessions(userDetails, false).isEmpty());
   }
 
   private void validateUpdateUser(User user, UserUpdateRequest request) {

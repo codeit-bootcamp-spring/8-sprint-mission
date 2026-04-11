@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -20,6 +21,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -41,6 +43,7 @@ class MessageControllerTest {
   private JpaMetamodelMappingContext jpaMappingContext;
 
   @Test
+  @WithMockUser
   @DisplayName("POST /api/messages: 성공 - 201 + JSON 응답")
   void create_success() throws Exception {
     UUID msgId = UUID.randomUUID();
@@ -48,12 +51,12 @@ class MessageControllerTest {
 
     MessageDto response = new MessageDto(
         msgId,                // id
-        Instant.now(),       // createdAt
-        Instant.now(),       // updatedAt
-        "hello",             // content
-        channelId,           // channelId
-        null,                // author
-        List.of()            // attachments
+        Instant.now(),        // createdAt
+        Instant.now(),        // updatedAt
+        "hello",              // content
+        channelId,            // channelId
+        null,                 // author
+        List.of()             // attachments
     );
 
     when(messageService.createMessage(any())).thenReturn(response);
@@ -76,6 +79,7 @@ class MessageControllerTest {
             multipart("/api/messages")
                 .file(requestPart)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
+                .with(csrf())
         )
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.id").value(msgId.toString()))
@@ -84,6 +88,7 @@ class MessageControllerTest {
   }
 
   @Test
+  @WithMockUser
   @DisplayName("POST /api/messages: 실패 - validation(content blank) -> 400")
   void create_fail_validation() throws Exception {
     UUID channelId = UUID.randomUUID();
@@ -106,6 +111,7 @@ class MessageControllerTest {
             multipart("/api/messages")
                 .file(requestPart)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
+                .with(csrf())
         )
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));

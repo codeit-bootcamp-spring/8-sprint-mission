@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -102,6 +103,7 @@ public class BasicMessageService implements MessageService {
 
   @Override
   @Transactional
+  @PreAuthorize("@messageSecurity.isAuthor(#messageId, authentication.principal.userDto.id)")
   public MessageDto updateMessage(UUID messageId, MessageUpdateRequest request) {
 
     log.info("[MESSAGE] update start message={}", request.newContent());
@@ -118,18 +120,19 @@ public class BasicMessageService implements MessageService {
 
   @Override
   @Transactional
-  public void deleteMessage(UUID id) {
+  @PreAuthorize("@messageSecurity.isAuthor(#messageId, authentication.principal.userDto.id)")
+  public void deleteMessage(UUID messageId) {
 
-    log.info("[MESSAGE] delete start messageId={}", id);
+    log.info("[MESSAGE] delete start messageId={}", messageId);
 
-    if (!messageRepository.existsById(id)) {
-      throw new MessageNotFoundException(id);
+    if (!messageRepository.existsById(messageId)) {
+      throw new MessageNotFoundException(messageId);
     }
 
     //  CascadeType.ALL 및 orphanRemoval=true 설정
     // 연관된 BinaryContent도 DB에서 자동으로 삭제됨
-    messageRepository.deleteById(id);
+    messageRepository.deleteById(messageId);
 
-    log.info("[MESSAGE] delete success messageId={}", id);
+    log.info("[MESSAGE] delete success messageId={}", messageId);
   }
 }
