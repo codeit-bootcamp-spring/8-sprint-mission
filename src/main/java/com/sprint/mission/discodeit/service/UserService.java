@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.service;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,8 @@ public interface UserService {
 
 		UserDto update(UUID userId, UserUpdateRequest userUpdateRequest,
 				Optional<BinaryContentCreateRequest> profileCreateRequest);
+
+		UserDto updateRole(UUID userId, Role newRole);
 
 		void delete(UUID userId);
 }

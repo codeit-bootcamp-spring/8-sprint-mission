@@ -8,8 +8,11 @@ public record MessageDto(
 		UUID id,
 		String content,
 		UUID channelId,
+		UUID channel,
 		UUID authorId,
+		UserDto author,
 		List<UUID> attachmentIds,
+		List<BinaryContentDto> attachments,
 		Instant createdAt
 ) {
 

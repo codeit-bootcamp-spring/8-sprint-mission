@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/binaryContents")
+@RequestMapping({"/api/binaryContents", "/api/binary-contents"})
 public class BinaryContentController implements BinaryContentApi {
 
 		private final BinaryContentService binaryContentService;

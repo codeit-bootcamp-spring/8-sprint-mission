@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
+import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.service.MessageService;
 import java.io.IOException;
 import java.time.Instant;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.Valid;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -47,10 +49,47 @@ public class MessageController implements MessageApi {
 		 */
 		@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 		public ResponseEntity<MessageDto> create(
-				@RequestPart("messageCreateRequest") @Valid MessageCreateRequest messageCreateRequest,
-				@RequestPart(value = "attachments", required = false) List<MultipartFile> attachments
+				@RequestPart(value = "messageCreateRequest", required = false) @Valid MessageCreateRequest messageCreateRequest,
+				@RequestPart(value = "message", required = false) @Valid MessageCreateRequest messageRequestAlias,
+				@RequestPart(value = "request", required = false) @Valid MessageCreateRequest genericRequestAlias,
+				@RequestParam(value = "content", required = false) String content,
+				@RequestParam(value = "channelId", required = false) UUID channelId,
+				@RequestParam(value = "channelID", required = false) UUID channelIdAlias1,
+				@RequestParam(value = "channel_id", required = false) UUID channelIdAlias2,
+				@RequestParam(value = "channel", required = false) UUID channelIdAlias3,
+				@RequestParam(value = "authorId", required = false) UUID authorId,
+				@RequestPart(value = "attachments", required = false) List<MultipartFile> attachments,
+				@RequestPart(value = "files", required = false) List<MultipartFile> filesAlias,
+				@RequestPart(value = "images", required = false) List<MultipartFile> imagesAlias,
+				@AuthenticationPrincipal DiscodeitUserDetails userDetails
 		) {
-				List<BinaryContentCreateRequest> attachmentRequests = Optional.ofNullable(attachments)
+				MessageCreateRequest resolvedRequest = Optional.ofNullable(messageCreateRequest)
+						.orElse(Optional.ofNullable(messageRequestAlias).orElse(genericRequestAlias));
+				UUID resolvedChannelId = Optional.ofNullable(channelId)
+						.orElse(Optional.ofNullable(channelIdAlias1)
+								.orElse(Optional.ofNullable(channelIdAlias2).orElse(channelIdAlias3)));
+				log.debug("메시지 생성 파라미터, channelId={}, channelID={}, channel_id={}, channel={}, resolvedChannelId={}",
+						channelId, channelIdAlias1, channelIdAlias2, channelIdAlias3, resolvedChannelId);
+				if (resolvedRequest == null && content != null && resolvedChannelId != null) {
+						UUID resolvedAuthorId = authorId;
+						if (resolvedAuthorId == null && userDetails != null) {
+								resolvedAuthorId = userDetails.getUserDto().id();
+						}
+						resolvedRequest = new MessageCreateRequest(content, resolvedChannelId, resolvedAuthorId);
+				}
+				if (resolvedRequest != null && resolvedRequest.authorId() == null && userDetails != null) {
+						resolvedRequest = new MessageCreateRequest(
+								resolvedRequest.content(),
+								resolvedRequest.channelId(),
+								userDetails.getUserDto().id()
+						);
+				}
+				if (resolvedRequest == null) {
+						throw new IllegalArgumentException("messageCreateRequest is required");
+				}
+				List<MultipartFile> resolvedAttachments = Optional.ofNullable(attachments)
+						.orElse(Optional.ofNullable(filesAlias).orElse(imagesAlias));
+				List<BinaryContentCreateRequest> attachmentRequests = Optional.ofNullable(resolvedAttachments)
 						.map(files -> files.stream()
 								.map(file -> {
 										try {
@@ -66,9 +105,9 @@ public class MessageController implements MessageApi {
 								.toList())
 						.orElse(new ArrayList<>());
 				log.debug("메시지 생성 요청, channelId={}, authorId={}, attachments={}",
-						messageCreateRequest.channelId(), messageCreateRequest.authorId(),
+						resolvedRequest.channelId(), resolvedRequest.authorId(),
 						attachmentRequests.size());
-				MessageDto createdMessage = messageService.create(messageCreateRequest, attachmentRequests);
+				MessageDto createdMessage = messageService.create(resolvedRequest, attachmentRequests);
 				return ResponseEntity
 						.status(HttpStatus.CREATED)
 						.body(createdMessage);
@@ -100,8 +139,11 @@ public class MessageController implements MessageApi {
 		}
 
 		@GetMapping
-		public ResponseEntity<?> findAllByChannelId(
-				@RequestParam("channelId") UUID channelId,
+		public ResponseEntity<PageResponse<MessageDto>> findAllByChannelId(
+				@RequestParam(value = "channelId", required = false) UUID channelId,
+				@RequestParam(value = "channelID", required = false) UUID channelIdAlias1,
+				@RequestParam(value = "channel_id", required = false) UUID channelIdAlias2,
+				@RequestParam(value = "channel", required = false) UUID channelIdAlias3,
 				@RequestParam(value = "cursor", required = false) Instant cursor,
 				@PageableDefault(
 						size = 50,
@@ -109,13 +151,16 @@ public class MessageController implements MessageApi {
 						sort = "createdAt",
 						direction = Direction.DESC
 				) Pageable pageable) {
-				if (cursor == null) {
-						return ResponseEntity.ok(messageService.findAllByChannelIdAsList(channelId));
+				UUID resolvedChannelId = Optional.ofNullable(channelId)
+						.orElse(Optional.ofNullable(channelIdAlias1)
+								.orElse(Optional.ofNullable(channelIdAlias2).orElse(channelIdAlias3)));
+				log.debug("메시지 조회 파라미터, channelId={}, channelID={}, channel_id={}, channel={}, resolvedChannelId={}, cursor={}",
+						channelId, channelIdAlias1, channelIdAlias2, channelIdAlias3, resolvedChannelId, cursor);
+				if (resolvedChannelId == null) {
+						throw new IllegalArgumentException("channelId is required");
 				}
-				PageResponse<MessageDto> messages = messageService.findAllByChannelId(channelId, cursor,
+				PageResponse<MessageDto> messages = messageService.findAllByChannelId(resolvedChannelId, cursor,
 						pageable);
-				return ResponseEntity
-						.status(HttpStatus.OK)
-						.body(messages);
+				return ResponseEntity.ok(messages);
 		}
 }

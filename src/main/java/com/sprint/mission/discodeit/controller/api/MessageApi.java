@@ -17,7 +17,9 @@ import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.multipart.MultipartFile;
+import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 
 @Tag(name = "Message", description = "Message API")
 public interface MessageApi {
@@ -39,9 +41,26 @@ public interface MessageApi {
 						content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
 				) MessageCreateRequest messageCreateRequest,
 				@Parameter(
+						description = "Message 생성 정보(별칭: message)",
+						content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+				) MessageCreateRequest message,
+				@Parameter(
+						description = "Message 생성 정보(별칭: request)",
+						content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+				) MessageCreateRequest request,
+				@Parameter(description = "Message 내용(폼 필드 fallback)") String content,
+				@Parameter(description = "채널 ID(폼 필드 fallback)") UUID channelId,
+				@Parameter(description = "채널 ID 별칭(channelID)") UUID channelID,
+				@Parameter(description = "채널 ID 별칭(channel_id)") UUID channel_id,
+				@Parameter(description = "채널 ID 별칭(channel)") UUID channel,
+				@Parameter(description = "작성자 ID(폼 필드 fallback)") UUID authorId,
+				@Parameter(
 						description = "Message 첨부 파일들",
 						content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
-				) List<MultipartFile> attachments
+				) List<MultipartFile> attachments,
+				@Parameter(description = "Message 첨부 파일들(별칭: files)") List<MultipartFile> files,
+				@Parameter(description = "Message 첨부 파일들(별칭: images)") List<MultipartFile> images,
+				@AuthenticationPrincipal DiscodeitUserDetails userDetails
 		);
 
 		@Operation(summary = "Message 내용 수정")
@@ -74,15 +93,18 @@ public interface MessageApi {
 				@Parameter(description = "삭제할 Message ID") UUID messageId
 		);
 
-		@Operation(summary = "Channel의 Message 목록 조회", description = "cursor 없이 호출 시 목록 배열 반환, cursor 있으면 PageResponse 반환")
+		@Operation(summary = "Channel의 Message 목록 조회", description = "항상 PageResponse 형태로 반환")
 		@ApiResponses(value = {
 				@ApiResponse(
 						responseCode = "200", description = "Message 목록 조회 성공",
 						content = @Content(schema = @Schema(description = "cursor 없음: MessageDto 배열, cursor 있음: PageResponse"))
 				)
 		})
-		ResponseEntity<?> findAllByChannelId(
+		ResponseEntity<com.sprint.mission.discodeit.dto.response.PageResponse<MessageDto>> findAllByChannelId(
 				@Parameter(description = "조회할 Channel ID") UUID channelId,
+				@Parameter(description = "조회할 Channel ID 별칭(channelID)") UUID channelID,
+				@Parameter(description = "조회할 Channel ID 별칭(channel_id)") UUID channel_id,
+				@Parameter(description = "조회할 Channel ID 별칭(channel)") UUID channel,
 				@Parameter(description = "페이징 커서 정보") Instant cursor,
 				@Parameter(description = "페이징 정보", example = "{\"size\": 50, \"sort\": \"createdAt,desc\"}") Pageable pageable
 		);
