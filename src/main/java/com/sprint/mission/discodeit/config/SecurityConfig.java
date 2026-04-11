@@ -4,8 +4,8 @@ import com.sprint.mission.discodeit.handler.CustomAccessDeniedHandler;
 import com.sprint.mission.discodeit.handler.CustomAuthenticationEntryPoint;
 import com.sprint.mission.discodeit.handler.LoginFailureHandler;
 import com.sprint.mission.discodeit.handler.SpaCsrfTokenRequestHandler;
+import com.sprint.mission.discodeit.security.jwt.JwtAuthenticationFilter;
 import com.sprint.mission.discodeit.security.jwt.JwtLoginSuccessHandler;
-import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,18 +22,12 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.session.SessionRegistryImpl;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
-import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableWebSecurity
@@ -53,8 +47,8 @@ public class SecurityConfig {
       JwtLoginSuccessHandler jwtLoginSuccessHandler,
       LoginFailureHandler loginFailureHandler,
       CustomAuthenticationEntryPoint authenticationEntryPoint,
-      CustomAccessDeniedHandler accessDeniedHandler
-  ) throws Exception {
+      CustomAccessDeniedHandler accessDeniedHandler,
+      JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
 
     http
         .headers(headers -> headers
@@ -94,45 +88,10 @@ public class SecurityConfig {
         .exceptionHandling(ex -> ex
             .authenticationEntryPoint(authenticationEntryPoint)
             .accessDeniedHandler(accessDeniedHandler)
-        );
+        )
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
-  }
-
-  @Bean
-  public SessionRegistry sessionRegistry() {
-    return new SessionRegistryImpl();
-  }
-
-  @Bean
-  public HttpSessionEventPublisher httpSessionEventPublisher() {
-    return new HttpSessionEventPublisher();
-  }
-
-  @Bean
-  public JdbcTokenRepositoryImpl tokenRepository(DataSource dataSource) {
-    JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
-    tokenRepository.setDataSource(dataSource);
-
-    return tokenRepository;
-  }
-
-  @Bean
-  public PersistentTokenBasedRememberMeServices persistentTokenBasedRememberMeServices(
-      UserDetailsService userDetailsService, PersistentTokenRepository tokenRepository
-  ) {
-    PersistentTokenBasedRememberMeServices rememberMeServices =
-        new PersistentTokenBasedRememberMeServices(
-            rememberMeKey,
-            userDetailsService,
-            tokenRepository
-        );
-
-    rememberMeServices.setTokenValiditySeconds(60 * 60 * 24 * 7);
-    rememberMeServices.setCookieName("remember-me");
-    rememberMeServices.setParameter("remember-me");
-
-    return rememberMeServices;
   }
 
   @Bean

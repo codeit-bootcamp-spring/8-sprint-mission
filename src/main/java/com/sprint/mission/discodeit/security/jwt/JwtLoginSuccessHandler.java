@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.dto.JwtDTO;
+import com.sprint.mission.discodeit.dto.JwtInformation;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.DiscodeitUserDetails;
 import jakarta.servlet.ServletException;
@@ -20,6 +21,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
   private final ObjectMapper objectMapper;
   private final JwtTokenProvider tokenProvider;
+  private final JwtRegistry jwtRegistry;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -42,6 +44,13 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
         response.setStatus(HttpServletResponse.SC_OK);
         response.getWriter().write(objectMapper.writeValueAsString(jwtDto));
 
+        jwtRegistry.registerJwtInformation(
+            new JwtInformation(
+                discodeitUserDetails.getUserDto(),
+                accessToken,
+                refreshToken
+            )
+        );
       } catch (Exception e) {
         response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         response.getWriter().write(objectMapper.createObjectNode()
