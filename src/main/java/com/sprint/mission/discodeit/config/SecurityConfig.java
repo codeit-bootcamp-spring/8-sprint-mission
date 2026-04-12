@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.security.LoginFailureHandler;
 import com.sprint.mission.discodeit.security.jwt.JwtAuthenticationFilter;
 import com.sprint.mission.discodeit.security.jwt.JwtLoginSuccessHandler;
 import com.sprint.mission.discodeit.security.jwt.JwtLogoutHandler;
+import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,7 +45,8 @@ public class SecurityConfig {
   public SecurityFilterChain filterChain(HttpSecurity http,
       JwtLoginSuccessHandler successHandler,
       JwtLogoutHandler logoutHandler,
-      LoginFailureHandler failureHandler) throws Exception {
+      LoginFailureHandler failureHandler,
+      JwtRegistry jwtRegistry) throws Exception {
     http
         // CSRF 설정 - SPA 환경에 맞게 쿠키 기반 저장소, 커스텀 핸들러 사용
         .csrf(csrf -> csrf
@@ -64,7 +66,7 @@ public class SecurityConfig {
             .addLogoutHandler(logoutHandler)
             .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
         )
-        .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService),
+        .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService, jwtRegistry),
             UsernamePasswordAuthenticationFilter.class)
         // 인증되지 않은 접근 시 리다이렉트 X, 401 에러 반환
         .exceptionHandling(exception -> exception

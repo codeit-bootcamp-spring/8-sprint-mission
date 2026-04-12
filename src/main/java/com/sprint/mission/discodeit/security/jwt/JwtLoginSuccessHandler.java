@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.dto.auth.JwtDto;
+import com.sprint.mission.discodeit.dto.auth.JwtInformation;
 import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import jakarta.servlet.http.Cookie;
@@ -20,7 +21,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
   private final JwtTokenProvider jwtTokenProvider;
   private final ObjectMapper objectMapper;
-
+  private final JwtRegistry jwtRegistry;
 
   @Override
   public void onAuthenticationSuccess(
@@ -45,6 +46,10 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
     refreshCookie.setMaxAge(604800);
     // 응답에 커스텀하게 만든 쿠키를 넣어놓는다.
     response.addCookie(refreshCookie);
+
+    jwtRegistry.registerJwtInformation(userDto.id(), new JwtInformation(
+        userDto, accessToken, refreshToken, jwtTokenProvider.getExpirationTime(refreshToken)
+    ));
 
     JwtDto jwtDto = new JwtDto(accessToken, userDto);
 

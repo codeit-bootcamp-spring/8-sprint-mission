@@ -11,6 +11,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,25 @@ public class JwtTokenProvider {
   // 리프레시 토큰 생성
   public String createRefreshToken(UUID userId, String role) {
     return createToken(userId, role, refreshTokenValidity);
+  }
+
+  // 토큰 만료 시간 추출
+  public Instant getExpirationTime(String token) {
+    try {
+      SignedJWT signedJWT = SignedJWT.parse(token);
+
+      Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+      if (expirationTime == null) {
+        throw new RuntimeException("토큰에 만료 시간 정보가 포함되어 있지 않습니다.");
+      }
+
+      return expirationTime.toInstant();
+
+    } catch (Exception e) {
+      log.error("토큰에서 만료 시간을 추출하는데 실패했습니다. token: {}, error: {}", token, e.getMessage());
+      throw new RuntimeException("유효하지 않은 토큰 형식입니다.", e);
+    }
   }
 
   // 토큰 생성 공통 메서드

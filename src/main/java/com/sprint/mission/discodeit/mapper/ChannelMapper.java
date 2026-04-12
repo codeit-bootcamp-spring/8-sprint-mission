@@ -7,14 +7,13 @@ import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
-import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
+import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.session.SessionRegistry;
 
 @Mapper(
     config = GlobalMapperConfig.class,
@@ -32,7 +31,7 @@ public abstract class ChannelMapper {
   protected UserMapper userMapper;
 
   @Autowired
-  protected SessionRegistry sessionRegistry;
+  protected JwtRegistry jwtRegistry;
 
   @Mapping(target = "lastMessageAt", expression = "java(resolveLastMessageAt(channel))")
   @Mapping(target = "participants", expression = "java(resolveParticipants(channel))")
@@ -55,11 +54,7 @@ public abstract class ChannelMapper {
   }
 
   private boolean isUserOnline(UUID userId) {
-    return sessionRegistry.getAllPrincipals().stream()
-        .filter(p -> p instanceof DiscodeitUserDetails)
-        .map(p -> (DiscodeitUserDetails) p)
-        .anyMatch(userDetails -> userDetails.getUserDto().id().equals(userId) &&
-            !sessionRegistry.getAllSessions(userDetails, false).isEmpty());
+    return jwtRegistry.hasActiveJwtInformationByUserId(userId);
   }
 
 }
