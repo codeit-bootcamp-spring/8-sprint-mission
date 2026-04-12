@@ -109,8 +109,8 @@ public class ChannelServiceTest {
       given(userRepository.findAllById(eq(participants))).willReturn(List.of(user1, user2));
 
       List<UserDto> participantsDto = List.of(
-          new UserDto(participants.get(0), "user1", "user1@naver.com", null, Role.USER),
-          new UserDto(participants.get(1), "user2", "user2@naver.com", null, Role.USER)
+          new UserDto(participants.get(0), "user1", "user1@naver.com", null, true, Role.USER),
+          new UserDto(participants.get(1), "user2", "user2@naver.com", null, true, Role.USER)
       );
 
       ChannelDto privateDto = new ChannelDto(channelId, ChannelType.PRIVATE, null, null,
