@@ -94,7 +94,7 @@ class BasicMessageServiceTest {
     channel = new Channel(ChannelType.PUBLIC, "testChannel", "testDescription");
     ReflectionTestUtils.setField(channel, "id", channelId);
 
-    author = new User("testUser", "test@example.com", "password", null);
+    author = new User("testUser", "test@example.com", "password", null, Role.USER);
     ReflectionTestUtils.setField(author, "id", authorId);
 
     attachment = new BinaryContent("test.txt", 100L, "text/plain");
