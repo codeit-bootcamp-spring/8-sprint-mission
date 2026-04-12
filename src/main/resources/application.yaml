@@ -38,14 +38,8 @@ discodeit:
     local:
       root-path: ./storage/binary-contents
 
-# 4. SQL 로그 상세 설정
-logging:
-  level:
-    org.hibernate.SQL: debug
-    org.hibernate.orm.jdbc.bind: trace
-    org.springframework.security: trace
 
-# 5. Actuator 엔드포인트 설정 (Admin 서버가 데이터를 가져가는 통로)
+# 4. Actuator 엔드포인트 설정 (Admin 서버가 데이터를 가져가는 통로)
 management:
   endpoints:
     web:
@@ -57,7 +51,7 @@ management:
     info:
       enabled: true
 
-# 6. Actuator /info 노출 정보
+# 5. Actuator /info 노출 정보
 info:
   app:
     name: Discodeit

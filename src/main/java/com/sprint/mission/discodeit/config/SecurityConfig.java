@@ -60,7 +60,6 @@ public class SecurityConfig {
             .requestMatchers("/api/auth/csrf-token").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users", "/api/users/").permitAll()
             .requestMatchers("/api/auth/login").permitAll()
-            .requestMatchers("/api/auth/logout").permitAll()
             .requestMatchers(nonApiRequestMatcher).permitAll()
             .anyRequest().authenticated()
         );
@@ -87,7 +86,7 @@ public class SecurityConfig {
         http.rememberMe(remember -> remember
             .rememberMeParameter("remember-me")
             .userDetailsService(userDetailsService)
-            .key("discodeit-remember-me-key")
+            .key(java.util.UUID.randomUUID().toString())
         );
 
         return http.build();
