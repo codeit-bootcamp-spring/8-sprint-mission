@@ -43,7 +43,16 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
         UserDto userDto = discodeitUserDetails.getUserDto();
 
-        JwtDTO jwtDto = new JwtDTO(userDto, accessToken);
+        UserDto onlineUserDto = new UserDto(
+            userDto.id(),
+            userDto.username(),
+            userDto.email(),
+            userDto.profile(),
+            true,
+            userDto.role()
+        );
+
+        JwtDTO jwtDto = new JwtDTO(onlineUserDto, accessToken);
         response.setStatus(HttpServletResponse.SC_OK);
         response.getWriter().write(objectMapper.writeValueAsString(jwtDto));
 
