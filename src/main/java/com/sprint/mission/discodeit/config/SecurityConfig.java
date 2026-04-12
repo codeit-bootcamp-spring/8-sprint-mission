@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.config;
 import com.sprint.mission.discodeit.config.csrf.SpaCsrfTokenRequestHandler;
 import com.sprint.mission.discodeit.security.jwt.JwtAuthenticationFilter;
 import com.sprint.mission.discodeit.security.jwt.JwtLoginSuccessHandler;
+import com.sprint.mission.discodeit.security.jwt.JwtLogoutHandler;
 import com.sprint.mission.discodeit.security.DiscodeitUserDetailsService;
 import com.sprint.mission.discodeit.security.LoginFailureHandler;
 import com.sprint.mission.discodeit.security.RestAccessDeniedHandler;
@@ -32,6 +33,7 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 @Import({
     JwtAuthenticationFilter.class,
     JwtLoginSuccessHandler.class,
+    JwtLogoutHandler.class,
     LoginFailureHandler.class,
     RestAuthenticationEntryPoint.class,
     RestAccessDeniedHandler.class,
@@ -46,10 +48,10 @@ public class SecurityConfig {
         HttpSecurity http,
         JwtAuthenticationFilter jwtAuthenticationFilter,
         JwtLoginSuccessHandler jwtLoginSuccessHandler,
+        JwtLogoutHandler jwtLogoutHandler,
         LoginFailureHandler loginFailureHandler,
         RestAuthenticationEntryPoint restAuthenticationEntryPoint,
-        RestAccessDeniedHandler restAccessDeniedHandler,
-        DiscodeitUserDetailsService userDetailsService
+        RestAccessDeniedHandler restAccessDeniedHandler
     ) throws Exception {
         RequestMatcher nonApiRequestMatcher = request -> !request.getRequestURI().startsWith("/api/");
 
@@ -72,6 +74,7 @@ public class SecurityConfig {
         );
         http.logout(logout -> logout
             .logoutUrl("/api/auth/logout")
+            .addLogoutHandler(jwtLogoutHandler)
             .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
         );
         http.exceptionHandling(ex -> ex
