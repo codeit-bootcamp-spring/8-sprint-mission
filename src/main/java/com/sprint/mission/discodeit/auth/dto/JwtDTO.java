@@ -5,26 +5,27 @@ import com.sprint.mission.discodeit.dto.data.UserDto;
 /**
  * JWT 응답 DTO
  * 로그인/재발급 시 사용자 정보와 액세스 토큰을 함께 반환한다.
+ * 프론트엔드는 { userDto, accessToken } 구조를 기대한다.
  */
 public class JwtDTO {
 
-  private UserDto user;
+  private UserDto userDto;
   private String accessToken;
 
   public JwtDTO() {
   }
 
-  public JwtDTO(UserDto user, String accessToken) {
-    this.user = user;
+  public JwtDTO(UserDto userDto, String accessToken) {
+    this.userDto = userDto;
     this.accessToken = accessToken;
   }
 
-  public UserDto getUser() {
-    return user;
+  public UserDto getUserDto() {
+    return userDto;
   }
 
-  public void setUser(UserDto user) {
-    this.user = user;
+  public void setUserDto(UserDto userDto) {
+    this.userDto = userDto;
   }
 
   public String getAccessToken() {
@@ -37,8 +38,6 @@ public class JwtDTO {
 
   @Override
   public String toString() {
-    return "JwtDTO{" + "user=" + user + ", accessToken='" + accessToken + '\'' + '}';
+    return "JwtDTO{" + "userDto=" + userDto + ", accessToken='" + accessToken + '\'' + '}';
   }
 }
-
-

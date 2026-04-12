@@ -134,7 +134,7 @@ class AuthControllerTest {
     mockMvc.perform(post("/api/auth/refresh")
             .cookie(new Cookie(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME, refreshToken)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.user.username").value(username))
+        .andExpect(jsonPath("$.userDto.username").value(username))
         .andExpect(jsonPath("$.accessToken").value(accessToken));
 
     verify(jwtTokenProvider).addRefreshCookie(org.mockito.ArgumentMatchers.any(),
