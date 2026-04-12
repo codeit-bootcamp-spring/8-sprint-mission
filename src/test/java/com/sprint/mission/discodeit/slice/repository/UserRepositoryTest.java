@@ -2,7 +2,7 @@ package com.sprint.mission.discodeit.slice.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.sprint.mission.discodeit.config.JpaConfig;
+import com.sprint.mission.discodeit.config.AppConfig;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import java.util.List;
@@ -15,7 +15,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
-@Import(JpaConfig.class)
+@Import(AppConfig.class)
 @DataJpaTest
 @ActiveProfiles("test")
 @DisplayName("UserRepository 테스트")
