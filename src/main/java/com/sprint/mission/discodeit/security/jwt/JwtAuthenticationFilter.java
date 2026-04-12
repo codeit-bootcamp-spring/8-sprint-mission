@@ -1,12 +1,15 @@
 package com.sprint.mission.discodeit.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.dto.response.ErrorResponse;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.service.basic.DiscodeitUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -55,14 +58,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           SecurityContextHolder.getContext().setAuthentication(authentication);
         } else {
           // 토큰 유효성 검사 실패 시 처리(401)
-          sendUnauthorized(response, "Invalid JWT token");
+          sendUnauthorized(response, ErrorCode.INVALID_TOKEN);
           return;
         }
       }
     } catch (Exception e) {
       // 인증 과정에서 예외 발생 시 인증 컨텍스트를 초기화하고 401 응답을 반환한다.
       SecurityContextHolder.clearContext();
-      sendUnauthorized(response, "JWT authentication failed");
+      sendUnauthorized(response, ErrorCode.UNEXPECTED_PRINCIPAL_TYPE);
       return;
     }
 
@@ -77,20 +80,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     return null;
   }
 
-  private void sendUnauthorized(HttpServletResponse response, String message) throws IOException {
+  private void sendUnauthorized(HttpServletResponse response, ErrorCode errorCode)
+      throws IOException {
 
     // 응답 헤더 설정
-    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    response.setStatus(errorCode.getStatus().value());
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     response.setCharacterEncoding("UTF-8");
 
     // JSON 응답 전송
-    String responseBody = objectMapper.createObjectNode()
-        .put("success", false)
-        .put("message", message)
-        .toString();
+    ErrorResponse errorResponse = new ErrorResponse(
+        Instant.now(),
+        errorCode.name(),
+        errorCode.getMessage(),
+        null,
+        "AuthenticationTypeException",
+        errorCode.getStatus().value()
+    );
 
     // 응답 바디 전송
-    response.getWriter().write(responseBody);
+    response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
   }
 }

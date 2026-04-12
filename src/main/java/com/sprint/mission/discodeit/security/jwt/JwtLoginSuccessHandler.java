@@ -4,11 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.dto.JwtDTO;
 import com.sprint.mission.discodeit.dto.JwtInformation;
 import com.sprint.mission.discodeit.dto.UserDto;
+import com.sprint.mission.discodeit.dto.response.ErrorResponse;
 import com.sprint.mission.discodeit.entity.DiscodeitUserDetails;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -52,18 +55,36 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
             )
         );
       } catch (Exception e) {
-        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        response.getWriter().write(objectMapper.createObjectNode()
-            .put("success", false)
-            .put("message", "Token generation failed")
-            .toString());
+        ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
+
+        response.setStatus(errorCode.getStatus().value());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+            Instant.now(),
+            errorCode.name(),
+            errorCode.getMessage(),
+            null,
+            e.getClass().getSimpleName(),
+            errorCode.getStatus().value()
+        );
+
+        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
       }
     } else {
-      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-      response.getWriter().write(objectMapper.createObjectNode()
-          .put("success", false)
-          .put("message", "Invalid principal")
-          .toString());
+      ErrorCode errorCode = ErrorCode.UNEXPECTED_PRINCIPAL_TYPE;
+
+      response.setStatus(errorCode.getStatus().value());
+
+      ErrorResponse errorResponse = new ErrorResponse(
+          Instant.now(),
+          errorCode.name(),
+          errorCode.getMessage(),
+          null,
+          "SecurityContext Principal Type Mismatch",
+          errorCode.getStatus().value()
+      );
+
+      response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }
   }
 }

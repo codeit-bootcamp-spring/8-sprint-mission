@@ -121,7 +121,7 @@ public class JwtTokenProvider {
     return cookie;
   }
 
-  // Refresh Token은 담은 HttpOnly가 적용된 쿠키를 응답에 추가
+  // Refresh Token을 담은 HttpOnly가 적용된 쿠키를 응답에 추가
   public void addRefreshCookie(HttpServletResponse response, String refreshToken) {
 
     Cookie cookie = generateRefreshTokenCookie(refreshToken);
@@ -188,28 +188,6 @@ public class JwtTokenProvider {
       String subject = signedJWT.getJWTClaimsSet().getSubject();
 
       return subject;
-    } catch (Exception e) {
-      throw new InvalidTokenException();
-    }
-  }
-
-  public String getTokenId(String token) {
-    try {
-      SignedJWT signedJWT = SignedJWT.parse(token);
-      String jti = signedJWT.getJWTClaimsSet().getJWTID();
-
-      return jti;
-    } catch (Exception e) {
-      throw new InvalidTokenException();
-    }
-  }
-
-  public Date getIssuedAt(String token) {
-    try {
-      SignedJWT signedJWT = SignedJWT.parse(token);
-      Date iat = signedJWT.getJWTClaimsSet().getIssueTime();
-
-      return iat;
     } catch (Exception e) {
       throw new InvalidTokenException();
     }
