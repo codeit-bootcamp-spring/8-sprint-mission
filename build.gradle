@@ -80,6 +80,8 @@ dependencies {
 
     // Amazon S3 파일 업로드/다운로드/삭제를 위한 클라이언트
     implementation 'software.amazon.awssdk:s3'
+
+    implementation 'com.nimbusds:nimbus-jose-jwt:10.3'
 }
 
 tasks.named('test') {
