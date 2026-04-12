@@ -7,6 +7,9 @@ import com.sprint.mission.discodeit.auth.handler.CustomAccessDeniedHandler;
 import com.sprint.mission.discodeit.auth.handler.CustomSessionExpiredStrategy;
 import com.sprint.mission.discodeit.auth.handler.LoginFailureHandler;
 import com.sprint.mission.discodeit.auth.handler.LoginSuccessHandler;
+import com.sprint.mission.discodeit.security.JwtAuthenticationFilter;
+import com.sprint.mission.discodeit.security.JwtLoginSuccessHandler;
+import com.sprint.mission.discodeit.security.JwtLogoutHandler;
 import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +30,8 @@ import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -42,7 +47,8 @@ public class SecurityConfig {
   private final CustomSessionExpiredStrategy customSessionExpiredStrategy;
   private final ObjectMapper objectMapper;
   private final String[] PUBLIC_URLS = {"/", "/index.html", "/favicon.ico", "/assets/**", "/error",
-      "/swagger-ui/**", "/v3/api-docs/**", "/api/auth/login", "/api/auth/logout"};
+      "/swagger-ui/**", "/v3/api-docs/**", "/api/auth/login", "/api/auth/logout",
+      "/api/auth/refresh"};
 
   @Value("${security.remember-me-key}")
   private String rememberMeKey;
@@ -70,31 +76,36 @@ public class SecurityConfig {
       LoginSuccessHandler loginSuccessHandler, LoginFailureHandler loginFailureHandler,
       CustomAccessDeniedHandler customAccessDeniedHandler,
       DaoAuthenticationProvider authenticationProvider,
-      PersistentTokenBasedRememberMeServices rememberMeServices) throws Exception {
+      JwtLoginSuccessHandler jwtLoginSuccessHandler, JwtLogoutHandler jwtLogoutHandler,
+      JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
     http
         // 접근 권한 설정
-        .authorizeHttpRequests(
-            auth -> auth
-                .requestMatchers(PUBLIC_URLS).permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // 회원가입
-                .anyRequest().authenticated()
-        )
+        .authorizeHttpRequests(auth -> auth.requestMatchers(PUBLIC_URLS).permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // 회원가입
+            .anyRequest().authenticated())
         // CSRF 설정
         .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             .csrfTokenRequestHandler(spaCsrfTokenRequestHandler)
-            // 로그인, 로그아웃, 회원가입은 CSRF 검증에서 제외
-            .ignoringRequestMatchers("/api/auth/login", "/api/auth/logout", "/api/users"))
-        // 폼 로그인 설정
-        .formLogin(
-            formLogin -> formLogin.loginPage("/index.html").loginProcessingUrl("/api/auth/login")
-                .successHandler(loginSuccessHandler).failureHandler(loginFailureHandler)
-                .permitAll())
+            // 로그인, 로그아웃, 재발급, 회원가입은 CSRF 검증에서 제외
+            .ignoringRequestMatchers("/api/auth/login", "/api/auth/logout", "/api/auth/refresh",
+                "/api/users"))
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+
+        // 로그인 설정
+        .formLogin(form -> form.loginProcessingUrl("/api/auth/login")
+            .successHandler(jwtLoginSuccessHandler).failureHandler(loginFailureHandler).permitAll())
+
         // 로그아웃 설정
-        .logout(logout -> logout.logoutUrl("/api/auth/logout")
-            .deleteCookies(AuthConstants.COOKIE_SESSION_ID, AuthConstants.COOKIE_XSRF_TOKEN)
-            .invalidateHttpSession(true).clearAuthentication(true)
-            .logoutSuccessHandler((request, response, authentication) -> response.setStatus(200)))
+        .logout(logout -> logout
+            // 로그아웃 처리 URL
+            .logoutUrl("/api/auth/logout")
+            // 로그아웃 처리 핸들러
+            .addLogoutHandler(jwtLogoutHandler)
+            // 로그아웃 성공 시 처리 핸들러
+            .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
+            // 로그아웃 페이지는 인증 없이 접근 가능
+            .permitAll())
         // 예외 처리 설정
         .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, authException) -> {
           AuthErrorResponse errorResponse = new AuthErrorResponse(AuthConstants.ERROR_UNAUTHORIZED,
@@ -109,9 +120,8 @@ public class SecurityConfig {
         .sessionManagement(management -> management.sessionConcurrency(
             concurrency -> concurrency.maximumSessions(1)
                 .expiredSessionStrategy(customSessionExpiredStrategy)
-                .sessionRegistry(sessionRegistry()))).rememberMe(
-            rememberMe -> rememberMe.key(rememberMeKey).tokenValiditySeconds(7 * 24 * 60 * 60) // 7일
-                .rememberMeServices(rememberMeServices))
+                .sessionRegistry(sessionRegistry())))
+
         // 인증 제공자
         .authenticationProvider(authenticationProvider);
 
