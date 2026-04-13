@@ -18,9 +18,7 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -49,15 +47,13 @@ public class SecurityConfig {
       JwtLogoutHandler jwtLogoutHandler) throws Exception {
 
     http
-        .headers(headers -> headers
-            .frameOptions(FrameOptionsConfig::sameOrigin)
-        )
         .csrf(csrf -> csrf
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
-            .ignoringRequestMatchers("/h2-console/**")
         )
         .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/favicon.ico", "/index.html", "/static/**", "/assets/**", "/css/**",
+                "/js/**", "/images/**").permitAll()
             .requestMatchers("/").permitAll()
             .requestMatchers("/error").permitAll()
             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
@@ -92,13 +88,6 @@ public class SecurityConfig {
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
-  }
-
-  @Bean
-  public WebSecurityCustomizer webSecurityCustomizer() {
-    return web -> web.ignoring()
-        .requestMatchers("/favicon.ico", "/error", "/index.html")
-        .requestMatchers("/static/**", "/assets/**", "/css/**", "/js/**", "/images/**");
   }
 
   @Bean
