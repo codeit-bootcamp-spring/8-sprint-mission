@@ -1,6 +1,6 @@
 package com.sprint.mission.discodeit.service.auth;
 
-import com.sprint.mission.discodeit.DTO.dto.UserDto;
+import com.sprint.mission.discodeit.dto.dto.UserDto;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;

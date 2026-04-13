@@ -1,8 +1,8 @@
 package com.sprint.mission.discodeit.init;
 
-import com.sprint.mission.discodeit.DTO.dto.UserDto;
-import com.sprint.mission.discodeit.DTO.request.UserCreateRequest;
-import com.sprint.mission.discodeit.DTO.request.UserRoleUpdateRequest;
+import com.sprint.mission.discodeit.dto.dto.UserDto;
+import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
+import com.sprint.mission.discodeit.dto.request.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.exception.UserException;
 import com.sprint.mission.discodeit.service.AuthService;

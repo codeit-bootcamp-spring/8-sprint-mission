@@ -12,9 +12,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.sprint.mission.discodeit.DTO.dto.UserDto;
-import com.sprint.mission.discodeit.DTO.request.UserCreateRequest;
-import com.sprint.mission.discodeit.DTO.request.UserUpdateRequest;
+import com.sprint.mission.discodeit.dto.dto.UserDto;
+import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
+import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.exception.UserException.UserNotFoundException;
 
