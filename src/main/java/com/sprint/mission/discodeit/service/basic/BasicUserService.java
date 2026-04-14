@@ -6,7 +6,7 @@ import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentSaveFailedException;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.exception.user.UserEmailAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.exception.user.UsernameAlreadyExistsException;
@@ -14,12 +14,12 @@ import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,8 +34,8 @@ public class BasicUserService implements UserService {
   private final UserRepository userRepository;
   private final BinaryContentRepository binaryContentRepository;
   private final UserMapper userMapper;
-  private final BinaryContentStorage binaryContentStorage;
   private final PasswordEncoder passwordEncoder;
+  private final ApplicationEventPublisher eventPublisher;
 
 
   @Transactional
@@ -67,16 +67,18 @@ public class BasicUserService implements UserService {
           byte[] bytes = profileRequest.bytes();
           BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
               contentType);
-          binaryContentRepository.save(binaryContent);
+          BinaryContent savedBinaryContent = binaryContentRepository.save(binaryContent);
 
-          try {
-            binaryContentStorage.put(binaryContent.getId(), bytes);
-          } catch (Exception e) {
-            log.error("[UserService] 프로필 이미지 스토리지 저장 실패 - 파일명: {}, 원인: {}",
-                profileRequest.fileName(), e.getMessage());
-            throw new BinaryContentSaveFailedException(binaryContent.getId(), fileName);
-          }
-          return binaryContent;
+          BinaryContentCreatedEvent event = BinaryContentCreatedEvent.now(
+              savedBinaryContent.getId(),
+              savedBinaryContent.getFileName(),
+              bytes
+          );
+
+          eventPublisher.publishEvent(event);
+
+          log.debug("[UserService] 프로필 저장 이벤트 발행 완료 - ID: {}", savedBinaryContent.getId());
+          return savedBinaryContent;
         })
         .orElse(null);
 
@@ -86,7 +88,8 @@ public class BasicUserService implements UserService {
 
     userRepository.save(user);
 
-    log.info("[UserService] 사용자 생성 완료 - ID: {},  프로필 여부: {}", user.getId(), (profile != null));
+    log.info("[UserService] 사용자 생성 완료 - ID: {},  프로필 여부: {}", user.getId(),
+        (profile != null));
     return userMapper.toDto(user);
   }
 
@@ -118,6 +121,7 @@ public class BasicUserService implements UserService {
     String newUsername = userUpdateRequest.newUsername();
     String newEmail = userUpdateRequest.newEmail();
     String newPassword = userUpdateRequest.newPassword();
+    String encryptedPassword = passwordEncoder.encode(newPassword);
 
     if (newUsername != null && !newUsername.equals(user.getUsername())) {
       if (userRepository.existsByUsername(newUsername)) { // username 중복 확인
@@ -147,18 +151,20 @@ public class BasicUserService implements UserService {
           profileRequest.contentType()
       );
 
-      binaryContentRepository.save(newProfile);
+      BinaryContent updatedBinaryContent = binaryContentRepository.save(newProfile);
 
-      try {
-        binaryContentStorage.put(newProfile.getId(), bytes);
-      } catch (Exception e) {
-        log.error("[UserService] 프로필 이미지 스토리지 저장 실패 - 유저Id: {}, 원인: {}",
-            userId, e.getMessage());
-        throw new BinaryContentSaveFailedException(newProfile.getId(), newProfile.getFileName());
-      }
+      BinaryContentCreatedEvent event = BinaryContentCreatedEvent.now(
+          updatedBinaryContent.getId(),
+          updatedBinaryContent.getFileName(),
+          bytes
+      );
+
+      eventPublisher.publishEvent(event);
+
+      log.debug("[UserService] 프로필 수정 이벤트 발행 완료 - ID: {}", updatedBinaryContent.getId());
     }
 
-    user.update(newUsername, newEmail, newPassword, newProfile);
+    user.update(newUsername, newEmail, encryptedPassword, newProfile);
 
     log.info("[UserService] 사용자 수정 완료 - ID: {}", userId);
     return userMapper.toDto(user);

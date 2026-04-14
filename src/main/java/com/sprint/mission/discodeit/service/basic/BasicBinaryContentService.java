@@ -3,17 +3,19 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.base.BinaryContentStatus;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
-import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentSaveFailedException;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -24,7 +26,7 @@ public class BasicBinaryContentService implements BinaryContentService {
 
   private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentMapper binaryContentMapper;
-  private final BinaryContentStorage binaryContentStorage;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   @Override
@@ -41,18 +43,18 @@ public class BasicBinaryContentService implements BinaryContentService {
         contentType
     );
 
-    binaryContentRepository.save(binaryContent);
+    BinaryContent savedBinaryContent = binaryContentRepository.save(binaryContent);
     log.debug("[BinaryContentService] DB 저장 완료 - ID: {}", binaryContent.getId());
 
-    try {
-      binaryContentStorage.put(binaryContent.getId(), bytes);
-    } catch (Exception e) {
-      log.error("[BinaryContentService] 스토리지 저장 실패 - 이름: {}, 원인: {}", binaryContent.getId(),
-          e.getMessage());
-      throw new BinaryContentSaveFailedException(binaryContent.getId(), fileName);
-    }
+    BinaryContentCreatedEvent event = BinaryContentCreatedEvent.now(
+        savedBinaryContent.getId(),
+        savedBinaryContent.getFileName(),
+        bytes
+    );
 
-    log.info("[BinaryContentService] 파일 저장 완료 - Id: {}", binaryContent.getId());
+    eventPublisher.publishEvent(event);
+
+    log.debug("[BinaryContentService] 파일 저장 이벤트 발행 완료 - Id: {}", savedBinaryContent.getId());
     return binaryContentMapper.toDto(binaryContent);
   }
 
@@ -93,5 +95,19 @@ public class BasicBinaryContentService implements BinaryContentService {
 
     binaryContentRepository.deleteById(binaryContentId);
     log.info("[BinaryContentService] 파일 삭제 완료 - Id: {}", binaryContentId);
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  @Override
+  public BinaryContentDto updateStatus(UUID binaryContentId, BinaryContentStatus status) {
+    log.info("[BinaryContentService] 파일 상태 업데이트 시작 - Id: {}", binaryContentId);
+
+    BinaryContent binaryContent = binaryContentRepository.findById(binaryContentId)
+        .orElseThrow(() -> new BinaryContentNotFoundException(binaryContentId));
+
+    binaryContent.updateStatus(status);
+
+    log.info("[BinaryContentService] 파일 상태 업데이트 완료 - Id: {}, status: {}", binaryContentId, status);
+    return binaryContentMapper.toDto(binaryContent);
   }
 }
