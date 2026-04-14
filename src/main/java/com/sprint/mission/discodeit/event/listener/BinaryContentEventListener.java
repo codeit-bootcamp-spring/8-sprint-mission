@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.event.listener;
 
+import com.sprint.mission.discodeit.entity.base.BinaryContentStatus;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
@@ -26,9 +27,11 @@ public class BinaryContentEventListener {
 
     try {
       binaryContentStorage.put(event.binaryContentId(), event.data());
+      binaryContentService.updateStatus(event.binaryContentId(), BinaryContentStatus.SUCCESS);
 
       log.info("[BinaryContentEventListener] 바이너리 데이터 저장 완료 - ID: {}", event.binaryContentId());
     } catch (Exception e) {
+      binaryContentService.updateStatus(event.binaryContentId(), BinaryContentStatus.FAIL);
 
       log.error("[BinaryContentEventListener] 바이너리 데이터 저장 실패 - ID: {}, 파일명: {}, 원인: {}",
           event.binaryContentId(), event.fileName(), e.getMessage());
