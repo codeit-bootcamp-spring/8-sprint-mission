@@ -1,21 +1,22 @@
 package com.sprint.mission.discodeit.event;
 
+import com.sprint.mission.discodeit.entity.User;
 import java.time.Instant;
 import java.util.UUID;
 
 public record RoleUpdatedEvent(
     UUID userId,
-    String userName,
+    User user,
     String previousRole,
     String newRole,
     Instant occurredAt
 ) {
 
   public static RoleUpdatedEvent now(
-      UUID messageId, String content, String channelName, String authorName
+      UUID userId, User user, String previousRole, String newRole
   ) {
     return new RoleUpdatedEvent(
-        messageId, content, channelName, authorName, Instant.now()
+        userId, user, previousRole, newRole, Instant.now()
     );
   }
 }
