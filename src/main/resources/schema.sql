@@ -1,10 +1,10 @@
 -- 1. 가장 하위 자식 테이블 (관계 매핑 테이블)
 DROP TABLE IF EXISTS message_attachments;
-DROP TABLE IF EXISTS persistent_logins CASCADE;
 
 -- 2. 외래 키로 다른 테이블을 참조하고 있는 테이블들
 DROP TABLE IF EXISTS messages;
 DROP TABLE IF EXISTS read_statuses;
+DROP TABLE IF EXISTS notifications;
 
 -- 3. 더 이상 자식이 없는 부모 테이블들
 DROP TABLE IF EXISTS users;
@@ -108,6 +108,20 @@ CREATE TABLE message_attachments
     CONSTRAINT fk_message_attachments_binary_contents
         FOREIGN KEY (attachment_id)
             REFERENCES binary_contents (id)
+            ON DELETE CASCADE
+);
+
+CREATE TABLE notifications
+(
+    id          uuid                     NOT NULL,
+    created_at  timestamp with time zone NOT NULL,
+    receiver_id uuid                     NOT NULL,
+    title       text                     NOT NULL,
+    content     text                     NOT NULL,
+
+    CONSTRAINT fk_notification_users
+        FOREIGN KEY (receiver_id)
+            REFERENCES users (id)
             ON DELETE CASCADE
 );
 
