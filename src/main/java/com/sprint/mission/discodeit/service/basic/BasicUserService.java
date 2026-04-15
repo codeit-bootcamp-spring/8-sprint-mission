@@ -5,8 +5,11 @@ import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.BinaryContentDeletedEvent;
 import com.sprint.mission.discodeit.exception.UserException.DuplicateEmailException;
 import com.sprint.mission.discodeit.exception.UserException.DuplicateUsernameException;
 import com.sprint.mission.discodeit.exception.UserException.UserNotFoundException;
@@ -20,6 +23,7 @@ import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,13 +41,13 @@ public class BasicUserService implements UserService {
 
     private final UserRepository userRepository;
     private final BinaryContentRepository binaryContentRepository;
-    private final BinaryContentStorage binaryContentStorage;
     private final MessageRepository messageRepository;
     private final ReadStatusRepository readStatusRepository;
 
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtRegistry jwtRegistry;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional
@@ -66,8 +70,8 @@ public class BasicUserService implements UserService {
                 .orElse(null);
 
         if (profile != null) {
-            binaryContentStorage.put(profile.getId(), optionalProfileCreateRequest.get().bytes());
-            log.debug("Service: 사용자 프로필 이미지 생성 완료 - ID: {}", profile.getId());
+            createdEvent(profile.getId(), optionalProfileCreateRequest.get().bytes());
+            log.debug("Service: 사용자 프로필 이미지 이벤트 발행 완료 - ID: {}", profile.getId());
         }
 
         String encodedPassword = passwordEncoder.encode(request.password());
@@ -76,6 +80,7 @@ public class BasicUserService implements UserService {
         User savedUser = userRepository.save(user);
 
         log.info("Service: 유저 생성 완료 및 DB 저장 완료 - ID: {}", savedUser.getId());
+
 
         return userMapper.toDto(savedUser, false);
     }
@@ -136,13 +141,12 @@ public class BasicUserService implements UserService {
             if (user.getProfile() != null) {
                 UUID userProfileId = user.getProfile().getId();
                 //byte를 저장해놓은 기존 파일 삭제
-                binaryContentStorage.delete(userProfileId);
-
+                deletedEvent(newProfile.getId());
                 binaryContentRepository.delete(user.getProfile());
             }
             newProfile = saveBinaryContent(optionalProfileCreateRequest.get());
-            binaryContentStorage.put(newProfile.getId(), optionalProfileCreateRequest.get().bytes());
-            log.debug("Service: 사용자 프로필 수정 완료 - ID: {}", newProfile.getId());
+            createdEvent(newProfile.getId(), optionalProfileCreateRequest.get().bytes());
+            log.debug("Service: 사용자 프로필 수정 이벤트 발행 완료 - ID: {}", newProfile.getId());
         }
 
         String encodedPassword = user.getPassword();
@@ -209,9 +213,27 @@ public class BasicUserService implements UserService {
         BinaryContent binaryContent = new BinaryContent(
                 fileName,
                 (long) bytes.length,
-                contentType
+                contentType,
+                BinaryContentStatus.PROCESSING
         );
         return binaryContentRepository.save(binaryContent);
+    }
+
+    // 생성 이벤트 발행 중복 코드
+    private void createdEvent(UUID id, byte[] bytes) {
+        BinaryContentCreatedEvent event = new BinaryContentCreatedEvent(
+                id,
+                bytes
+        );
+        applicationEventPublisher.publishEvent(event);
+    }
+
+    // 삭제 이벤트 발생
+    private void deletedEvent(UUID id) {
+        BinaryContentDeletedEvent event = new BinaryContentDeletedEvent(
+                id
+        );
+        applicationEventPublisher.publishEvent(event);
     }
 
     private boolean isUserOnline(UUID userId) {

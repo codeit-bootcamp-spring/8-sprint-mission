@@ -12,10 +12,12 @@ CREATE TABLE IF NOT EXISTS binary_contents
 (
     -- column level constraints
     id           uuid,
-    created_at   timestamp with time zone NOT NULL,
-    file_name    varchar(255)             NOT NULL,
-    size         bigint                   NOT NULL,
-    content_type varchar(100)             NOT NULL,
+    created_at   timestamp with time zone         NOT NULL,
+    updated_at   timeStamp with time zone,
+    file_name    varchar(255)                     NOT NULL,
+    size         bigint                           NOT NULL,
+    content_type varchar(100)                     NOT NULL,
+    status       varchar(20) DEFAULT 'PROCESSING' NOT NULL,
     -- table level constraints
     CONSTRAINT pk_binary_contents_id PRIMARY KEY (id)
 );

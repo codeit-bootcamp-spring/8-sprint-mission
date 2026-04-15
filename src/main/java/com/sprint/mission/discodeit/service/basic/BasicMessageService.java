@@ -5,10 +5,8 @@ import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
-import com.sprint.mission.discodeit.entity.BinaryContent;
-import com.sprint.mission.discodeit.entity.Channel;
-import com.sprint.mission.discodeit.entity.Message;
-import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.entity.*;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.exception.ChannelExcption.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.MessageException.MessageNotFoundException;
 import com.sprint.mission.discodeit.exception.UserException.UserNotFoundException;
@@ -22,6 +20,7 @@ import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -45,10 +44,10 @@ public class BasicMessageService implements MessageService {
     private final UserRepository userRepository;
     private final ChannelRepository channelRepository;
     private final BinaryContentRepository binaryContentRepository;
-    private final BinaryContentStorage binaryContentStorage;
 
     private final MessageMapper messageMapper;
     private final PageResponseMapper pageResponseMapper;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional
@@ -79,11 +78,12 @@ public class BasicMessageService implements MessageService {
                             BinaryContent binaryContent = new BinaryContent(
                                     fileRequest.fileName(),
                                     (long) fileRequest.bytes().length,
-                                    fileRequest.contentType()
+                                    fileRequest.contentType(),
+                                    BinaryContentStatus.PROCESSING
                             );
                             binaryContentRepository.save(binaryContent);
 
-                            binaryContentStorage.put(binaryContent.getId(), fileRequest.bytes());
+                            createdEvent(binaryContent.getId(), fileRequest.bytes());
                             log.debug("Service: 메시지 첨부파일 업로드 성공 - ID: {}", binaryContent.getId());
                             return binaryContent;
                         }
@@ -167,5 +167,14 @@ public class BasicMessageService implements MessageService {
         messageRepository.delete(message);
 
         log.info("Service: 메시지 삭제 완료 - ID: {}", messageId);
+    }
+
+    // 생성 이벤트 발행 중복 코드
+    private void createdEvent(UUID id, byte[] bytes) {
+        BinaryContentCreatedEvent event = new BinaryContentCreatedEvent(
+                id,
+                bytes
+        );
+        applicationEventPublisher.publishEvent(event);
     }
 }
