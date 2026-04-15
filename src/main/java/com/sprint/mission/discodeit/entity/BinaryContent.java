@@ -41,6 +41,7 @@ public class BinaryContent extends BaseUpdatableEntity {
     this.fileName = fileName;
     this.size = size;
     this.contentType = contentType;
+    this.status = BinaryContentStatus.PROCESSING;
   }
 
   public void updateStatus(BinaryContentStatus status) {

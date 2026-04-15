@@ -95,6 +95,7 @@ public class BasicReadStatusService implements ReadStatusService {
   public ReadStatusDto update(UUID readStatusId, ReadStatusUpdateRequest readStatusUpdateRequest) {
     log.info("[ReadStatusService] 읽음 상태 수정 시작 - Id: {}", readStatusId);
     Instant lastReadAt = readStatusUpdateRequest.newLastReadAt();
+    boolean newNotificationEnabled = readStatusUpdateRequest.newNotificationEnabled();
 
     ReadStatus readStatus = readStatusRepository.findById(readStatusId)
         .orElseThrow(() -> {
@@ -102,7 +103,7 @@ public class BasicReadStatusService implements ReadStatusService {
           return new ReadStatusNotFoundException(readStatusId);
         });
 
-    readStatus.update(lastReadAt);
+    readStatus.update(lastReadAt, newNotificationEnabled);
 
     log.info("[ReadStatusService] 읽음 상태 수정 완료 - Id: {}", readStatus.getId());
     return readStatusMapper.toDto(readStatus);
