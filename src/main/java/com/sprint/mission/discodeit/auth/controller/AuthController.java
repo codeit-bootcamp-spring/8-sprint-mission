@@ -136,6 +136,7 @@ public class AuthController {
 
     jwtTokenProvider.addRefreshCookie(response, rotatedRefreshToken);
 
+    jwtSessionRegistry.register(jwtTokenProvider.toEntity(accessToken));
     final String newRefreshTokenJti = jwtTokenProvider.getTokenId(rotatedRefreshToken);
     jwtSessionRegistry.register(jwtTokenProvider.toEntity(rotatedRefreshToken));
     jwtSessionRegistry.markReplaced(oldRefreshTokenJti, newRefreshTokenJti);

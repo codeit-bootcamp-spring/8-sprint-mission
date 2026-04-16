@@ -117,6 +117,8 @@ class AuthControllerTest {
     User user = new User(username, "refresh@example.com", "encoded-password", null);
     DiscodeitUserDetails userDetails = new DiscodeitUserDetails(user);
     UserDto userDto = new UserDto(UUID.randomUUID(), username, "refresh@example.com", null, true, null);
+    JwtTokenEntity accessEntity = new JwtTokenEntity("access-jti", username, "access",
+        OffsetDateTime.now(), OffsetDateTime.now().plusMinutes(30));
     JwtTokenEntity rotatedEntity = new JwtTokenEntity(newRefreshJti, username, "refresh",
         OffsetDateTime.now(), OffsetDateTime.now().plusDays(7));
 
@@ -127,6 +129,7 @@ class AuthControllerTest {
     given(customUserDetailsService.loadUserByUsername(username)).willReturn(userDetails);
     given(jwtTokenProvider.generateAccessToken(userDetails)).willReturn(accessToken);
     given(jwtTokenProvider.generateRefreshToken(userDetails)).willReturn(rotatedRefreshToken);
+    given(jwtTokenProvider.toEntity(accessToken)).willReturn(accessEntity);
     given(jwtTokenProvider.getTokenId(rotatedRefreshToken)).willReturn(newRefreshJti);
     given(jwtTokenProvider.toEntity(rotatedRefreshToken)).willReturn(rotatedEntity);
     given(userMapper.toDto(user)).willReturn(userDto);
@@ -137,6 +140,9 @@ class AuthControllerTest {
         .andExpect(jsonPath("$.userDto.username").value(username))
         .andExpect(jsonPath("$.accessToken").value(accessToken));
 
+    verify(jwtSessionRegistry).register(accessEntity);
+    verify(jwtSessionRegistry).register(rotatedEntity);
+    verify(jwtSessionRegistry).markReplaced(oldRefreshJti, newRefreshJti);
     verify(jwtTokenProvider).addRefreshCookie(org.mockito.ArgumentMatchers.any(),
         org.mockito.ArgumentMatchers.eq(rotatedRefreshToken));
   }

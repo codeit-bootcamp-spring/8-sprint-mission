@@ -10,10 +10,12 @@ import com.sprint.mission.discodeit.auth.handler.LoginSuccessHandler;
 import com.sprint.mission.discodeit.security.JwtAuthenticationFilter;
 import com.sprint.mission.discodeit.security.JwtLoginSuccessHandler;
 import com.sprint.mission.discodeit.security.JwtLogoutHandler;
+import com.sprint.mission.discodeit.security.JwtProperties;
 import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -41,6 +43,7 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 @Configuration
 @RequiredArgsConstructor
 @Slf4j
+@EnableConfigurationProperties(JwtProperties.class)
 public class SecurityConfig {
 
   private final SpaCsrfTokenRequestHandler spaCsrfTokenRequestHandler;
