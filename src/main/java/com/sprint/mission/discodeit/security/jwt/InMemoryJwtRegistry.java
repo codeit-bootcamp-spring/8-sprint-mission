@@ -32,7 +32,7 @@ public class InMemoryJwtRegistry implements JwtRegistry {
   // 로그인 성공 시 JwtInformation 등록
   @Override
   public void registerJwtInformation(JwtInformation jwtInformation) {
-    UUID userId = jwtInformation.getUserDto().id();
+    UUID userId = jwtInformation.userDto().id();
 
     origin.compute(userId, (key, queue) -> {
       if (queue == null) {
@@ -66,7 +66,7 @@ public class InMemoryJwtRegistry implements JwtRegistry {
   public boolean hasActiveJwtInformationByAccessToken(String accessToken) {
     return origin.values().stream()
         .flatMap(Collection::stream)
-        .anyMatch(jwtInformation -> jwtInformation.getAccessToken().equals(accessToken));
+        .anyMatch(jwtInformation -> jwtInformation.accessToken().equals(accessToken));
   }
 
   // 토큰 재발급 시 유효한 토큰인지 확인할 때 활용
@@ -74,23 +74,17 @@ public class InMemoryJwtRegistry implements JwtRegistry {
   public boolean hasActiveJwtInformationByRefreshToken(String refreshToken) {
     return origin.values().stream()
         .flatMap(Collection::stream)
-        .anyMatch(jwtInformation -> jwtInformation.getRefreshToken().equals(refreshToken));
+        .anyMatch(jwtInformation -> jwtInformation.refreshToken().equals(refreshToken));
   }
 
   // 토큰 재발급 시 토큰 로테이션 수행
   @Override
   public void rotateJwtInformation(String refreshToken, JwtInformation newJwtInformation) {
-    UUID userId = newJwtInformation.getUserDto().id();
+    UUID userId = newJwtInformation.userDto().id();
 
     origin.computeIfPresent(userId, (key, queue) -> {
-      queue.stream()
-          .filter(jwtInformation -> jwtInformation.getRefreshToken().equals(refreshToken))
-          .findFirst()
-          .ifPresent(jwt -> jwt.rotate(
-              newJwtInformation.getAccessToken(),
-              newJwtInformation.getRefreshToken()
-          ));
-
+      queue.removeIf(jwt -> jwt.refreshToken().equals(refreshToken));
+      queue.add(newJwtInformation);
       return queue;
     });
   }
@@ -101,7 +95,7 @@ public class InMemoryJwtRegistry implements JwtRegistry {
   public void clearExpiredJwtInformation() {
     origin.forEach((userId, queue) -> {
       queue.removeIf(jwtInformation -> {
-        Date expiration = jwtTokenProvider.getExpiration(jwtInformation.getRefreshToken());
+        Date expiration = jwtTokenProvider.getExpiration(jwtInformation.refreshToken());
 
         boolean isExpired = expiration.before(new Date());
 
