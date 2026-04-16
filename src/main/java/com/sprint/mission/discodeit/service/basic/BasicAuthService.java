@@ -1,51 +1,88 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.dto.data.JwtDto;
+import com.sprint.mission.discodeit.dto.data.JwtInformation;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.dto.request.RoleUpdateRequest;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
+import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
+import com.sprint.mission.discodeit.security.jwt.JwtTokenProvider;
 import com.sprint.mission.discodeit.service.AuthService;
-import jakarta.transaction.Transactional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-@Service
+@Slf4j
 @RequiredArgsConstructor
-@Transactional
+@Service
 public class BasicAuthService implements AuthService {
 
   private final UserRepository userRepository;
   private final UserMapper userMapper;
-  private final SessionRegistry sessionRegistry;
+  private final JwtTokenProvider jwtTokenProvider;
+  private final UserDetailsService userDetailsService;
+  private final JwtRegistry jwtRegistry;
 
   @PreAuthorize("hasRole('ADMIN')")
+  @Transactional
   @Override
   public UserDto updateRole(RoleUpdateRequest request) {
+    return updateRoleInternal(request);
+  }
 
-    User user = userRepository.findById(request.userId())
-        .orElseThrow(() -> new UserNotFoundException());
+  @Transactional
+  @Override
+  public UserDto updateRoleInternal(RoleUpdateRequest request) {
+    UUID userId = request.userId();
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> UserNotFoundException.withId(userId));
 
-    user.updateRole(request.newRole());
+    Role newRole = request.newRole();
+    user.updateRole(newRole);
 
-    invalidateUserSessions(user.getId());
+    jwtRegistry.invalidateJwtInformationByUserId(userId);
 
     return userMapper.toDto(user);
   }
 
-  private void invalidateUserSessions(UUID userId) {
-    sessionRegistry.getAllPrincipals().stream()
-        .filter(principal -> principal instanceof DiscodeitUserDetails) // UserDetails 타입만 필터링
-        .map(principal -> (DiscodeitUserDetails) principal) // UserDetails 타입으로 형변환 (캐스팅)
-        .filter(userDetails -> userDetails.getUserDto().id().equals(userId)) //ID가 일치하는 유저만 통과
-        .flatMap(userDetails -> sessionRegistry.getAllSessions(userDetails, false)
-            .stream()) // 해당 유저의 세션들만 평평하게 꺼냄
-        .forEach(SessionInformation::expireNow); // 전부 만료
+  @Override
+  @Transactional
+  public JwtDto refresh(String refreshToken) {
+
+    if (!jwtRegistry.hasActiveJwtInformationByRefreshToken(refreshToken)) {
+      throw new RuntimeException("무효화되었거나 존재하지 않는 리프레시 토큰입니다.");
+    }
+
+    if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
+      throw new RuntimeException("유효하지 않은 리프레시 토큰입니다.");
+    }
+
+    String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
+
+    DiscodeitUserDetails userDetails = (DiscodeitUserDetails) userDetailsService.loadUserByUsername(
+        username);
+    try {
+      String newAccessToken = jwtTokenProvider.generateAccessToken(userDetails);
+
+      String newRefreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
+
+      UserDto userDto = userDetails.getUserDto();
+      JwtInformation newInfo = new JwtInformation(userDto, newAccessToken, newRefreshToken);
+      jwtRegistry.rotateJwtInformation(refreshToken, newInfo);
+
+      return new JwtDto(userDetails.getUserDto(), newAccessToken, newRefreshToken);
+
+    } catch (Exception e) {
+      throw new RuntimeException("토큰 재발급 중 오류가 발생했습니다: ", e);
+    }
   }
 }

@@ -5,13 +5,13 @@ import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
-import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
@@ -34,6 +34,7 @@ public class BasicUserService implements UserService {
   private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentStorage binaryContentStorage;
   private final PasswordEncoder passwordEncoder;
+  private final JwtRegistry jwtRegistry;
 
   @Transactional
   @Override
@@ -66,13 +67,14 @@ public class BasicUserService implements UserService {
     String password = userCreateRequest.password();
     String encodedPassword = passwordEncoder.encode(password);
 
-    User user = new User(username, email, encodedPassword, nullableProfile, Role.USER);
+    User user = new User(username, email, encodedPassword, nullableProfile);
 
     userRepository.save(user);
     log.info("사용자 생성 완료: id={}, username={}", user.getId(), username);
     return userMapper.toDto(user);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public UserDto find(UUID userId) {
     log.debug("사용자 조회 시작: id={}", userId);
@@ -83,6 +85,7 @@ public class BasicUserService implements UserService {
     return userDto;
   }
 
+  @Transactional(readOnly = true)
   @Override
   public List<UserDto> findAll() {
     log.debug("모든 사용자 조회 시작");
@@ -94,8 +97,8 @@ public class BasicUserService implements UserService {
     return userDtos;
   }
 
+  @PreAuthorize("principal.userDto.id == #userId")
   @Transactional
-  @PreAuthorize("#userId == principal.userDto.id() or hasRole('ADMIN')")
   @Override
   public UserDto update(UUID userId, UserUpdateRequest userUpdateRequest,
       Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
@@ -133,15 +136,18 @@ public class BasicUserService implements UserService {
         .orElse(null);
 
     String newPassword = userUpdateRequest.newPassword();
-    String encodedNewPassword = passwordEncoder.encode(newPassword);
-    user.update(newUsername, newEmail, encodedNewPassword, nullableProfile);
+    String encodedPassword = Optional.ofNullable(newPassword).map(passwordEncoder::encode)
+        .orElse(user.getPassword());
+    user.update(newUsername, newEmail, encodedPassword, nullableProfile);
 
-    log.info("사용자 수정 완료: id={}", userId);
+    jwtRegistry.invalidateJwtInformationByUserId(userId);
+
+    log.info("사용자 수정 완료 및 세션 무효화: id={}", userId);
     return userMapper.toDto(user);
   }
 
+  @PreAuthorize("principal.userDto.id == #userId")
   @Transactional
-  @PreAuthorize("#userId == principal.userDto.id() or hasRole('ADMIN')")
   @Override
   public void delete(UUID userId) {
     log.debug("사용자 삭제 시작: id={}", userId);
@@ -151,6 +157,9 @@ public class BasicUserService implements UserService {
     }
 
     userRepository.deleteById(userId);
-    log.info("사용자 삭제 완료: id={}", userId);
+
+    jwtRegistry.invalidateJwtInformationByUserId(userId);
+
+    log.info("사용자 삭제 완료 및 세션 무효화: id={}", userId);
   }
 }

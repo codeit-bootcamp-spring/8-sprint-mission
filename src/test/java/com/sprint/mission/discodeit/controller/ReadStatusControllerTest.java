@@ -3,10 +3,10 @@ package com.sprint.mission.discodeit.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -69,7 +69,8 @@ class ReadStatusControllerTest {
     // When & Then
     mockMvc.perform(post("/api/readStatuses")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(createRequest)))
+            .content(objectMapper.writeValueAsString(createRequest))
+            .with(csrf()))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.id").value(readStatusId.toString()))
         .andExpect(jsonPath("$.userId").value(userId.toString()))
@@ -90,7 +91,8 @@ class ReadStatusControllerTest {
     // When & Then
     mockMvc.perform(post("/api/readStatuses")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(invalidRequest)))
+            .content(objectMapper.writeValueAsString(invalidRequest))
+            .with(csrf()))
         .andExpect(status().isBadRequest());
   }
 
@@ -118,7 +120,8 @@ class ReadStatusControllerTest {
     // When & Then
     mockMvc.perform(patch("/api/readStatuses/{readStatusId}", readStatusId)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(updateRequest)))
+            .content(objectMapper.writeValueAsString(updateRequest))
+            .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(readStatusId.toString()))
         .andExpect(jsonPath("$.userId").value(userId.toString()))
@@ -141,7 +144,8 @@ class ReadStatusControllerTest {
     // When & Then
     mockMvc.perform(patch("/api/readStatuses/{readStatusId}", nonExistentId)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(updateRequest)))
+            .content(objectMapper.writeValueAsString(updateRequest))
+            .with(csrf()))
         .andExpect(status().isNotFound());
   }
 

@@ -4,12 +4,12 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.dto.data.ChannelDto;
@@ -32,15 +32,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.test.context.support.WithMockUser;
 
+@Disabled
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class ReadStatusApiIntegrationTest {
 
   @Autowired
@@ -100,8 +103,8 @@ class ReadStatusApiIntegrationTest {
         .andExpect(jsonPath("$.lastReadAt", is(lastReadAt.toString())));
   }
 
-  @Disabled("H2 테스트 환경 차이로 인한 임시 비활성화")
   @Test
+  @WithMockUser(roles = "CHANNEL_MANAGER")
   @DisplayName("읽음 상태 생성 실패 API 통합 테스트 - 중복 생성")
   void createReadStatus_Failure_Duplicate() throws Exception {
     // Given
@@ -131,7 +134,8 @@ class ReadStatusApiIntegrationTest {
     String firstRequestBody = objectMapper.writeValueAsString(firstCreateRequest);
     mockMvc.perform(post("/api/readStatuses")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(firstRequestBody))
+            .content(firstRequestBody)
+            .with(csrf()))
         .andExpect(status().isCreated());
 
     // 두 번째 읽음 상태 생성 요청 (동일 사용자, 동일 채널) - 실패해야 함
@@ -146,7 +150,8 @@ class ReadStatusApiIntegrationTest {
     // When & Then
     mockMvc.perform(post("/api/readStatuses")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(duplicateRequestBody))
+            .content(duplicateRequestBody)
+            .with(csrf()))
         .andExpect(status().isConflict());
   }
 

@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.controller.api;
 
+import com.sprint.mission.discodeit.dto.data.JwtDto;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.dto.request.RoleUpdateRequest;
 import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
@@ -10,25 +11,43 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.security.web.csrf.CsrfToken;
 
 @Tag(name = "Auth", description = "인증 API")
 public interface AuthApi {
 
-  @Operation(summary = "현재 사용자 정보 조회")
+  @Operation(summary = "CSRF 토큰 요청")
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "조회 성공",
-          content = @Content(schema = @Schema(implementation = UserDto.class))),
-      @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
+      @ApiResponse(responseCode = "204", description = "CSRF 토큰 요청 성공"),
+      @ApiResponse(responseCode = "400", description = "CSRF 토큰 요청 실패")
   })
-  ResponseEntity<UserDto> me(@Parameter(hidden = true) DiscodeitUserDetails userDetails);
+  ResponseEntity<Void> getCsrfToken(
+      @Parameter(hidden = true) CsrfToken csrfToken
+  );
 
-  @Operation(summary = "사용자 권한 수정", description = "관리자가 특정 사용자의 권한을 변경합니다.")
+  @Operation(summary = "사용자 권한 수정")
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "권한 수정 성공",
-          content = @Content(schema = @Schema(implementation = UserDto.class))),
-      @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+      @ApiResponse(
+          responseCode = "200", description = "권한 변경 성공",
+          content = @Content(schema = @Schema(implementation = UserDto.class))
+      )
   })
-  ResponseEntity<UserDto> updateRole(@RequestBody RoleUpdateRequest request);
-}
+  ResponseEntity<UserDto> updateRole(
+      @Parameter(description = "권한 수정 요청 정보") RoleUpdateRequest request);
+
+  @Operation(summary = "토큰 재발급", description = "리프레시 토큰을 사용하여 액세스 토큰을 재발급합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "200", description = "재발급 성공",
+          content = @Content(schema = @Schema(implementation = JwtDto.class))
+      ),
+      @ApiResponse(responseCode = "401", description = "유효하지 않은 리프레시 토큰")
+  })
+  ResponseEntity<JwtDto> refresh(
+      @Parameter(description = "쿠키에 저장된 리프레시 토큰", hidden = true) String refreshToken,
+      @Parameter(hidden = true) HttpServletResponse response
+  );
+  
+} 

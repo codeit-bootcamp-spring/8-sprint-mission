@@ -34,8 +34,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class MessageApiIntegrationTest {
 
   @Autowired
@@ -60,9 +61,6 @@ class MessageApiIntegrationTest {
 
   @Autowired
   private UserService userService;
-
-  @Autowired
-  private UserDetailsService userDetailsService;
 
   @Test
   @WithMockUser(roles = "CHANNEL_MANAGER")
@@ -254,14 +252,14 @@ class MessageApiIntegrationTest {
   void updateMessage_Failure_MessageNotFound() throws Exception {
     // Given
     UUID nonExistentMessageId = UUID.randomUUID();
-
-    // 테스트 사용자 생성
+    
+    // 테스트 사용자 생성 (권한 검증을 위해)
     UserCreateRequest userRequest = new UserCreateRequest(
-        "messageuser",
-        "messageuser@example.com",
+        "testuser",
+        "test@example.com",
         "Password1!"
     );
-
+    
     UserDto user = userService.create(userRequest, Optional.empty());
     DiscodeitUserDetails userDetails = new DiscodeitUserDetails(user, "Password1!");
 
@@ -332,14 +330,14 @@ class MessageApiIntegrationTest {
   void deleteMessage_Failure_MessageNotFound() throws Exception {
     // Given
     UUID nonExistentMessageId = UUID.randomUUID();
-
-    // 테스트 사용자 생성
+    
+    // 테스트 사용자 생성 (권한 검증을 위해)
     UserCreateRequest userRequest = new UserCreateRequest(
-        "messageuser",
-        "messageuser@example.com",
+        "testuser",
+        "test@example.com",
         "Password1!"
     );
-
+    
     UserDto user = userService.create(userRequest, Optional.empty());
     DiscodeitUserDetails userDetails = new DiscodeitUserDetails(user, "Password1!");
 

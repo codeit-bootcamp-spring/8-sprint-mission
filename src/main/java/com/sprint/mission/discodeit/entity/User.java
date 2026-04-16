@@ -33,12 +33,11 @@ public class User extends BaseUpdatableEntity {
   @Column(nullable = false)
   private Role role = Role.USER;
 
-  public User(String username, String email, String password, BinaryContent profile, Role role) {
+  public User(String username, String email, String password, BinaryContent profile) {
     this.username = username;
     this.email = email;
     this.password = password;
     this.profile = profile;
-    this.role = role;
   }
 
   public void update(String newUsername, String newEmail, String newPassword,
@@ -58,6 +57,8 @@ public class User extends BaseUpdatableEntity {
   }
 
   public void updateRole(Role newRole) {
-    this.role = newRole;
+    if (this.role != newRole) {
+      this.role = newRole;
+    }
   }
 }

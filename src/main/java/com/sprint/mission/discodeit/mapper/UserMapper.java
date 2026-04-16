@@ -2,30 +2,17 @@ package com.sprint.mission.discodeit.mapper;
 
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
-import java.util.UUID;
+import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.session.SessionRegistry;
 
 @Mapper(componentModel = "spring", uses = {BinaryContentMapper.class})
 public abstract class UserMapper {
 
   @Autowired
-  protected SessionRegistry sessionRegistry;
+  protected JwtRegistry jwtRegistry;
 
-  @Mapping(target = "online", expression = "java(isUserOnline(user.getId()))")
+  @Mapping(target = "online", expression = "java(jwtRegistry.hasActiveJwtInformationByUserId(user.getId()))")
   public abstract UserDto toDto(User user);
-
-  protected boolean isUserOnline(UUID userId) {
-    if (userId == null) {
-      return false;
-    }
-
-    return sessionRegistry.getAllPrincipals().stream()
-        .filter(principal -> principal instanceof DiscodeitUserDetails)
-        .map(principal -> (DiscodeitUserDetails) principal)
-        .anyMatch(userDetails -> userDetails.getUserDto().id().equals(userId));
-  }
 }
