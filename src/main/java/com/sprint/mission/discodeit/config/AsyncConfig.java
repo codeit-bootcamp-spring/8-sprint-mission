@@ -2,7 +2,9 @@ package com.sprint.mission.discodeit.config;
 
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +15,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+@Slf4j
 @Configuration
 @EnableAsync
 public class AsyncConfig implements AsyncConfigurer {
@@ -62,6 +65,18 @@ public class AsyncConfig implements AsyncConfigurer {
           MDC.clear();
         }
       };
+    };
+  }
+
+  // 이벤트 리스너의 try-catch문에서 잡지 못한 예외 또는 예상치 못한 예외를 처리하는 핸들러
+  @Override
+  public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
+    return (ex, method, params) -> {
+      log.error("비동기 메서드 실행 중 예외 발생! 메서드명: {}, 메시지: {}",
+          method.getName(), ex.getMessage());
+      for (Object param : params) {
+        log.error("파라미터: {}", param);
+      }
     };
   }
 }
