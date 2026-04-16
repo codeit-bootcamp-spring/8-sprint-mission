@@ -25,6 +25,9 @@ public class JwtTokenProvider {
 
   public static final String REFRESH_TOKEN_COOKIE_NAME = "REFRESH-TOKEN";
 
+  @Value("${jwt.cookie.secure:true}")
+  private boolean cookieSecure;
+
   // 액세스 토큰의 만료 시간(밀리초 단위)
   private final int accessTokenExpirationMs;
   // 리프레시 토큰의 만료 시간(밀리초 단위)
@@ -99,21 +102,14 @@ public class JwtTokenProvider {
   public Cookie generateRefreshTokenCookie(String refreshToken) {
     Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
     cookie.setHttpOnly(true);
-    cookie.setSecure(false);  // 로컬 테스트는 false (운영은 true)
+    cookie.setSecure(cookieSecure);
     cookie.setPath("/");
     cookie.setMaxAge(refreshTokenExpirationMs / 1000);
     return cookie;
   }
 
   public boolean validateAccessToken(String token) {
-    try {
-      SignedJWT signedJWT = SignedJWT.parse(token);
-      return signedJWT.verify(accessTokenVerifier) &&
-          signedJWT.getJWTClaimsSet().getExpirationTime().after(new Date());
-    } catch (Exception e) {
-      log.error("Invalid Access Token: {}", e.getMessage());
-      return false;
-    }
+    return validateToken(token, accessTokenVerifier, "access");
   }
 
   private boolean validateToken(String token, JWSVerifier verifier, String expectedType) {
@@ -156,7 +152,7 @@ public class JwtTokenProvider {
       SignedJWT signedJWT = SignedJWT.parse(token);
       return signedJWT.getJWTClaimsSet().getSubject();
     } catch (Exception e) {
-      return null;
+      throw new IllegalArgumentException("토큰에서 사용자 정보를 추출할 수 없습니다.", e);
     }
   }
 }

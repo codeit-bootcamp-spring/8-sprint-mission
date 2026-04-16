@@ -57,7 +57,8 @@ public class AuthController implements AuthApi {
 
   @PostMapping("refresh")
   public ResponseEntity<JwtDto> refresh(
-      @CookieValue(name = "REFRESH_TOKEN") String refreshToken, HttpServletResponse response
+      @CookieValue(name = JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME) String refreshToken,
+      HttpServletResponse response
   ) {
     JwtDto result = authService.refresh(refreshToken);
 

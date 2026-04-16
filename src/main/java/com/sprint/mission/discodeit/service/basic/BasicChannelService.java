@@ -35,7 +35,6 @@ public class BasicChannelService implements ChannelService {
   private final UserRepository userRepository;
   private final ChannelMapper channelMapper;
 
-  @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   @Transactional
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   @Override
@@ -88,7 +87,6 @@ public class BasicChannelService implements ChannelService {
         .toList();
   }
 
-  @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   @Transactional
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   @Override
@@ -106,7 +104,6 @@ public class BasicChannelService implements ChannelService {
     return channelMapper.toDto(channel);
   }
 
-  @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   @Transactional
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   @Override

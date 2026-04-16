@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -19,15 +20,16 @@ public class InMemoryJwtRegistry implements JwtRegistry {
 
   @Override
   public void registerJwtInformation(JwtInformation jwtInformation) {
-    Queue<JwtInformation> userQueue = origin.computeIfAbsent(
-        jwtInformation.getUserDto().id(),
-        k -> new java.util.concurrent.ConcurrentLinkedQueue<>()
-    );
-
-    while (userQueue.size() >= maxActiveJwtCount) {
-      userQueue.poll();
-    }
-    userQueue.offer(jwtInformation);
+    origin.compute(jwtInformation.getUserDto().id(), (key, existingQueue) -> {
+      Queue<JwtInformation> queue = (existingQueue != null)
+          ? existingQueue
+          : new ConcurrentLinkedQueue<>();
+      while (queue.size() >= maxActiveJwtCount) {
+        queue.poll();
+      }
+      queue.offer(jwtInformation);
+      return queue;
+    });
   }
 
   @Override
@@ -81,7 +83,7 @@ public class InMemoryJwtRegistry implements JwtRegistry {
     origin.values().forEach(queue ->
         queue.removeIf(info -> info.getRefreshToken().equals(refreshToken))
     );
-    //apahfl rhksfl
+    //메모리 관리
     origin.entrySet().removeIf(entry -> entry.getValue().isEmpty());
   }
 }

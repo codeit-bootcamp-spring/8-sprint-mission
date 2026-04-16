@@ -25,3 +25,7 @@ management:
   info:
     env:
       enabled: true
+
+jwt:
+  cookie:
+    secure: false

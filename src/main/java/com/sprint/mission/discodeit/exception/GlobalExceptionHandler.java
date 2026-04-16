@@ -92,21 +92,4 @@ public class GlobalExceptionHandler {
       case INTERNAL_SERVER_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR;
     };
   }
-
-  @ExceptionHandler(AuthorizationDeniedException.class)
-  public ResponseEntity<ErrorResponse> handleAuthorizationDeniedException(
-      AuthorizationDeniedException ex) {
-    log.error("권한 거부 오류 발생: {}", ex.getMessage());
-    ErrorResponse response = new ErrorResponse(
-        Instant.now(),
-        "AUTHORIZATION_DENIED",
-        "요청에 대한 권한이 없습니다",
-        null,
-        ex.getClass().getSimpleName(),
-        HttpStatus.FORBIDDEN.value()
-    );
-    return ResponseEntity
-        .status(HttpStatus.FORBIDDEN)
-        .body(response);
-  }
 }

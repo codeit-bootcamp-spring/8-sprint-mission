@@ -57,20 +57,20 @@ public class BasicAuthService implements AuthService {
   @Override
   @Transactional
   public JwtDto refresh(String refreshToken) {
+
+    if (!jwtRegistry.hasActiveJwtInformationByRefreshToken(refreshToken)) {
+      throw new RuntimeException("무효화되었거나 존재하지 않는 리프레시 토큰입니다.");
+    }
+
+    if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
+      throw new RuntimeException("유효하지 않은 리프레시 토큰입니다.");
+    }
+
+    String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
+
+    DiscodeitUserDetails userDetails = (DiscodeitUserDetails) userDetailsService.loadUserByUsername(
+        username);
     try {
-      if (!jwtRegistry.hasActiveJwtInformationByRefreshToken(refreshToken)) {
-        throw new RuntimeException("무효화되었거나 존재하지 않는 리프레시 토큰입니다.");
-      }
-
-      if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
-        throw new RuntimeException("유효하지 않은 리프레시 토큰입니다.");
-      }
-
-      String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
-
-      DiscodeitUserDetails userDetails = (DiscodeitUserDetails) userDetailsService.loadUserByUsername(
-          username);
-
       String newAccessToken = jwtTokenProvider.generateAccessToken(userDetails);
 
       String newRefreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
@@ -82,7 +82,7 @@ public class BasicAuthService implements AuthService {
       return new JwtDto(userDetails.getUserDto(), newAccessToken, newRefreshToken);
 
     } catch (Exception e) {
-      throw new RuntimeException("토큰 재발급 중 오류가 발생했습니다: " + e.getMessage());
+      throw new RuntimeException("토큰 재발급 중 오류가 발생했습니다: ", e);
     }
   }
 }

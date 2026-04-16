@@ -70,6 +70,8 @@ jwt:
   refresh-token:
     secret: "discodeit-mission-number-10-refresh-token-secret-key-1234"
     exp: 604800000
+  cookie:
+    secure: true
 
 
 
