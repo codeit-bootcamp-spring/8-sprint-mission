@@ -48,6 +48,13 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
   public UUID put(UUID binaryContentId, byte[] bytes) {
     Path path = resolvePath(binaryContentId);
 
+    /*try {
+      Thread.sleep(3000);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException("Thread interrupted while simulating delay", e);
+    }*/
+
     if (Files.exists(path)) {
       throw new IllegalArgumentException("해당 파일이 이미 존재합니다.");
     }
