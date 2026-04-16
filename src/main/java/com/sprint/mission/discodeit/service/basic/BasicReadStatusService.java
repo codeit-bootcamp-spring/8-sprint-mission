@@ -94,14 +94,32 @@ public class BasicReadStatusService implements ReadStatusService {
   @Override
   public ReadStatusDto update(UUID readStatusId, ReadStatusUpdateRequest readStatusUpdateRequest) {
     log.info("[ReadStatusService] 읽음 상태 수정 시작 - Id: {}", readStatusId);
-    Instant lastReadAt = readStatusUpdateRequest.newLastReadAt();
-    boolean newNotificationEnabled = readStatusUpdateRequest.newNotificationEnabled();
 
     ReadStatus readStatus = readStatusRepository.findById(readStatusId)
         .orElseThrow(() -> {
           log.warn("[ReadStatusService] 읽음 상태 수정 실패 - 존재하지 않는 Id: {}", readStatusId);
           return new ReadStatusNotFoundException(readStatusId);
         });
+
+    Instant lastReadAt;
+    boolean newNotificationEnabled;
+
+    if (readStatusUpdateRequest.newLastReadAt() == null) {
+      // 요청에 lastReadAt이 null이라는 것은 알림 활성 여부만 수정 요청이라는 뜻
+      // -> 기존 lastReadAt 유지
+      // 알림 활성 여부 수정일 경우 현재 상태와 반대로 갱신
+      lastReadAt = readStatus.getLastReadAt();
+      newNotificationEnabled = !readStatus.isNotificationEnabled();
+      log.info("[ReadStatusService] 알림 상태 토글 요청 - 변경 전: {}, 변경 후: {}",
+          readStatus.isNotificationEnabled(), newNotificationEnabled);
+    } else {
+      // null이 아닐 경우 사용자가 채팅을 마지막으로 읽은 시간만 수정이라는 뜻
+      // -> 새로운 lastReadAt 갱신
+      // 사용자의 마지막 채팅 읽은 시간 수정일 경우 알림 활성 여부 유지
+      lastReadAt = readStatusUpdateRequest.newLastReadAt();
+      newNotificationEnabled = readStatus.isNotificationEnabled();
+      log.info("[ReadStatusService] 읽음 시간 갱신 요청 - New LastReadAt: {}", lastReadAt);
+    }
 
     readStatus.update(lastReadAt, newNotificationEnabled);
 
