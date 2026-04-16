@@ -57,10 +57,14 @@ public class AuthController implements AuthApi {
       HttpServletResponse response) {
 
     if (refreshToken == null || !jwtTokenProvider.validateRefreshToken(refreshToken)) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+      log.warn("[AuthController] 유효하지 않거나 누락된 리프레시 토큰입니다. Token: {}",
+          (refreshToken == null ? "null" : "invalid_format"));
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     if (!jwtRegistry.hasActiveJwtInformationByRefreshToken(refreshToken)) {
+      log.warn("[AuthController] 레지스트리에 존재하지 않는 리프레시 토큰입니다. (이미 만료되었거나 비정상 접근)");
+
       jwtTokenProvider.expireRefreshCookie(response);
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
