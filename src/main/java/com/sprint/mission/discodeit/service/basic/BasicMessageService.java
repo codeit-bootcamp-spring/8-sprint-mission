@@ -110,8 +110,10 @@ public class BasicMessageService implements MessageService {
     MessageCreatedEvent event = MessageCreatedEvent.now(
         savedMessage.getId(),
         savedMessage.getContent(),
-        savedMessage.getChannel(),
-        savedMessage.getAuthor()
+        savedMessage.getChannel().getId(),
+        savedMessage.getChannel().getName(),
+        savedMessage.getAuthor().getId(),
+        savedMessage.getAuthor().getUsername()
     );
 
     eventPublisher.publishEvent(event);

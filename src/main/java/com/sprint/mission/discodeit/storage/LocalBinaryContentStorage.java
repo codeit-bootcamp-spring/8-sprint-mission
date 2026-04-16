@@ -5,7 +5,6 @@ import jakarta.annotation.PostConstruct;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -13,10 +12,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -84,15 +81,12 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     InputStream inputStream = get(file.id());
     Resource resource = new InputStreamResource(inputStream);
 
-    ContentDisposition contentDisposition = ContentDisposition.attachment()
-        .filename(file.fileName(), StandardCharsets.UTF_8) // UTF-8 설정 필수
-        .build();
-
     return ResponseEntity
         .status(HttpStatus.OK)
-        .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString())
-        .contentType(MediaType.parseMediaType(file.contentType()))
-        .contentLength(file.size())
+        .header(HttpHeaders.CONTENT_DISPOSITION,
+            "attachment; filename=\"" + file.fileName() + "\"")
+        .header(HttpHeaders.CONTENT_TYPE, file.contentType())
+        .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(file.size()))
         .body(resource);
   }
 }
