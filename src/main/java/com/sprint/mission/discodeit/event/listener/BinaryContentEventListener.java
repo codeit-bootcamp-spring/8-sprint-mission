@@ -25,7 +25,7 @@ public class BinaryContentEventListener {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onBinaryContentCreated(BinaryContentCreatedEvent event) {
-    log.debug("[BinaryContentEventListener] 바이너리 데이터 저장 시작 - ID: {}, 파일명: {}",
+    log.info("[BinaryContentEventListener] 바이너리 데이터 저장 시작 - ID: {}, 파일명: {}",
         event.binaryContentId(), event.fileName());
 
     try {

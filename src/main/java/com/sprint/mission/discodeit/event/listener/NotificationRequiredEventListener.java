@@ -33,61 +33,72 @@ public class NotificationRequiredEventListener {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void on(MessageCreatedEvent event) {
-    log.info("[Notification] 메시지 생성 이벤트 수신 - MessageId: {}, Channel: {}",
+    log.info("[NotificationRequiredEventListener] 메시지 생성 이벤트 수신 - MessageId: {}, Channel: {}",
         event.messageId(), event.channelName());
 
-    UUID authorId = event.authorId();
-    String authorName = event.authorName();
-    UUID channelId = event.channelId();
-    String channelName = event.channelName();
-    String content = event.content();
+    try {
+      UUID authorId = event.authorId();
+      String authorName = event.authorName();
+      UUID channelId = event.channelId();
+      String channelName = (event.channelName() == null) ? "비공개 채널" : event.channelName();
+      String content = event.content();
 
-    List<ReadStatus> targets = readStatusRepository.findAllByChannelId(channelId)
-        .stream()
-        .filter(ReadStatus::isNotificationEnabled)
-        .filter(readStatus -> !readStatus.getUser().getId().equals(authorId))
-        .toList();
+      List<ReadStatus> targets = readStatusRepository.findAllByChannelId(channelId)
+          .stream()
+          .filter(ReadStatus::isNotificationEnabled)
+          .filter(readStatus -> !readStatus.getUser().getId().equals(authorId))
+          .toList();
 
-    log.debug("[Notification] 알림 발송 대상자 수: {}명 (작성자: {})",
-        targets.size(), event.authorName());
+      log.debug("[NotificationRequiredEventListener] 알림 발송 대상자 수: {}명 (작성자: {})",
+          targets.size(), event.authorName());
 
-    for (ReadStatus readStatus : targets) {
-      Notification notification = new Notification(
-          readStatus.getUser(),
-          String.format("%s (#%s)", authorName, channelName),
-          content
-      );
+      for (ReadStatus readStatus : targets) {
+        Notification notification = new Notification(
+            readStatus.getUser(),
+            String.format("%s (#%s)", authorName, channelName),
+            content
+        );
 
-      notificationRepository.save(notification);
-      log.debug("[Notification] 알림 저장 완료 - 수신자: {}", readStatus.getUser().getUsername());
+        notificationRepository.save(notification);
+        log.debug("[NotificationRequiredEventListener] 알림 저장 완료 - 수신자: {}",
+            readStatus.getUser().getUsername());
+      }
+      log.info("[NotificationRequiredEventListener] 메시지 알림 처리 완료 - 수신 대상: {}명", targets.size());
+    } catch (Exception e) {
+      log.error("[NotificationRequiredEventListener] 메시지 생성 이벤트 알림 처리 중 오류 발생 - Event: {}", event,
+          e);
     }
-    log.info("[Notification] 메시지 알림 처리 완료 - 수신 대상: {}명", targets.size());
   }
 
   @Async("taskExecutor")
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @TransactionalEventListener
   public void on(RoleUpdatedEvent event) {
-    log.info("[Notification] 권한 변경 이벤트 수신 - 대상자: {}, 변경: {} -> {}",
+    log.info("[NotificationRequiredEventListener] 권한 변경 이벤트 수신 - 대상자: {}, 변경: {} -> {}",
         event.userName(), event.previousRole(), event.newRole());
 
-    String title = "권한이 변경되었습니다.";
-    String previousRole = event.previousRole();
-    String newRole = event.newRole();
+    try {
+      String title = "권한이 변경되었습니다.";
+      String previousRole = event.previousRole();
+      String newRole = event.newRole();
 
-    User receiver = userRepository.findById(event.userId())
-        .orElseThrow(() -> {
-          log.warn("[Notification] 알림 실패 - 존재하지 않는 사용자 ID: {}", event.userId());
-          return new UserNotFoundException(event.userId());
-        });
+      User receiver = userRepository.findById(event.userId())
+          .orElseThrow(() -> new UserNotFoundException(event.userId()));
 
-    Notification notification = new Notification(
-        receiver,
-        title,
-        String.format("%s -> %s", previousRole, newRole)
-    );
+      Notification notification = new Notification(
+          receiver,
+          title,
+          String.format("%s -> %s", previousRole, newRole)
+      );
 
-    notificationRepository.save(notification);
-    log.info("[Notification] 권한 변경 알림 저장 완료 - 대상자: {}", event.userName());
+      notificationRepository.save(notification);
+      log.info("[NotificationRequiredEventListener] 권한 변경 알림 저장 완료 - 대상자: {}", event.userName());
+    } catch (UserNotFoundException e) {
+      log.warn("[NotificationRequiredEventListener] 알림 실패 - 존재하지 않는 사용자 ID: {}",
+          event.userId());
+    } catch (Exception e) {
+      log.error("[NotificationRequiredEventListener] 권한 변경 이벤트 알림 처리 중 오류 발생 - Event: {}", event,
+          e);
+    }
   }
 }
