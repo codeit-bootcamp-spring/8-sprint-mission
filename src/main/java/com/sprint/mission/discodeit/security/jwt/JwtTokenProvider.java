@@ -11,42 +11,39 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.sprint.mission.discodeit.entity.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.exception.user.InvalidTokenException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 @Component
+@EnableConfigurationProperties(JwtProperties.class)
 public class JwtTokenProvider {
 
   public static final String REFRESH_TOKEN_COOKIE_NAME = "REFRESH_TOKEN";
 
-  private final int accessTokenExpirationMs;
-  private final int refreshTokenExpirationMs;
+  private final JwtProperties jwtProperties;
 
   private final JWSSigner accessTokenSigner;
   private final JWSVerifier accessTokenVerifier;
   private final JWSSigner refreshTokenSigner;
   private final JWSVerifier refreshTokenVerifier;
 
-  public JwtTokenProvider(
-      @Value("${jwt.access-token.secret}") String accessTokenSecret,
-      @Value("${jwt.access-token.exp}") int accessTokenExpirationMs,
-      @Value("${jwt.refresh-token.secret}") String refreshTokenSecret,
-      @Value("${jwt.refresh-token.exp}") int refreshTokenExpirationMs
-  ) throws JOSEException {
-    this.accessTokenExpirationMs = accessTokenExpirationMs;
-    this.refreshTokenExpirationMs = refreshTokenExpirationMs;
+  public JwtTokenProvider(JwtProperties jwtProperties) throws JOSEException {
+    this.jwtProperties = jwtProperties;
 
-    byte[] accessTokenSecretBytes = accessTokenSecret.getBytes(StandardCharsets.UTF_8);
+    byte[] accessTokenSecretBytes = jwtProperties.accessToken().secret()
+        .getBytes(StandardCharsets.UTF_8);
     this.accessTokenSigner = new MACSigner(accessTokenSecretBytes);
     this.accessTokenVerifier = new MACVerifier(accessTokenSecretBytes);
 
-    byte[] refreshTokenSecretBytes = refreshTokenSecret.getBytes(StandardCharsets.UTF_8);
+    byte[] refreshTokenSecretBytes = jwtProperties.refreshToken().secret()
+        .getBytes(StandardCharsets.UTF_8);
     this.refreshTokenSigner = new MACSigner(refreshTokenSecretBytes);
     this.refreshTokenVerifier = new MACVerifier(refreshTokenSecretBytes);
   }
@@ -54,12 +51,14 @@ public class JwtTokenProvider {
   // Access Token 생성
   public String generateAccessToken(DiscodeitUserDetails userDetails) throws JOSEException {
 
-    return generateToken(userDetails, accessTokenExpirationMs, accessTokenSigner, "access");
+    return generateToken(userDetails, jwtProperties.accessToken().exp(), accessTokenSigner,
+        "access");
   }
 
   // Refresh Token 생성
   public String generateRefreshToken(DiscodeitUserDetails userDetails) throws JOSEException {
-    return generateToken(userDetails, refreshTokenExpirationMs, refreshTokenSigner, "refresh");
+    return generateToken(userDetails, jwtProperties.refreshToken().exp(), refreshTokenSigner,
+        "refresh");
   }
 
   // Token 생성
@@ -96,45 +95,43 @@ public class JwtTokenProvider {
   }
 
   // Refresh Token을 HttpOnly가 적용된 쿠키로 생성
-  public Cookie generateRefreshTokenCookie(String refreshToken) {
+  public String generateRefreshTokenCookie(String refreshToken) {
 
-    Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
-
-    cookie.setHttpOnly(true);
-    cookie.setSecure(false);
-    cookie.setPath("/");
-    cookie.setMaxAge(refreshTokenExpirationMs / 1000);
-
-    return cookie;
+    return ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
+        .httpOnly(true)
+        .secure(false)
+        .path("/")
+        .maxAge(jwtProperties.refreshToken().exp() / 1000)
+        .sameSite("Lax")
+        .build()
+        .toString();
   }
 
   // Refresh Token 쿠키를 만료시키는 쿠기 생성
-  public Cookie generateRefreshTokenExpirationCookie() {
+  public String generateRefreshTokenExpirationCookie() {
 
-    Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, "");
-
-    cookie.setHttpOnly(true);
-    cookie.setSecure(false);
-    cookie.setPath("/");
-    cookie.setMaxAge(0);
-
-    return cookie;
+    return ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
+        .httpOnly(true)
+        .secure(false)
+        .path("/")
+        .maxAge(0)
+        .sameSite("Lax")
+        .build()
+        .toString();
   }
 
   // Refresh Token을 담은 HttpOnly가 적용된 쿠키를 응답에 추가
   public void addRefreshCookie(HttpServletResponse response, String refreshToken) {
 
-    Cookie cookie = generateRefreshTokenCookie(refreshToken);
+    String cookieValue = generateRefreshTokenCookie(refreshToken);
 
-    response.addCookie(cookie);
+    response.addHeader(HttpHeaders.SET_COOKIE, cookieValue);
   }
 
   // 만료된 Refresh Token 쿠키를 응답에 추가
   public void expireRefreshCookie(HttpServletResponse response) {
-
-    Cookie cookie = generateRefreshTokenExpirationCookie();
-
-    response.addCookie(cookie);
+    String cookieValue = generateRefreshTokenExpirationCookie();
+    response.addHeader(HttpHeaders.SET_COOKIE, cookieValue);
   }
 
   // Access Token 검증
