@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/discodeit
     username: discodeit_user
-    password: iskr9675
+    password: discodeit1234
   jpa:
     properties:
       hibernate:
@@ -25,7 +25,3 @@ management:
   info:
     env:
       enabled: true
-
-jwt:
-  cookie:
-    secure: false

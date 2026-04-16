@@ -5,9 +5,12 @@ import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.security.Http403ForbiddenAccessDeniedHandler;
 import com.sprint.mission.discodeit.security.LoginFailureHandler;
 import com.sprint.mission.discodeit.security.SpaCsrfTokenRequestHandler;
+import com.sprint.mission.discodeit.security.jwt.InMemoryJwtRegistry;
 import com.sprint.mission.discodeit.security.jwt.JwtAuthenticationFilter;
 import com.sprint.mission.discodeit.security.jwt.JwtLoginSuccessHandler;
 import com.sprint.mission.discodeit.security.jwt.JwtLogoutHandler;
+import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
+import com.sprint.mission.discodeit.security.jwt.JwtTokenProvider;
 import java.util.List;
 import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +31,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 @Slf4j
 @Configuration
@@ -66,27 +70,26 @@ public class SecurityConfig {
                 new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
         )
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
-            .requestMatchers(HttpMethod.POST, "/api/users", "/api/auth/login", "/api/auth/logout",
-                "/api/auth/refresh")
-            .permitAll()
-
-            .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-            .requestMatchers("/actuator/**").permitAll()
-            .requestMatchers("/error").permitAll()
-
-            .requestMatchers("/", "/index.html", "/favicon.ico", "/assets/**").permitAll()
-
+            .requestMatchers(
+                AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/auth/csrf-token"),
+                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/users"),
+                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/login"),
+                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/refresh"),
+                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/logout"),
+                new NegatedRequestMatcher(AntPathRequestMatcher.antMatcher("/api/**"))
+            ).permitAll()
             .anyRequest().authenticated()
         )
         .exceptionHandling(ex -> ex
-            .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+            .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
             .accessDeniedHandler(new Http403ForbiddenAccessDeniedHandler(objectMapper))
         )
         .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         )
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        // Add JWT authentication filter
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+    ;
     return http.build();
   }
 
@@ -127,4 +130,8 @@ public class SecurityConfig {
     return handler;
   }
 
+  @Bean
+  public JwtRegistry jwtRegistry(JwtTokenProvider jwtTokenProvider) {
+    return new InMemoryJwtRegistry(1, jwtTokenProvider);
+  }
 }
