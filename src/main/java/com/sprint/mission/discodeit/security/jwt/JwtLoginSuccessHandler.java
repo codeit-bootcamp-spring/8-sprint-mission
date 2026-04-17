@@ -62,11 +62,6 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
                 jwtRegistry.registerJwtInformation(information);
                 log.info("[JwtLoginSuccessHandler] JwtRegistry에 새 토큰 등록 완료");
 
-                // 토큰 메타데이터 저장 (toEntity로 중복 제거)
-                log.info("[JwtLoginSuccessHandler] 토큰 메타데이터 저장 시작");
-                JwtTokenEntity accessEntity = tokenProvider.toEntity(accessToken);
-                JwtTokenEntity refreshEntity = tokenProvider.toEntity(refreshToken);
-
                 // 리프레시 쿠키 설정
                 log.info("[JwtLoginSuccessHandler] 리프레시 쿠키 설정 시작");
                 tokenProvider.addRefreshCookie(response, refreshToken);
