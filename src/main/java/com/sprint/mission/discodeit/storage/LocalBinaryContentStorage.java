@@ -51,6 +51,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
 
     @Override
     public UUID put(UUID id, byte[] bytes) {
+        delay(3000);
         try {
             Path filePath = resolvePath(id);
             Files.write(filePath, bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
@@ -105,6 +106,15 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
         } catch (IOException e) {
             log.error("파일 삭제 실패 id={}", id, e);
             throw new RuntimeException(e);
+        }
+    }
+
+    private void delay(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("지연 시뮬레이션 중 인터럽트 발생", e);
         }
     }
 }

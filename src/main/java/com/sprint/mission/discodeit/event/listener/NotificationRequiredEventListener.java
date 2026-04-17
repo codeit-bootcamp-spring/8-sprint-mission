@@ -31,7 +31,7 @@ public class NotificationRequiredEventListener {
     private final ChannelService channelService;
     private final UserRepository userRepository;
 
-    @Async
+    @Async("notificationTaskExecutor")
     @TransactionalEventListener
     public void on(MessageCreatedEvent event) {
         MessageDto message = event.getData();
@@ -55,7 +55,7 @@ public class NotificationRequiredEventListener {
         notificationService.create(receiverIds, title, content);
     }
 
-    @Async
+    @Async("notificationTaskExecutor")
     @TransactionalEventListener
     public void on(RoleUpdatedEvent event) {
         UUID userId = event.userId();
