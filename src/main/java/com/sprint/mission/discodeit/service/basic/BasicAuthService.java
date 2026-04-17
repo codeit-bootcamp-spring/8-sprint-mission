@@ -14,6 +14,7 @@ import com.sprint.mission.discodeit.service.AuthService;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,7 @@ public class BasicAuthService implements AuthService {
     return userMapper.toDto(user);
   }
 
+  @CacheEvict(value = "user", allEntries = true)
   @Override
   @Transactional
   @PreAuthorize("hasRole('ADMIN')")

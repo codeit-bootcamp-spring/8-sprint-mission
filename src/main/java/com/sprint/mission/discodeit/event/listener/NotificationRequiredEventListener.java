@@ -59,7 +59,7 @@ public class NotificationRequiredEventListener {
             content
         );
 
-        notificationService.save(notification);
+        notificationService.send(notification);
         log.debug("[NotificationRequiredEventListener] 알림 저장 완료 - 수신자: {}",
             readStatus.getUser().getUsername());
       }
@@ -91,7 +91,7 @@ public class NotificationRequiredEventListener {
           String.format("%s -> %s", previousRole, newRole)
       );
 
-      notificationService.save(notification);
+      notificationService.send(notification);
       log.info("[NotificationRequiredEventListener] 권한 변경 알림 저장 완료 - 대상자: {}", event.userName());
     } catch (UserNotFoundException e) {
       log.warn("[NotificationRequiredEventListener] 알림 실패 - 존재하지 않는 사용자 ID: {}",

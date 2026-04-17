@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public interface NotificationService {
 
-  void save(Notification notification);
+  void send(Notification notification);
 
   List<NotificationDto> findAll(UUID userId);
 

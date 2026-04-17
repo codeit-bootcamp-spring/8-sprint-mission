@@ -10,6 +10,8 @@ import com.sprint.mission.discodeit.service.NotificationService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,10 +28,14 @@ public class BasicNotificationService implements NotificationService {
   // 호출 측 트랜잭션의 성공/실패 상관없이 알림은 항상 저장
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @Override
-  public void save(Notification notification) {
+  @CacheEvict(value = "notification", key = "#notification.receiver.id")
+  public void send(Notification notification) {
     notificationRepository.save(notification);
   }
 
+  @Cacheable(
+      value = "notification", key = "#userId"
+  )
   @Override
   public List<NotificationDto> findAll(UUID userId) {
 
@@ -39,6 +45,7 @@ public class BasicNotificationService implements NotificationService {
         .toList();
   }
 
+  @CacheEvict(value = "notification", key = "#userId")
   @Transactional
   @Override
   public void deleteByIdIfOwner(UUID userId, UUID notificationId) {

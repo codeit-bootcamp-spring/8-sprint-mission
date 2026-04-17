@@ -18,6 +18,9 @@ spring:
     hibernate:
       ddl-auto: none
 
+  cache:
+    type: caffeine
+
 admin:
   username: ${ADMIN_USERNAME}
   password: ${ADMIN_PASSWORD}

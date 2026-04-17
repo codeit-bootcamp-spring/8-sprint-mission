@@ -19,6 +19,8 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,7 +39,7 @@ public class BasicUserService implements UserService {
   private final PasswordEncoder passwordEncoder;
   private final ApplicationEventPublisher eventPublisher;
 
-
+  @CacheEvict(value = "user", allEntries = true)
   @Transactional
   @Override
   public UserDto create(UserCreateRequest userCreateRequest,
@@ -105,6 +107,7 @@ public class BasicUserService implements UserService {
         });
   }
 
+  @CacheEvict(value = "user", allEntries = true)
   @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.userDto.id")
   @Transactional
   @Override
@@ -170,6 +173,7 @@ public class BasicUserService implements UserService {
     return userMapper.toDto(user);
   }
 
+  @CacheEvict(value = "user", allEntries = true)
   @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.userDto.id")
   @Transactional
   @Override
@@ -186,6 +190,7 @@ public class BasicUserService implements UserService {
     log.info("[UserService] 사용자 삭제 완료 - ID: {}", user.getId());
   }
 
+  @Cacheable(value = "user")
   @Override
   public List<UserDto> findAll() {
     log.debug("[UserService] 전체 사용자 목록 조회 시작");

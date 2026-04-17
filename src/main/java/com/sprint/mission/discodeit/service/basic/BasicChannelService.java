@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +37,7 @@ public class BasicChannelService implements ChannelService {
   private final UserRepository userRepository;
   private final ChannelMapper channelMapper;
 
+  @CacheEvict(value = "channel", allEntries = true)
   @Transactional
   @Override
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
@@ -51,6 +54,7 @@ public class BasicChannelService implements ChannelService {
     return channelMapper.toDto(channel);
   }
 
+  @CacheEvict(value = "channel", allEntries = true)
   @Transactional
   @Override
   public ChannelDto create(PrivateChannelCreateRequest channelCreateRequest) {
@@ -85,6 +89,7 @@ public class BasicChannelService implements ChannelService {
         });
   }
 
+  @CacheEvict(value = "channel", allEntries = true)
   @Transactional
   @Override
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
@@ -111,6 +116,7 @@ public class BasicChannelService implements ChannelService {
     return channelMapper.toDto(channel);
   }
 
+  @CacheEvict(value = "channel", allEntries = true)
   @Transactional
   @Override
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
@@ -129,6 +135,9 @@ public class BasicChannelService implements ChannelService {
     log.info("[ChannelService] 채널 삭제 및 연관 정보(메시지, 읽음상태) 삭제 완료 - Id: {}", channelId);
   }
 
+  @Cacheable(
+      value = "channel", key = "#userId"
+  )
   @Override
   public List<ChannelDto> findAllByUserId(UUID userId) {
     log.debug("[ChannelService] 특정 사용자가 볼 수 있는 채널 목록 조회 시작 - UserId: {}", userId);

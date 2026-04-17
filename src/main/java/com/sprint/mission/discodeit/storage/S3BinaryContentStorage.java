@@ -6,7 +6,6 @@ import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentSaveFailedException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
-import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.NotificationService;
 import jakarta.annotation.PreDestroy;
@@ -48,19 +47,16 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
   private final S3Client s3Client;
   private final S3Presigner s3Presigner;
   private final UserRepository userRepository;
-  private final NotificationRepository notificationRepository;
   private final NotificationService notificationService;
   private final String adminUsername;
 
   public S3BinaryContentStorage(S3Properties s3Properties,
       UserRepository userRepository,
-      NotificationRepository notificationRepository,
       NotificationService notificationService,
       @Value("${admin.username}") String adminUsername
   ) {
     this.s3Properties = s3Properties;
     this.userRepository = userRepository;
-    this.notificationRepository = notificationRepository;
     this.notificationService = notificationService;
     this.adminUsername = adminUsername;
 
@@ -134,7 +130,7 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
             e.getCause().getMessage())
     );
 
-    notificationService.save(notification);
+    notificationService.send(notification);
 
     log.info("[S3BinaryContentStorage] S3 바이너리 저장 실패 알림 관리자에게 전달");
     return null;
