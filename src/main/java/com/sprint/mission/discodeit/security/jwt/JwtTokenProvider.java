@@ -319,11 +319,11 @@ public class JwtTokenProvider {
             boolean valid = exp != null && exp.after(new Date());
 
             // 위의 모든 검증이 성공하면 true, 하나라도 실패하면 false
-            log.info("[TokenProvider] verifyToken: 만료 검사 결과=" + valid);
+            log.info("[TokenProvider] verifyToken: 만료 검사 결과={}", valid);
 
             return valid;
         } catch (Exception e) {
-            log.info("[TokenProvider] verifyToken: 예외 발생- " + e.getMessage());
+            log.info("[TokenProvider] verifyToken: 예외 발생: {}", e.getMessage());
             return false;
         }
     }
