@@ -6,9 +6,9 @@ import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
-import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.service.NotificationService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +26,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class NotificationRequiredEventListener {
 
   private final ReadStatusRepository readStatusRepository;
-  private final NotificationRepository notificationRepository;
   private final UserRepository userRepository;
+  private final NotificationService notificationService;
 
   @Async("taskExecutor")
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -59,7 +59,7 @@ public class NotificationRequiredEventListener {
             content
         );
 
-        notificationRepository.save(notification);
+        notificationService.save(notification);
         log.debug("[NotificationRequiredEventListener] 알림 저장 완료 - 수신자: {}",
             readStatus.getUser().getUsername());
       }
@@ -72,7 +72,7 @@ public class NotificationRequiredEventListener {
 
   @Async("taskExecutor")
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  @TransactionalEventListener
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void on(RoleUpdatedEvent event) {
     log.info("[NotificationRequiredEventListener] 권한 변경 이벤트 수신 - 대상자: {}, 변경: {} -> {}",
         event.userName(), event.previousRole(), event.newRole());
@@ -91,7 +91,7 @@ public class NotificationRequiredEventListener {
           String.format("%s -> %s", previousRole, newRole)
       );
 
-      notificationRepository.save(notification);
+      notificationService.save(notification);
       log.info("[NotificationRequiredEventListener] 권한 변경 알림 저장 완료 - 대상자: {}", event.userName());
     } catch (UserNotFoundException e) {
       log.warn("[NotificationRequiredEventListener] 알림 실패 - 존재하지 않는 사용자 ID: {}",

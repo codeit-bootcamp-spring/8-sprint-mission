@@ -14,4 +14,8 @@ public class BinaryContentSaveFailedException extends BinaryContentException {
   public BinaryContentSaveFailedException() {
     super(ErrorCode.BINARY_CONTENT_CONVERT_FAILED);
   }
+
+  public BinaryContentSaveFailedException(Throwable cause) {
+    super(ErrorCode.BINARY_CONTENT_SAVE_FAILED, cause);
+  }
 }

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -20,6 +21,14 @@ public class BasicNotificationService implements NotificationService {
 
   private final NotificationRepository notificationRepository;
   private final NotificationMapper notificationMapper;
+
+  // 알림을 저장할 때는 항상 새로운 트랜잭션 생성
+  // 호출 측 트랜잭션의 성공/실패 상관없이 알림은 항상 저장
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  @Override
+  public void save(Notification notification) {
+    notificationRepository.save(notification);
+  }
 
   @Override
   public List<NotificationDto> findAll(UUID userId) {
