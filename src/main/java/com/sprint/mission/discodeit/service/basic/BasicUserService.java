@@ -15,6 +15,7 @@ import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.security.jwt.store.JwtRegistry;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +46,7 @@ public class BasicUserService implements UserService {
 
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final SessionRegistry sessionRegistry;
+    private final JwtRegistry jwtRegistry;
 
     @Override
     @Transactional
@@ -87,7 +88,7 @@ public class BasicUserService implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
-        boolean isOnline = isUserOnline(user.getUsername());
+        boolean isOnline = isUserOnline(user.getId());
         return userMapper.toDto(user, isOnline);
     }
 
@@ -95,7 +96,7 @@ public class BasicUserService implements UserService {
     public List<UserDto> findAll() {
         return userRepository.findAll().stream()
                 .map(user -> {
-                    boolean isOnline = isUserOnline(user.getUsername());
+                    boolean isOnline = isUserOnline(user.getId());
                     return userMapper.toDto(user, isOnline);
                 })
                 .toList();
@@ -157,7 +158,7 @@ public class BasicUserService implements UserService {
 
         log.info("Service: 유저 수정 완료 - ID: {}", userId);
 
-        boolean isOnline = isUserOnline(user.getUsername());
+        boolean isOnline = isUserOnline(user.getId());
         return userMapper.toDto(userRepository.save(user), isOnline);
     }
 
@@ -176,7 +177,8 @@ public class BasicUserService implements UserService {
             log.debug("Service - 사용자 프로필 이미지 데이터 삭제 완료");
         }
 
-        invalidatedUserSessions(user.getUsername());
+        jwtRegistry.invalidateJwtInformationByUserId(userId);
+        log.info("Service: 회원 탈퇴로 인한 토큰 삭제 완료 - ID: {}", userId);
 
         readStatusRepository.deleteAllByUserId(userId);
         messageRepository.deleteAllByAuthorId(userId);
@@ -194,10 +196,9 @@ public class BasicUserService implements UserService {
         user.updateRole(newRole);
         User updatedUser = userRepository.save(user);
 
-        // 권한이 변경된 사용자의 모든 활성 세션을 무효화
-        invalidatedUserSessions(user.getUsername());
+        jwtRegistry.invalidateJwtInformationByUserId(userId);
 
-        log.info("[UserService] 사용자 권한 변경 및 세션 무효화 완료!");
+        log.info("[UserService] 사용자 권한 변경 및 JWT 무효화 완료!");
 
         // 세션이 무효화되어 오프라인 처리
         return userMapper.toDto(updatedUser, false);
@@ -216,55 +217,7 @@ public class BasicUserService implements UserService {
         return binaryContentRepository.save(binaryContent);
     }
 
-    // 특정 사용자의 모든 활성 세션을 무효화
-    // 권한 변경, 비밀번호 변경 등 보안상 중요한 변경 시 호출 가능
-    private void invalidatedUserSessions(String username) {
-        try {
-            log.info("[UserService] ****** 세션 무효화 시작 ******");
-            log.info("[UserService] 대상 사용자: {}", username);
-
-            // SessionRegistry에서 모든 주체(principal) 조회
-            List<Object> principals = sessionRegistry.getAllPrincipals();
-            log.info("[UserService] 현재 로그인된 사용자 수: {}", principals.size());
-
-            // 해당 사용자의 모든 세션 정보 찾기
-            for (Object principal : principals) {
-                UserDetails userDetails = (UserDetails) principal;
-                String principalName = userDetails.getUsername();
-
-                log.info("[UserService] 현재 확인중인 Principal: {} + (username: {})", principal, principalName);
-
-                if (username.equals(principalName)) {
-
-                    // 해당 사용자의 모든 세션 정보 가져오기
-                    List<SessionInformation> sessions = sessionRegistry.getAllSessions(principal, false);
-                    log.info("[UserService] 카깃 사용자 발견! 이 사람의 활성 세션 수: " + sessions.size());
-
-                    // 위에 검색된 모든 세션 무효화
-                    for (SessionInformation session : sessions) {
-                        log.info("[UserService] 세션 무효화중... - 세션 ID: {}", session.getSessionId());
-                        session.expireNow();
-                        log.info("[UserService] 세션 무효화 완료! - 만료됨: {}", session.isExpired());
-                    }
-
-                    log.info("[UserService] 사용자 {}의 모든 세션({}개)이 무효화 되었습니다.", username, sessions.size());
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            // 세션 무효화 실패 시, 권한 변경 자체를 실패시키지 않음 (DB 변경은 유지시키겠다)
-            log.error("[UserService] 세션 무효화 중 오류 발생! - {}", e.getMessage());
-        }
-    }
-
-    // SessionRegistry를 조회하여 유저가 실시간으로 온라인지 확인
-    private boolean isUserOnline(String username) {
-        return sessionRegistry.getAllPrincipals().stream()
-                .filter(principal -> principal instanceof UserDetails)
-                .map(principal -> (UserDetails) principal)
-                .anyMatch(userDetails ->
-                        userDetails.getUsername().equals(username) &&
-                                !sessionRegistry.getAllSessions(userDetails, false).isEmpty()
-                );
+    private boolean isUserOnline(UUID userId) {
+        return jwtRegistry.hasActiveJwtInformationByUserId(userId);
     }
 }

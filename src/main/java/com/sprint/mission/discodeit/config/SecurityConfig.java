@@ -1,15 +1,18 @@
 package com.sprint.mission.discodeit.config;
 
-import com.sprint.mission.discodeit.handler.*;
+import com.sprint.mission.discodeit.handler.CustomAccessDeniedHandler;
+import com.sprint.mission.discodeit.handler.CustomAuthenticationEntryPoint;
+import com.sprint.mission.discodeit.handler.LoginFailureHandler;
+import com.sprint.mission.discodeit.security.jwt.JwtAuthenticationFilter;
+import com.sprint.mission.discodeit.security.jwt.JwtLoginSuccessHandler;
+import com.sprint.mission.discodeit.security.jwt.JwtLogoutHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
@@ -21,22 +24,15 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
-import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.csrf.*;
-import org.springframework.security.web.session.HttpSessionEventPublisher;
 
-import javax.sql.DataSource;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -47,20 +43,14 @@ import java.util.stream.IntStream;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value("${auth.remember-me.validity-seconds}")
-    private int tokenValiditySeconds;
-
-    @Value("${auth.remember-me.key}")
-    private String rememberMeKey;
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-                                           SessionRegistry sessionRegistry,
-                                           LoginSuccessHandler loginSuccessHandler,
+                                           JwtLoginSuccessHandler jwtLoginSuccessHandler,
                                            LoginFailureHandler loginFailureHandler,
+                                           JwtLogoutHandler jwtLogoutHandler,
+                                           JwtAuthenticationFilter jwtAuthenticationFilter,
                                            CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
                                            CustomAccessDeniedHandler customAccessDeniedHandler,
-                                           RememberMeServices rememberMeServices,
                                            DaoAuthenticationProvider authenticationProvider) throws Exception {
         http
                 // CSRF 설정: 쿠키 기반 CSRF 토큰 사용
@@ -80,6 +70,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/csrf-token").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/auth/logout").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                         .requestMatchers(HttpMethod.PATCH, "/api/users/*").authenticated()
@@ -99,30 +90,16 @@ public class SecurityConfig {
                 // 세션 관리 설정
                 // 동일한 계정으로 동시 로그인할 수 없도록 설정
                 .sessionManagement(session -> session
-                        .sessionFixation(fixation -> fixation
-                                .migrateSession()
-                        )
-                        .sessionConcurrency(concurrency -> concurrency
-                                .maximumSessions(1)
-                                .maxSessionsPreventsLogin(false)
-                                .sessionRegistry(sessionRegistry)
-                                .expiredSessionStrategy(new CustomSessionExpiredStrategy())
-                        )
+                        // JWT 기반 인증에서는 세션이라는 개념 자체가 불필요하므로 STATELESS로 설정한다.
+                        // 참고로 원래 디폴트 설정은 IF_REQUIRED다.
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                // Remember-Me 설정
-                .rememberMe(remember -> remember
-                        // bean으로 정의한 Remember-Me 서비스 사용
-                        .rememberMeServices(rememberMeServices)
-                        // 토큰 생성 시 사용할 키(설정 파일등에서 주입받을 수 있으나, 편의상 리터럴 문자열 사용)
-                        .key(rememberMeKey)
-                )
-
                 // form 기반 로그인 활성화
                 .formLogin(form -> form
                         // 로그인을 처리하는 URL 정의
                         .loginProcessingUrl("/api/auth/login")
                         // 로그인 성공 시 처리할 핸들러 정의
-                        .successHandler(loginSuccessHandler)
+                        .successHandler(jwtLoginSuccessHandler)
                         // 로그인 실패 시 처리할 핸들러 정의
                         .failureHandler(loginFailureHandler)
                         // 로그인 페이지는 인증 없이 모두 접근 가능해야 한다.
@@ -133,8 +110,10 @@ public class SecurityConfig {
                 .logout(logout -> logout
                         // 로그아웃을 처리하는 URL 정의
                         .logoutUrl("/api/auth/logout")
-                        // 로그아웃 성공 시 처리할 핸들러 정의
-                        .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
+                        // 로그아웃 처리 핸들러
+                        .addLogoutHandler(jwtLogoutHandler)
+                        // 로그아웃 성공 시 처리 핸들러
+                        .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
                         // 로그아웃 페이지를 인증 없이 모두 접근 가능해야 함
                         .permitAll()
                 )
@@ -143,7 +122,15 @@ public class SecurityConfig {
                         .accessDeniedHandler(customAccessDeniedHandler)
                 )
                 // 인증 프로파이더 설정 (앞서 bean으로 정의된 DaoAuthenticationProvider 사용)
-                .authenticationProvider(authenticationProvider);
+                .authenticationProvider(authenticationProvider)
+                /**
+                 * 설명. JWT 인증 필터를 UsernamePasswordAuthenticationFilter 바로 앞단에 배치한다.
+                 * 이렇게 배치하는 이유는, 요청에 Authorization 헤더가 있을 경우 JWT 토큰으로 먼저 인증을 시도하고,
+                 * JWT 인증이 성공하면 SecurityContext에 인증 정보를 설정하여
+                 * 후속 필터들이 이미 인증된 상태로 처리되도록 하기 위함이다.
+                 * 만약 JWT 토큰이 없거나 유효하지 않다면 UsernamePasswordAuthenticationFilter가 폼 로그인을 처리할 수 있다.
+                 */
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
@@ -173,36 +160,6 @@ public class SecurityConfig {
                 .requestMatchers("/favicon.ico", "/error")
                 // 정적 리소스
                 .requestMatchers("/static/**", "/css/**", "/js/**");
-    }
-
-    @Bean
-    public SessionRegistry sessionRegistry() {
-        // 세션 레지스트리 구현체를 상속받아 로깅 커스터마이징
-        SessionRegistryImpl sessionRegistry = new SessionRegistryImpl() {
-
-            @Override
-            public void registerNewSession(String sessionId, Object principal) {
-                log.info("[SessionRegistry] 새 세션 등록 - 사용자: {}, 세션ID: {}", principal, sessionId);
-                super.registerNewSession(sessionId, principal);
-            }
-
-            @Override
-            public void removeSessionInformation(String sessionId) {
-                log.info("[SessionRegistry] 기존 세션 제거 - 세션ID: {}", sessionId);
-                super.removeSessionInformation(sessionId);
-            }
-
-            @Override
-            public SessionInformation getSessionInformation(String sessionId) {
-                SessionInformation info = super.getSessionInformation(sessionId);
-                if (info != null) {
-                    log.info("[SessionRegistry] 세션 정보 조회 - 세션ID: {}, 만료됨: {}", sessionId, info.isExpired());
-                }
-                return info;
-            }
-        };
-
-        return sessionRegistry;
     }
 
     public static class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
@@ -248,46 +205,6 @@ public class SecurityConfig {
         log.info("[SecurityConfig] MethodSecurityExpressionHandler 설정 완료!");
 
         return handler;
-    }
-
-    @Bean
-    public HttpSessionEventPublisher httpSessionEventPublisher() {
-        return new HttpSessionEventPublisher();
-    }
-
-    // Remember-Me 기능을 위한 JdbcTokenRepository Bean 설정
-    // Remember-Me 토큰을 쿠키가 아닌 데이터베이스에 저장하여 Remember-Me 기능을 구현한다.
-    @Bean
-    public JdbcTokenRepositoryImpl tokenRepository(DataSource dataSource) {
-        log.info("[SecurityConfig] JdbcTokenRepository 생성...");
-        JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
-
-        tokenRepository.setDataSource(dataSource);
-
-        log.info("[SecurityConfig] JdbcTokenRepository 설정 완료...");
-        return tokenRepository;
-    }
-
-    // Remember-Me 서비스 Bean 설정
-    // 테스트를 위해 1분으로 설정
-    @Bean
-    public PersistentTokenBasedRememberMeServices persistentTokenBasedRememberMeServices(
-            UserDetailsService userDetailsService, PersistentTokenRepository tokenRepository
-    ) {
-        PersistentTokenBasedRememberMeServices rememberMeServices =
-                new PersistentTokenBasedRememberMeServices(
-                        rememberMeKey,
-                        userDetailsService,
-                        tokenRepository
-                );
-
-        rememberMeServices.setTokenValiditySeconds(tokenValiditySeconds);
-        rememberMeServices.setCookieName("remember-me");
-        rememberMeServices.setParameter("remember-me");
-
-        log.info("[SecurityConfig] Remember-Me 설정 완료...");
-
-        return rememberMeServices;
     }
 
     @Bean

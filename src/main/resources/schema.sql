@@ -98,7 +98,6 @@ CREATE INDEX idx_messages_channel_created_at ON messages (channel_id, created_at
 
 -- 테이블 설명 추가
 COMMENT ON TABLE users IS '유저';
-COMMENT ON TABLE user_statuses IS '유저 상태';
 COMMENT ON TABLE channels IS '채널';
 COMMENT ON TABLE messages IS '메시지';
 COMMENT ON TABLE read_statuses IS '메시지 읽음 상태';

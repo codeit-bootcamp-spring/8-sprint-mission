@@ -33,7 +33,6 @@ discodeit:
     username: ${DISCODEIT_ADMIN_USERNAME}
     password: ${DISCODEIT_ADMIN_PASSWORD}
     email: ${DISCODEIT_ADMIN_EMAIL}
-
   session:
     timeout: 5
 
@@ -83,8 +82,16 @@ info:
     max-file-size: ${spring.servlet.multipart.max-file-size}
     max-request-size: ${spring.servlet.multipart.max-request-size}
 
-auth:
-  remember-me:
-    key: discodeit-key
-    validity-seconds: 604800
+# 커스텀 프로퍼티 추가
+jwt:
+  access-token:
+    secret: ${JWT_ACCESS_TOKEN}
+    exp: 900000        # 15분(ms)
+  refresh-token:
+    secret: ${JWT_REFRESH_TOKEN}
+    exp: 3600000       # 1시간(ms)
+  max-active-count: 1
 
+# 개발 환경 권장 쿠키 설정 가이드(메모)
+# - 개발: Secure=false, SameSite=Lax, Path=/
+# - 운영: Secure=true(HTTPS), SameSite=Lax/Strict, Path=/
