@@ -34,9 +34,12 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 @ConditionalOnProperty(name = "discodeit.storage.type", havingValue = "s3")
 public class S3BinaryContentStorage implements BinaryContentStorage {
 
+    // S3 core Infrastructure
     private final S3Properties s3Properties;
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
+
+    // Infrastructure Service
     private final ApplicationEventPublisher applicationEventPublisher;
 
     // S3Exception.class 발생하면 재시도

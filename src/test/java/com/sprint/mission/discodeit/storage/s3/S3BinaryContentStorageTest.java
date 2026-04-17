@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.sprint.mission.discodeit.dto.dto.BinaryContentDto;
 import com.sprint.mission.discodeit.config.S3Properties;
+import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import com.sprint.mission.discodeit.storage.S3BinaryContentStorage;
 
 import java.io.FileInputStream;
@@ -62,7 +63,7 @@ public class S3BinaryContentStorageTest {
 
         this.currentTestId = UUID.randomUUID();
 
-        this.storage = new S3BinaryContentStorage(s3Properties, s3Client, s3Presigner);
+        this.storage = new S3BinaryContentStorage(s3Properties, s3Client, s3Presigner, null);
     }
 
     @AfterEach
@@ -136,7 +137,8 @@ public class S3BinaryContentStorageTest {
                 id,
                 "test-file",
                 1024L,
-                "text/plain"
+                "text/plain",
+                BinaryContentStatus.PROCESSING
         );
     }
 
