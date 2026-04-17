@@ -8,11 +8,16 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.UUID;
 
+import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -32,7 +37,15 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
     private final S3Properties s3Properties;
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
+    // S3Exception.class 발생하면 재시도
+    // 처음 딜레이 시간은 1초, 이후로 2배씩 늘어난다.
+    @Retryable(
+            retryFor = S3Exception.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000, multiplier = 2)
+    )
     @Override
     public UUID put(UUID id, byte[] bytes) {
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
@@ -85,4 +98,16 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
                     e);
         }
     }
+
+    // Retry의 재시도 횟수가 끝나면 호출된다.
+    @Recover
+    public void recover(S3Exception e, UUID binaryContentId, byte[] bytes) {
+        log.error("S3 업로드 재시도 실패: {}, id: {}", e.getMessage(), binaryContentId);
+        applicationEventPublisher.publishEvent(
+                new S3UploadFailedEvent(binaryContentId, e)
+        );
+
+        throw new RuntimeException(e);
+    }
+
 }
