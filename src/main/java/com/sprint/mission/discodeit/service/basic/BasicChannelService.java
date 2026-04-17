@@ -41,24 +41,13 @@ public class BasicChannelService implements ChannelService {
     @Override
     @PreAuthorize("hasRole('CHANNEL_MANAGER')")
     @Transactional
-    public ChannelDto create(PublicChannelCreateRequest request, UUID userId) {
+    public ChannelDto create(PublicChannelCreateRequest request) {
         String name = request.name();
         String description = request.description();
 
         log.info("Service: Public 채널 생성 요청 - name: {}, description: {}", name, description);
         Channel channel = new Channel(name, description, ChannelType.PUBLIC);
         Channel savedChannel = channelRepository.save(channel);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-
-        ReadStatus readStatus = new ReadStatus(
-                user,
-                savedChannel,
-                Instant.now()
-        );
-
-        readStatusRepository.save(readStatus);
 
         log.info("Service: Public 채널 생성 완료 - ID: {}", savedChannel.getId());
 

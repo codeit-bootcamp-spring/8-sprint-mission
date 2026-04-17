@@ -33,8 +33,7 @@ public interface ChannelApi {
             )
     )
     ResponseEntity<ChannelDto> createPublicChannel(
-            @Parameter(description = "Public Channel 생성 정보") PublicChannelCreateRequest request,
-            @Parameter(description = "로그인한 사용자") DiscodeitUserDetails userDetails
+            @Parameter(description = "Public Channel 생성 정보") PublicChannelCreateRequest request
     );
 
     @Operation(summary = "Private Channel 생성", operationId = "create_4")

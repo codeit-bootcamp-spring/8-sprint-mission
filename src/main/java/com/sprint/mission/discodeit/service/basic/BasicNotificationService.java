@@ -10,9 +10,11 @@ import com.sprint.mission.discodeit.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -42,12 +44,31 @@ public class BasicNotificationService implements NotificationService {
                 .orElseThrow(() -> new NotificationNotFoundException(notificationId));
 
         // 인가되지 않은 요청 403 ErrorResponse
-        if (!notification.getReceiver().getId().equals(userId)) {
+        if (!notification.getReceiverId().equals(userId)) {
             log.warn("[BasicNotificationService] 권한 없는 알림 삭제 시도 - 알림 ID: {}, 요청자 ID: {}", notificationId, userId);
             throw new NotificationAccessDeniedException(notificationId);
         }
 
         notificationRepository.delete(notification);
         log.info("[BasicNotificationService] 알림 삭제 완료 - ID: {}", notificationId);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    @Override
+    public void create(Set<UUID> receiverIds, String title, String content) {
+        if (receiverIds.isEmpty()) {
+            log.warn("알림 생성 요청이 비어있습니다. receiverIds: {}", receiverIds);
+            return;
+        }
+        log.info("새 알림 생성 시작합니다. receiverIds: {}", receiverIds);
+        List<Notification> notifications = receiverIds.stream()
+                .map(receiverId ->
+                        new Notification(
+                                receiverId,
+                                title,
+                                content
+                        )).toList();
+        notificationRepository.saveAll(notifications);
+        log.info("새 알림 생성 완료했습니다. receiverIds: {}", receiverIds);
     }
 }

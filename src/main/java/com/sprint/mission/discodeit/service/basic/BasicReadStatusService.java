@@ -79,18 +79,11 @@ public class BasicReadStatusService implements ReadStatusService {
     @Override
     @Transactional
     public ReadStatusDto update(UUID readStatusId, ReadStatusUpdateRequest request) {
-        log.info("[ReadStatusService] 읽음 서비스 로직 실행 - ID: {}", readStatusId);
-        Instant newLastReadAt = request.newLastReadAt();
+        log.info("[ReadStatusService] 읽음 상태 수정 실행 - ID: {}, newLastReadAt: {}", readStatusId, request.newLastReadAt());
+
         ReadStatus readStatus = readStatusRepository.findById(readStatusId)
                 .orElseThrow(() -> new ReadStatusNotFoundException(readStatusId));
-
-        if (request.newLastReadAt() != null) {
-            readStatus.update(newLastReadAt);
-        }
-
-        if (request.newNotificationEnabled() != null) {
-            readStatus.updateNotificationEnabled(request.newNotificationEnabled());
-        }
+        readStatus.update(request.newLastReadAt(), request.newNotificationEnabled());
 
         log.info("[ReadStatusService] 읽음 상태 변경 완료 - ID: {}", readStatusId);
         return readStatusMapper.toDto(readStatusRepository.save(readStatus));

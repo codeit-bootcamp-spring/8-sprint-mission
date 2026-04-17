@@ -1,71 +1,73 @@
 package com.sprint.mission.discodeit.event.listener;
 
-import com.sprint.mission.discodeit.entity.Notification;
-import com.sprint.mission.discodeit.entity.ReadStatus;
-import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.dto.dto.ChannelDto;
+import com.sprint.mission.discodeit.dto.dto.MessageDto;
+import com.sprint.mission.discodeit.entity.*;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.service.ChannelService;
+import com.sprint.mission.discodeit.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class NotificationRequiredEventListener {
 
-    private final NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
     private final ReadStatusRepository readStatusRepository;
+    private final ChannelService channelService;
     private final UserRepository userRepository;
 
     @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @TransactionalEventListener
     public void on(MessageCreatedEvent event) {
-        log.info("[NotificationListener] MessageCreatedEvent 수신 - ChannelId: {}", event.channelId());
+        MessageDto message = event.getData();
+        UUID channelId = message.channelId();
+        ChannelDto channel = channelService.find(channelId);
 
-        List<ReadStatus> targetReadStatuses = readStatusRepository.findAllByChannelIdAndNotificationEnabledTrue(event.channelId());
+        log.info("[NotificationListener] MessageCreatedEvent 수신");
 
-        List<Notification> notifications = targetReadStatuses.stream()
-                .map(ReadStatus::getUser)
-                .filter(user -> !user.getId().equals(event.senderId())) // 본인 제외
-                .map(receiver -> {
-                    return new Notification(
-                            receiver,
-                            String.format("%s (#%s)", event.senderName(), event.channelName()),
-                            event.content()
-                    );
-                })
-                .toList();
+        Set<UUID> receiverIds = readStatusRepository.findAllByChannelIdAndNotificationEnabledTrue(channelId)
+                .stream()
+                .map(readStatus -> readStatus.getUser().getId())
+                .filter(receiverId -> !receiverId.equals(message.author().id()))
+                .collect(Collectors.toSet());
+        String title = message.author().username()
+                .concat(
+                        channel.type().equals(ChannelType.PUBLIC) ?
+                                String.format(" (#%s)", channel.name()) : ""
+                );
+        String content = message.content();
 
-        if (!notifications.isEmpty()) {
-            notificationRepository.saveAll(notifications);
-            log.info("[NotificationListener] {}건의 메시지 알림 생성 완료", notifications.size());
-        }
+        notificationService.create(receiverIds, title, content);
     }
 
     @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @TransactionalEventListener
     public void on(RoleUpdatedEvent event) {
-        log.info("[NotificationListener] RoleUpdatedEvent 수신 - UserId: {}", event.userId());
+        UUID userId = event.userId();
+        Role oldRole = event.oldRole();
+        Role newRole = event.newRole();
+        log.info("[NotificationListener] RoleUpdatedEvent 수신");
 
-        // userId를 가진 프록시 객체를 생성함
-        User proxyUser = userRepository.getReferenceById(event.userId());
+        String title = "권한이 변경되었습니다.";
+        String content = String.format("%s -> %s", oldRole, newRole);
 
-        Notification notification = new Notification(
-                proxyUser,
-                "권한이 변경되었습니다.",
-                String.format("%s -> %s", event.oldRole(), event.newRole())
-        );
+        notificationService.create(Set.of(userId), title, content);
 
-        notificationRepository.save(notification);
-        log.info("[NotificationListener] 권한 변경 알림 생성 완료 - UserId: {}", event.userId());
+        log.info("[NotificationListener] 권한 변경 알림 생성 완료");
     }
 }

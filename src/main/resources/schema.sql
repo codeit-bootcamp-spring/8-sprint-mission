@@ -105,8 +105,7 @@ CREATE TABLE IF NOT EXISTS notifications
     title       varchar(100) NOT NULL,
     content     varchar(200) NOT NULL,
     -- table level constraints
-    CONSTRAINT pk_notification_id PRIMARY KEY (id),
-    CONSTRAINT fk_notification_user_id FOREIGN KEY (receiver_id) REFERENCES users (id) ON DELETE CASCADE
+    CONSTRAINT pk_notification_id PRIMARY KEY (id)
 );
 
 -- 인덱스 추가

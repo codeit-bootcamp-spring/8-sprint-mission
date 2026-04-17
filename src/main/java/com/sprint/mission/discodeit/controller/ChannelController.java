@@ -37,10 +37,9 @@ public class ChannelController implements ChannelApi {
 
     @PostMapping("public")
     public ResponseEntity<ChannelDto> createPublicChannel(
-            @Valid @RequestBody PublicChannelCreateRequest channelCreateRequest,
-            @AuthenticationPrincipal DiscodeitUserDetails userDetails) {
+            @Valid @RequestBody PublicChannelCreateRequest channelCreateRequest) {
         log.info("Controller: Public 채널 생성 요청 - name: {}", channelCreateRequest.name());
-        ChannelDto channelDto = channelService.create(channelCreateRequest, userDetails.getUserDto().id());
+        ChannelDto channelDto = channelService.create(channelCreateRequest);
         log.info("Controller: Public 채널 생성 완료 - ID: {}", channelDto.id());
         return ResponseEntity
                 .status(HttpStatus.CREATED)

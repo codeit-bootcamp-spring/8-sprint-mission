@@ -23,9 +23,9 @@ public class NotificationController {
 
     @GetMapping
     public ResponseEntity<List<NotificationDto>> findNotifications(
-            @AuthenticationPrincipal DiscodeitUserDetails userDetails
+            @AuthenticationPrincipal DiscodeitUserDetails principal
     ) {
-        UUID receiverId = userDetails.getUserDto().id();
+        UUID receiverId = principal.getUserDto().id();
 
         List<NotificationDto> notifications = notificationService.findAllByReceiver(receiverId);
         return ResponseEntity
@@ -35,10 +35,11 @@ public class NotificationController {
 
     @DeleteMapping(path = "/{notificationId}")
     public ResponseEntity<Void> confirmNotification(
-            @PathVariable UUID notificationId,
-            @AuthenticationPrincipal DiscodeitUserDetails userDetails
+            @AuthenticationPrincipal DiscodeitUserDetails principal,
+            @PathVariable UUID notificationId
     ) {
-        notificationService.confirmAndDelete(notificationId, userDetails.getUserDto().id());
+        UUID receiverId = principal.getUserDto().id();
+        notificationService.confirmAndDelete(notificationId, receiverId);
         return ResponseEntity
                 .status(HttpStatus.NO_CONTENT)
                 .build();
