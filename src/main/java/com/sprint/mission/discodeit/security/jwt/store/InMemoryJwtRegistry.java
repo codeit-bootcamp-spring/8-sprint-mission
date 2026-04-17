@@ -81,29 +81,30 @@ public class InMemoryJwtRegistry implements JwtRegistry {
         }
     }
 
-    @Scheduled(fixedDelay = 1000 * 60 * 5)
     @Override
-    public void clearExpiredJwtInformation() {
-        log.info("[JwtRegistry] 만료된 JwtInformation 정리 스케줄러 실행");
+    public void invalidateByRefreshToken(String refreshToken) {
+        log.info("[JwtRegistry] Refresh Token 단일 값으로 무효화 처리 시작");
 
-        Date now = new Date();
+        boolean isRemoved = false;
 
+        // 모든 유저의 토큰 큐를 순회하여 일치하는 Refresh Token을 찾아 제거
         for (Queue<JwtInformation> tokens : origin.values()) {
-            tokens.removeIf(information -> {
-                try {
-                    Date expirationDate = jwtTokenProvider.getExpiration(information.getAccessToken());
+            boolean removedInQueue = tokens.removeIf(
+                    information -> information.getRefreshToken().equals(refreshToken)
+            );
 
-                    return expirationDate.before(now);
-                } catch (Exception e) {
-                    log.warn("[JwtRegistry] 토큰 파싱 실패, 삭제 처리: {}", e.getMessage());
-                    return true;
-                }
-            });
+            if (removedInQueue) {
+                isRemoved = true;
+                break;
+            }
         }
 
-        // JwtInformation 정보가 없는 경우 Map에서 삭제하여 메모리 확보
-        origin.entrySet().removeIf(entry -> entry.getValue().isEmpty());
-
-        log.info("[JwtRegistry] 만료된 JwtInformation 토큰 정리 완료");
+        // 삭제 후 큐가 비어버린 유저가 있는 경우 맵에서 제거하여 메모리를 확보함.
+        if (isRemoved) {
+            origin.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+            log.info("[JwtRegistry] Refresh Token 무효화 완료");
+        } else {
+            log.warn("[JwtRegistry] 무효화하려는 Refresh Token을 찾을 수 없습니다.");
+        }
     }
 }

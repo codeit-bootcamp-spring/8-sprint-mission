@@ -50,7 +50,8 @@ public class JwtLogoutHandler implements LogoutHandler {
                             jwtRegistry.invalidateJwtInformationByUserId(userId);
                             log.info("[JwtLogoutHandler] RT 무효화 완료: userId={}", userId);
                         } else {
-                            log.warn("[JwtLogoutHandler] 유효하지 않은 RT로 인해 무효화를 건너뜀");
+                            jwtRegistry.invalidateByRefreshToken(refreshToken);
+                            log.warn("[JwtLogoutHandler] 유저 ID 파싱 실패. 해당 리프레시 토큰 단건 무효화 처리");
                         }
                     });
         }
