@@ -170,7 +170,8 @@ public class JwtTokenProvider {
         // 토큰 직렬화: 실질적으로 JWT 토큰을 생성한 후 URL 안전한 문자열(Base64 인코딩)로 직렬화하는 메서드.
         String completedJWT = signedJWT.serialize();
 
-        log.info("[TokenProvider] generateToken: {}의 {} 토큰 생성 완료: {}", userDetails.getUsername(), tokenType, completedJWT);
+        // 토큰 값 대신 토큰 ID(jti)나 마스킹된 값만 로깅
+        log.info("[TokenProvider] generateToken: {} 토큰 생성 완료: jti={}", tokenType, tokenId);
 
         return completedJWT;
     }
