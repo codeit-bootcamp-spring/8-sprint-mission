@@ -9,6 +9,9 @@ import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +30,8 @@ public class BasicNotificationService implements NotificationService {
     private final NotificationMapper notificationMapper;
 
     @Override
+    @Cacheable(value = "notifications", key = "#receiverId")
+    @PreAuthorize("principal.userDto.id == #receiverId")
     public List<NotificationDto> findAllByReceiver(UUID receiverId) {
         return notificationRepository.findAllByReceiverIdOrderByCreatedAtDesc(receiverId)
                 .stream()
@@ -34,9 +39,12 @@ public class BasicNotificationService implements NotificationService {
                 .toList();
     }
 
-    @Transactional
+
     @Override
-    public void confirmAndDelete(UUID notificationId, UUID userId) {
+    @CacheEvict(value = "notifications", key = "#receiverId")
+    @PreAuthorize("principal.userDto.id == #receiverId")
+    @Transactional
+    public void confirmAndDelete(UUID notificationId, UUID receiverId) {
         log.info("[BasicNotificationService]  알림 확인 후 삭제 로직 시작 - ID: {}", notificationId);
 
         // 알림이 없는 경우 404 ErrorResponse 
@@ -44,8 +52,8 @@ public class BasicNotificationService implements NotificationService {
                 .orElseThrow(() -> new NotificationNotFoundException(notificationId));
 
         // 인가되지 않은 요청 403 ErrorResponse
-        if (!notification.getReceiverId().equals(userId)) {
-            log.warn("[BasicNotificationService] 권한 없는 알림 삭제 시도 - 알림 ID: {}, 요청자 ID: {}", notificationId, userId);
+        if (!notification.getReceiverId().equals(receiverId)) {
+            log.warn("[BasicNotificationService] 권한 없는 알림 삭제 시도 - 알림 ID: {}, 요청자 ID: {}", notificationId, receiverId);
             throw new NotificationAccessDeniedException(notificationId);
         }
 

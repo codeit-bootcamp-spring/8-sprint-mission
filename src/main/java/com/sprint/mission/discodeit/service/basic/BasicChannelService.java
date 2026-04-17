@@ -16,6 +16,8 @@ import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +41,7 @@ public class BasicChannelService implements ChannelService {
     private final ChannelMapper channelMapper;
 
     @Override
+    @CacheEvict(value = "channels", allEntries = true)
     @PreAuthorize("hasRole('CHANNEL_MANAGER')")
     @Transactional
     public ChannelDto create(PublicChannelCreateRequest request) {
@@ -55,6 +58,7 @@ public class BasicChannelService implements ChannelService {
     }
 
     @Override
+    @CacheEvict(value = "channels", allEntries = true)
     @Transactional
     public ChannelDto create(PrivateChannelCreateRequest request) {
         log.info("Service - Private 채널 생성 요청");
@@ -88,6 +92,7 @@ public class BasicChannelService implements ChannelService {
     }
 
     @Override
+    @Cacheable(value = "channels", key = "#userId")
     public List<ChannelDto> findAll(UUID userId) {
         List<UUID> mySubscribedChannelIds = readStatusRepository.findAllByUserIdWithChannel(userId)
                 .stream()
@@ -101,7 +106,9 @@ public class BasicChannelService implements ChannelService {
                 .toList();
     }
 
+
     @Override
+    @CacheEvict(value = "channels", allEntries = true)
     @PreAuthorize("hasRole('CHANNEL_MANAGER')")
     @Transactional
     public ChannelDto update(UUID channelId, PublicChannelUpdateRequest request) {
@@ -124,6 +131,7 @@ public class BasicChannelService implements ChannelService {
     }
 
     @Override
+    @CacheEvict(value = "channels", allEntries = true)
     @PreAuthorize("hasRole('CHANNEL_MANAGER')")
     @Transactional
     public void delete(UUID channelId) {

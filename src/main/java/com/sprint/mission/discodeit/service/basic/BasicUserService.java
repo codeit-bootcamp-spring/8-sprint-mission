@@ -23,6 +23,8 @@ import com.sprint.mission.discodeit.security.jwt.store.JwtRegistry;
 import com.sprint.mission.discodeit.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -50,6 +52,7 @@ public class BasicUserService implements UserService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
+    @CacheEvict(value = "users", allEntries = true)
     @Transactional
     public UserDto create(UserCreateRequest request,
                           Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
@@ -94,6 +97,7 @@ public class BasicUserService implements UserService {
         return userMapper.toDto(user, isOnline);
     }
 
+    @Cacheable(value = "users", key = "'all'")
     @Override
     public List<UserDto> findAll() {
         return userRepository.findAll().stream()
@@ -104,8 +108,9 @@ public class BasicUserService implements UserService {
                 .toList();
     }
 
-    @PreAuthorize("principal.userDto.id == #userId")
     @Override
+    @CacheEvict(value = "users", allEntries = true)
+    @PreAuthorize("principal.userDto.id == #userId")
     @Transactional
     public UserDto update(UUID userId, UserUpdateRequest request,
                           Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
@@ -163,8 +168,9 @@ public class BasicUserService implements UserService {
         return userMapper.toDto(userRepository.save(user), isOnline);
     }
 
-    @PreAuthorize("principal.userDto.id == #userId")
     @Override
+    @CacheEvict(value = "users", allEntries = true)
+    @PreAuthorize("principal.userDto.id == #userId")
     @Transactional
     public void delete(UUID userId) {
         User user = userRepository.findById(userId)
@@ -187,8 +193,9 @@ public class BasicUserService implements UserService {
         log.info("Service: 사용자 DB 삭제 완료 - ID: {}", userId);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @Override
+    @CacheEvict(value = "users", allEntries = true)
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public UserDto updateUserRole(UUID userId, Role newRole) {
         User user = userRepository.findById(userId)

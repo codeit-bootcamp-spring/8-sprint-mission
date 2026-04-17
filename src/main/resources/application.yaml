@@ -8,7 +8,15 @@ spring:
       # 최대 업로드 가능 용량
       max-request-size: 20MB
       # 임시 파일 저장 경로
-
+  #  CacheConfig에 있는 내용이라 주석처리 했습니다.
+  #  cache:
+  #    caffeine:
+  #      spec: >
+  #        maximumSize=100,
+  #        expireAfterAccess=600s,
+  #        recordStats
+  
+  
   jpa:
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -61,6 +69,8 @@ management:
       show-details: always
     info:
       access: read_only
+    caches:
+      access: unrestricted
   observations:
     annotations:
       enabled: true
