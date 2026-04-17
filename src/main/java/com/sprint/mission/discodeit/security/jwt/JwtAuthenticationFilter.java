@@ -103,9 +103,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     log.info("[JwtAuthenticationFilter] SecurityContext 인증 설정 완료: username={}", username);
                 } else {
-                    // 토큰 유효성 검사 실패 시 처리(401)
-                    log.info("[JwtAuthenticationFilter] 토큰 유효성 검사 실패");
-                    sendUnauthorized(response, "Invalid JWT Token");
+                    log.info("[JwtAuthenticationFilter] 토큰 유효성 검사 실패 - 인증 없이 계속 진행");
+                    // 토큰이 유효하지 않을 경우 401을 반환하지 않고 SecurityContext를 설정하지 않고 필터 체인을 계속 진행
+                    SecurityContextHolder.clearContext();
                     return;
                 }
             }
