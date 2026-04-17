@@ -303,6 +303,13 @@ public class JwtTokenProvider {
                 return false;
             }
 
+            // 실제 값과 기대 값이 다른지 확인하는 로직
+            String actualType = signedJWT.getJWTClaimsSet().getStringClaim("type");
+            if (!expectedType.equals(actualType)) {
+                log.warn("[TokenProvider] 토큰 타입 불일치: expected={}, actual={}", expectedType, actualType);
+                return false;
+            }
+
             // 만료 시간 검증
             log.info("TokenProvider] verifyToken: 만료 시간 검증 시작");
             Date exp = signedJWT.getJWTClaimsSet().getExpirationTime();
