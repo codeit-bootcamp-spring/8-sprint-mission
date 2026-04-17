@@ -63,9 +63,9 @@ public class AuthController implements AuthApi {
             String refreshToken,
             HttpServletResponse response) {
 
-        // 쿠키 값이 없거나(null) 유효하지 않으면 400 응답을 반환한다.
+        // 쿠키 값이 없거나(null) 유효하지 않으면 401 응답을 반환한다.
         if (refreshToken == null || !jwtTokenProvider.validateRefreshToken(refreshToken)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         if (!jwtRegistry.hasActiveJwtInformationByRefreshToken(refreshToken)) {
