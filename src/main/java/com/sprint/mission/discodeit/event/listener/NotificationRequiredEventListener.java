@@ -23,7 +23,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Component
+// @Component
 @RequiredArgsConstructor
 public class NotificationRequiredEventListener {
 

@@ -9,6 +9,8 @@ import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,6 +30,7 @@ public class BasicNotificationService implements NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final NotificationMapper notificationMapper;
+    private final CacheManager cacheManager;
 
     @Override
     @Cacheable(value = "notifications", key = "#receiverId")
@@ -77,6 +80,20 @@ public class BasicNotificationService implements NotificationService {
                                 content
                         )).toList();
         notificationRepository.saveAll(notifications);
+        evictNotificationCache(receiverIds);
         log.info("새 알림 생성 완료했습니다. receiverIds: {}", receiverIds);
+    }
+
+    // 기존 캐시를 삭제하여 다음번에 findAllByReceiver로 조회했을 경우 무조건 캐시 미스가 나게 해야하기 함.
+    private void evictNotificationCache(Set<UUID> receiverIds) {
+        Cache cache = cacheManager.getCache("notifications");
+        if (cache != null) {
+            for (UUID receiverId : receiverIds) {
+                cache.evict(receiverId);
+                log.debug("알림 캐시를 제거했습니다. receiverId: {}", receiverId);
+            }
+        } else {
+            log.warn("알림 캐시가 존재하지 않습니다.");
+        }
     }
 }
