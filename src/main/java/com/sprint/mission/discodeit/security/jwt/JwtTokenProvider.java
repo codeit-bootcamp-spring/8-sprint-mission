@@ -350,40 +350,25 @@ public class JwtTokenProvider {
         }
     }
 
-    public String getTokenId(String token) {
+    public UUID getUserIdFromToken(String token) {
         try {
-            log.info("[TokenProvider] getTokenId 호출됨: jti 추출 시작");
+            log.info("[TokenProvider] getUserIdFromToken 호출됨: userId 추출 시작");
 
             SignedJWT signedJWT = SignedJWT.parse(token);
-            String jti = signedJWT.getJWTClaimsSet().getJWTID();
+            Object userIdClaim = signedJWT.getJWTClaimsSet().getClaim("userId");
 
-            log.info("[TokenProvider] getTokenId 결과: jti={}", jti);
+            if (userIdClaim == null) {
+                log.warn("[TokenProvider] 토큰 내에 userId 클레임이 존재하지 않습니다.");
+                return null;
+            }
 
-            return jti;
+            UUID userId = UUID.fromString(userIdClaim.toString());
+            log.info("[TokenProvider] getUserIdFromToken 결과: userId={}", userId);
+
+            return userId;
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid JWT token", e);
-        }
-    }
-
-    /**
-     * 토큰에서 발급 시간(iat)을 추출한다.
-     * 디버깅이나 감사 로그에서 토큰 생성 시점을 확인할 때 유용하다.
-     *
-     * @param token JWT 문자열
-     * @return 발급 시간(Date)
-     */
-    public Date getIssuedAt(String token) {
-        try {
-            log.info("[TokenProvider] getIssuedAt 호출됨: iat 추출 시작");
-
-            SignedJWT signedJWT = SignedJWT.parse(token);
-            Date iat = signedJWT.getJWTClaimsSet().getIssueTime();
-
-            log.info("[TokenProvider] getIssuedAt 결과: iat={}", iat);
-
-            return iat;
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid JWT token", e);
+            log.error("[TokenProvider] userId 추출 중 예외 발생: {}", e.getMessage());
+            return null;
         }
     }
 
@@ -404,38 +389,6 @@ public class JwtTokenProvider {
             log.info("[TokenProvider] getExpiration 결과: exp={}", exp);
 
             return exp;
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid JWT token", e);
-        }
-    }
-
-    /**
-     * 직렬화된 JWT 문자열을 파싱하여 `JwtTokenEntity`로 변환한다.
-     * 컨트롤러나 핸들러 쪽에서 토큰의 메타데이터를 DB에 저장할 때 사용되는 유틸 메서드이다.
-     *
-     * @param token 직렬화된 JWT 문자열(Access 또는 Refresh)
-     * @return 발급.만료 시각과 타입이 채워진 `JwtTokenEntity`
-     */
-    public JwtTokenEntity toEntity(String token) {
-        try {
-            log.info("[TokenProvider] toEntity 호출됨: 토큰 메타데이터 변환 시작");
-
-            // 토큰 파싱
-            SignedJWT signedJWT = SignedJWT.parse(token);
-
-            // 토큰 클레임 추출
-            String jti = signedJWT.getJWTClaimsSet().getJWTID();
-            String username = signedJWT.getJWTClaimsSet().getSubject();
-            String tokenType = (String) signedJWT.getJWTClaimsSet().getClaim("type");
-            OffsetDateTime issuedAt = OffsetDateTime.ofInstant(signedJWT.getJWTClaimsSet().getIssueTime().toInstant(), ZoneOffset.UTC);
-            OffsetDateTime expiresAt = OffsetDateTime.ofInstant(signedJWT.getJWTClaimsSet().getExpirationTime().toInstant(), ZoneOffset.UTC);
-
-            // 추출된 토큰 메타데이터를 JwtTokenEntity 객체로 변환
-            JwtTokenEntity entity = new JwtTokenEntity(jti, username, tokenType, issuedAt, expiresAt);
-
-            log.info("[TokenProvider] toEntity 결과: jti={}, username={}, type={}", jti, username, tokenType);
-
-            return entity;
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid JWT token", e);
         }
