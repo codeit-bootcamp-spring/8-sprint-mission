@@ -4,6 +4,7 @@ import com.sprint.mission.discodeit.dto.dto.ChannelDto;
 import com.sprint.mission.discodeit.dto.request.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
+import com.sprint.mission.discodeit.service.auth.DiscodeitUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,7 +33,8 @@ public interface ChannelApi {
             )
     )
     ResponseEntity<ChannelDto> createPublicChannel(
-            @Parameter(description = "Public Channel 생성 정보") PublicChannelCreateRequest request
+            @Parameter(description = "Public Channel 생성 정보") PublicChannelCreateRequest request,
+            @Parameter(description = "로그인한 사용자") DiscodeitUserDetails userDetails
     );
 
     @Operation(summary = "Private Channel 생성", operationId = "create_4")

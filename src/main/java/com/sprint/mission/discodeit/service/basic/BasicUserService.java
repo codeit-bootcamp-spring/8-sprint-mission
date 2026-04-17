@@ -10,6 +10,7 @@ import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.event.BinaryContentDeletedEvent;
+import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.UserException.DuplicateEmailException;
 import com.sprint.mission.discodeit.exception.UserException.DuplicateUsernameException;
 import com.sprint.mission.discodeit.exception.UserException.UserNotFoundException;
@@ -20,7 +21,6 @@ import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.security.jwt.store.JwtRegistry;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -47,7 +47,7 @@ public class BasicUserService implements UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtRegistry jwtRegistry;
-    private final ApplicationEventPublisher applicationEventPublisher;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -194,15 +194,18 @@ public class BasicUserService implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
+        Role oldRole = user.getRole();
+
         user.updateRole(newRole);
-        User updatedUser = userRepository.save(user);
+
+        updatedEvent(userId, oldRole, newRole);
 
         jwtRegistry.invalidateJwtInformationByUserId(userId);
 
         log.info("[UserService] 사용자 권한 변경 및 JWT 무효화 완료!");
 
         // 세션이 무효화되어 오프라인 처리
-        return userMapper.toDto(updatedUser, false);
+        return userMapper.toDto(user, false);
     }
 
     //중복 코드 제거
@@ -225,7 +228,7 @@ public class BasicUserService implements UserService {
                 id,
                 bytes
         );
-        applicationEventPublisher.publishEvent(event);
+        eventPublisher.publishEvent(event);
     }
 
     // 삭제 이벤트 발생
@@ -233,7 +236,17 @@ public class BasicUserService implements UserService {
         BinaryContentDeletedEvent event = new BinaryContentDeletedEvent(
                 id
         );
-        applicationEventPublisher.publishEvent(event);
+        eventPublisher.publishEvent(event);
+    }
+
+    // 사용자의 권한 변경 후 이벤트 발생
+    private void updatedEvent(UUID id, Role oldRole, Role newRole) {
+        RoleUpdatedEvent event = new RoleUpdatedEvent(
+                id,
+                oldRole,
+                newRole
+        );
+        eventPublisher.publishEvent(event);
     }
 
     private boolean isUserOnline(UUID userId) {

@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.*;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.exception.ChannelExcption.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.MessageException.MessageNotFoundException;
 import com.sprint.mission.discodeit.exception.UserException.UserNotFoundException;
@@ -98,6 +99,17 @@ public class BasicMessageService implements MessageService {
         );
 
         Message savedMessage = messageRepository.save(message);
+
+        MessageCreatedEvent event = new MessageCreatedEvent(
+                channel.getId(),
+                channel.getName(),
+                author.getId(),
+                author.getUsername(),
+                message.getContent()
+        );
+
+        applicationEventPublisher.publishEvent(event);
+
         log.info("Service: 메시지 생성 성공 - ID: {}", savedMessage.getId());
         return messageMapper.toDto(savedMessage);
     }

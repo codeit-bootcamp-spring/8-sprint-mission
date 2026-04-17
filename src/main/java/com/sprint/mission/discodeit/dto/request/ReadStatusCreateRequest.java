@@ -9,7 +9,8 @@ import java.util.UUID;
 public record ReadStatusCreateRequest(
         UUID userId,
         UUID channelId,
-        Instant lastReadAt
+        Instant lastReadAt,
+        boolean newNotificationEnabled
 ) {
 
 }

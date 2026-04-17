@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS messages CASCADE;
 DROP TABLE IF EXISTS read_statuses CASCADE;
 DROP TABLE IF EXISTS binary_contents CASCADE;
 DROP TABLE IF EXISTS message_attachments CASCADE;
+DROP TABLE IF EXISTS notifications CASCADE;
 
 -- 2. 테이블 생성
 CREATE TABLE IF NOT EXISTS binary_contents
@@ -71,12 +72,13 @@ CREATE TABLE IF NOT EXISTS messages
 CREATE TABLE IF NOT EXISTS read_statuses
 (
     -- column level constraints
-    id           uuid                     NOT NULL,
-    created_at   timestamp with time zone NOT NULL,
-    updated_at   timestamp with time zone,
-    user_id      uuid                     NOT NULL,
-    channel_id   uuid                     NOT NULL,
-    last_read_at timestamp with time zone NOT NULL,
+    id                   uuid                     NOT NULL,
+    created_at           timestamp with time zone NOT NULL,
+    updated_at           timestamp with time zone,
+    user_id              uuid                     NOT NULL,
+    channel_id           uuid                     NOT NULL,
+    last_read_at         timestamp with time zone NOT NULL,
+    notification_enabled boolean                  NOT NULL,
     -- table level constraints
     CONSTRAINT pk_read_statuses_id PRIMARY KEY (id),
     CONSTRAINT fk_read_statuses_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
@@ -93,6 +95,18 @@ CREATE TABLE IF NOT EXISTS message_attachments
     CONSTRAINT pk_message_id_attachment_id PRIMARY KEY (message_id, attachment_id),
     CONSTRAINT fk_message_attachments_message_id FOREIGN KEY (message_id) REFERENCES messages (id) ON DELETE CASCADE,
     CONSTRAINT fk_message_attachments_attachment_id FOREIGN KEY (attachment_id) REFERENCES binary_contents (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS notifications
+(
+    -- column level constraints
+    id          uuid         NOT NULL,
+    receiver_id uuid         NOT NULL,
+    title       varchar(100) NOT NULL,
+    content     varchar(200) NOT NULL,
+    -- table level constraints
+    CONSTRAINT pk_notification_id PRIMARY KEY (id),
+    CONSTRAINT fk_notification_user_id FOREIGN KEY (receiver_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 -- 인덱스 추가
@@ -135,12 +149,19 @@ COMMENT ON COLUMN read_statuses.created_at IS '메시지 읽음 상태생성시�
 COMMENT ON COLUMN read_statuses.updated_at IS '메시지 읽음 상태갱신시간';
 COMMENT ON COLUMN read_statuses.user_id IS '상위 유저코드';
 COMMENT ON COLUMN read_statuses.channel_id IS '상위 채널코드';
+COMMENT ON COLUMN read_statuses.notification_enabled IS '알람 여부';
 
 COMMENT ON COLUMN binary_contents.id IS '첨부파일코드';
 COMMENT ON COLUMN binary_contents.created_at IS '첨부파일생성시간';
 COMMENT ON COLUMN binary_contents.file_name IS '첨부파일이름';
 COMMENT ON COLUMN binary_contents.size IS '첨부파일크기';
 COMMENT ON COLUMN binary_contents.content_type IS '첨부파일타입';
+COMMENT ON COLUMN binary_contents.status IS '파일 업로드 상태';
 
 COMMENT ON COLUMN message_attachments.message_id IS '상위 메시지코드';
 COMMENT ON COLUMN message_attachments.attachment_id IS '상위 첨부파일코드';
+
+COMMENT ON COLUMN notifications.id IS '알림 코드';
+COMMENT ON COLUMN notifications.receiver_id IS '알림 대상자';
+COMMENT ON COLUMN notifications.title IS '알림 제목';
+COMMENT ON COLUMN notifications.content IS '알림 내용';

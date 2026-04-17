@@ -63,19 +63,13 @@ public class JwtTokenProvider {
 
         log.info("[TokenProvider] 생성자 호출됨: 토큰 서명/검증자 및 만료 시간 초기화");
 
-        // 주입받은 만료 시간 값들을 필드에 저장하여 토큰 생성 시 사용할 수 있도록 설정한다.
         this.accessTokenExpirationMs = accessTokenExpirationMs;
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
 
-        // 엑세스 토큰용 비밀키를 바이트 배열로 변환하여 HMAC-SHA256 서명자와 검증자를 생성한다.
-        // 이를 통해 엑세스 토큰의 무결성을 보장하고 위변조를 방지할 수 있다.
-        // Access 토큰 검증/서명을 위한 비밀키 바이트 배열을 준비한다.
         byte[] accessSecretBytes = accessTokenSecret.getBytes(StandardCharsets.UTF_8);
         this.accessTokenSigner = new MACSigner(accessSecretBytes);
         this.accessTokenVerifier = new MACVerifier(accessSecretBytes);
 
-        // 리프레시 토큰용 비밀키를 바이트 배열로 변환하여 별도의 서명자와 검증자를 생성한다.
-        // 엑세스 토큰과 다른 비밀키를 사용함으로써 각 토큰의 독립적인 보안성을 확보한다.
         byte[] refreshSecretBytes = refreshTokenSecret.getBytes(StandardCharsets.UTF_8);
         this.refreshTokenSigner = new MACSigner(refreshSecretBytes);
         this.refreshTokenVerifier = new MACVerifier(refreshSecretBytes);

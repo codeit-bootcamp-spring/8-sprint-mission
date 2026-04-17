@@ -70,7 +70,7 @@ class ReadStatusServiceTest {
     void createReadStatus_success() {
         // given
         ReadStatusCreateRequest request = new ReadStatusCreateRequest(user.getId(), channel.getId(),
-                Instant.now());
+                Instant.now(), false);
         ReadStatusDto dto = new ReadStatusDto(readStatus.getId(), user.getId(), channel.getId(),
                 readStatus.getLastReadAt());
 
@@ -97,7 +97,7 @@ class ReadStatusServiceTest {
     void createReadStatus_fail_alreadyExists() {
         // given
         ReadStatusCreateRequest request = new ReadStatusCreateRequest(user.getId(), channel.getId(),
-                Instant.now());
+                Instant.now(), true);
 
         given(userRepository.findById(user.getId())).willReturn(Optional.of(user));
         given(channelRepository.findById(channel.getId())).willReturn(Optional.of(channel));

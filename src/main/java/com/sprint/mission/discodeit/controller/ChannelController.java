@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.dto.request.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.controller.api.ChannelApi;
 import com.sprint.mission.discodeit.service.ChannelService;
+import com.sprint.mission.discodeit.service.auth.DiscodeitUserDetails;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -35,9 +37,10 @@ public class ChannelController implements ChannelApi {
 
     @PostMapping("public")
     public ResponseEntity<ChannelDto> createPublicChannel(
-            @Valid @RequestBody PublicChannelCreateRequest channelCreateRequest) {
+            @Valid @RequestBody PublicChannelCreateRequest channelCreateRequest,
+            @AuthenticationPrincipal DiscodeitUserDetails userDetails) {
         log.info("Controller: Public 채널 생성 요청 - name: {}", channelCreateRequest.name());
-        ChannelDto channelDto = channelService.create(channelCreateRequest);
+        ChannelDto channelDto = channelService.create(channelCreateRequest, userDetails.getUserDto().id());
         log.info("Controller: Public 채널 생성 완료 - ID: {}", channelDto.id());
         return ResponseEntity
                 .status(HttpStatus.CREATED)

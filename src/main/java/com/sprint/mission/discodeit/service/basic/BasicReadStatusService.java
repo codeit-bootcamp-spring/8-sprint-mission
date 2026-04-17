@@ -16,6 +16,7 @@ import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ReadStatusService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)
@@ -67,7 +69,6 @@ public class BasicReadStatusService implements ReadStatusService {
                 .orElseThrow(() -> new ReadStatusNotFoundException(readStatusId));
     }
 
-    //N+1 문제 발생할 수 있음
     @Override
     public List<ReadStatusDto> findAllByUserId(UUID userId) {
         return readStatusRepository.findAllByUserIdWithChannel(userId).stream()
@@ -78,13 +79,20 @@ public class BasicReadStatusService implements ReadStatusService {
     @Override
     @Transactional
     public ReadStatusDto update(UUID readStatusId, ReadStatusUpdateRequest request) {
+        log.info("[ReadStatusService] 읽음 서비스 로직 실행 - ID: {}", readStatusId);
         Instant newLastReadAt = request.newLastReadAt();
         ReadStatus readStatus = readStatusRepository.findById(readStatusId)
-                .orElseThrow(
-                        () -> new ReadStatusNotFoundException(readStatusId));
+                .orElseThrow(() -> new ReadStatusNotFoundException(readStatusId));
 
-        readStatus.update(newLastReadAt);
+        if (request.newLastReadAt() != null) {
+            readStatus.update(newLastReadAt);
+        }
 
+        if (request.newNotificationEnabled() != null) {
+            readStatus.updateNotificationEnabled(request.newNotificationEnabled());
+        }
+
+        log.info("[ReadStatusService] 읽음 상태 변경 완료 - ID: {}", readStatusId);
         return readStatusMapper.toDto(readStatusRepository.save(readStatus));
     }
 
