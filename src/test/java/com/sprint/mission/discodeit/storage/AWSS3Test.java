@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.storage;
 
 import java.io.IOException;
 import java.time.Duration;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +25,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequ
 
 @SpringBootTest(classes = AWSS3Test.class)
 @Disabled // 로컬/CI 환경에 AWS 키가 없을 때 테스트 제외
+@Slf4j
 public class AWSS3Test {
 
   @Value("${AWS_S3_ACCESS_KEY}")
@@ -70,7 +72,7 @@ public class AWSS3Test {
         .build();
 
     s3Client.putObject(putObjectRequest, RequestBody.fromString(content));
-    System.out.println("Upload complete: " + key);
+    log.info("Upload complete: {}", key);
   }
 
   @Test
@@ -84,7 +86,7 @@ public class AWSS3Test {
         .build();
 
     ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(getObjectRequest);
-    System.out.println("Downloaded content: " + new String(objectBytes.asByteArray()));
+    log.info("Downloaded content: {}", new String(objectBytes.asByteArray()));
   }
 
   @Test
@@ -107,6 +109,6 @@ public class AWSS3Test {
     // 3. S3Presigner를 사용하여 실제 URL 생성
     PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
 
-    System.out.println("Generated Presigned URL: " + presignedRequest.url());
+    log.info("Generated Presigned URL: {}", presignedRequest.url());
   }
 }

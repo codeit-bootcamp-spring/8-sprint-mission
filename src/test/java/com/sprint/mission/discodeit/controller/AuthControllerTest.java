@@ -1,7 +1,9 @@
 package com.sprint.mission.discodeit.controller;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -11,7 +13,12 @@ import com.sprint.mission.discodeit.auth.service.DiscodeitUserDetailsService;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.mapper.UserMapper;
+import com.sprint.mission.discodeit.security.JwtTokenProvider;
+import com.sprint.mission.discodeit.security.store.JwtSessionRegistry;
+import com.sprint.mission.discodeit.security.store.JwtTokenEntity;
 import com.sprint.mission.discodeit.service.UserService;
+import jakarta.servlet.http.Cookie;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,6 +53,12 @@ class AuthControllerTest {
   // 기존 AuthService 기반 테스트를 UserDetailsService 구조로 전환하기 위한 mock
   @MockitoBean
   private DiscodeitUserDetailsService customUserDetailsService;
+
+  @MockitoBean
+  private JwtTokenProvider jwtTokenProvider;
+
+  @MockitoBean
+  private JwtSessionRegistry jwtSessionRegistry;
 
   @Test
   @DisplayName("CSRF 토큰 조회 성공 테스트")
@@ -89,5 +102,72 @@ class AuthControllerTest {
     } finally {
       SecurityContextHolder.clearContext();
     }
+  }
+
+  @Test
+  @DisplayName("리프레시 토큰 Rotation으로 access token 재발급 성공")
+  void refreshAccessToken_Success_WithRotation() throws Exception {
+    String refreshToken = "old-refresh-token";
+    String rotatedRefreshToken = "new-refresh-token";
+    String username = "refreshuser";
+    String accessToken = "new-access-token";
+    String oldRefreshJti = "old-jti";
+    String newRefreshJti = "new-jti";
+
+    User user = new User(username, "refresh@example.com", "encoded-password", null);
+    DiscodeitUserDetails userDetails = new DiscodeitUserDetails(user);
+    UserDto userDto = new UserDto(UUID.randomUUID(), username, "refresh@example.com", null, true, null);
+    JwtTokenEntity accessEntity = new JwtTokenEntity("access-jti", username, "access",
+        OffsetDateTime.now(), OffsetDateTime.now().plusMinutes(30));
+    JwtTokenEntity rotatedEntity = new JwtTokenEntity(newRefreshJti, username, "refresh",
+        OffsetDateTime.now(), OffsetDateTime.now().plusDays(7));
+
+    given(jwtTokenProvider.validateRefreshToken(refreshToken)).willReturn(true);
+    given(jwtTokenProvider.getTokenId(refreshToken)).willReturn(oldRefreshJti);
+    given(jwtSessionRegistry.isRevoked(oldRefreshJti)).willReturn(false);
+    given(jwtTokenProvider.getUsernameFromToken(refreshToken)).willReturn(username);
+    given(customUserDetailsService.loadUserByUsername(username)).willReturn(userDetails);
+    given(jwtTokenProvider.generateAccessToken(userDetails)).willReturn(accessToken);
+    given(jwtTokenProvider.generateRefreshToken(userDetails)).willReturn(rotatedRefreshToken);
+    given(jwtTokenProvider.toEntity(accessToken)).willReturn(accessEntity);
+    given(jwtTokenProvider.getTokenId(rotatedRefreshToken)).willReturn(newRefreshJti);
+    given(jwtTokenProvider.toEntity(rotatedRefreshToken)).willReturn(rotatedEntity);
+    given(userMapper.toDto(user)).willReturn(userDto);
+
+    mockMvc.perform(post("/api/auth/refresh")
+            .cookie(new Cookie(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME, refreshToken)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.userDto.username").value(username))
+        .andExpect(jsonPath("$.accessToken").value(accessToken));
+
+    verify(jwtSessionRegistry).register(accessEntity);
+    verify(jwtSessionRegistry).register(rotatedEntity);
+    verify(jwtSessionRegistry).markReplaced(oldRefreshJti, newRefreshJti);
+    verify(jwtTokenProvider).addRefreshCookie(org.mockito.ArgumentMatchers.any(),
+        org.mockito.ArgumentMatchers.eq(rotatedRefreshToken));
+  }
+
+  @Test
+  @DisplayName("리프레시 토큰이 없으면 401 응답")
+  void refreshAccessToken_Failure_WhenCookieMissing() throws Exception {
+    mockMvc.perform(post("/api/auth/refresh"))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.code").value("INVALID_USER_CREDENTIALS"));
+  }
+
+  @Test
+  @DisplayName("폐기된 리프레시 토큰이면 401 응답")
+  void refreshAccessToken_Failure_WhenRevokedToken() throws Exception {
+    String refreshToken = "revoked-refresh-token";
+    String oldRefreshJti = "revoked-jti";
+
+    given(jwtTokenProvider.validateRefreshToken(refreshToken)).willReturn(true);
+    given(jwtTokenProvider.getTokenId(refreshToken)).willReturn(oldRefreshJti);
+    given(jwtSessionRegistry.isRevoked(oldRefreshJti)).willReturn(true);
+
+    mockMvc.perform(post("/api/auth/refresh")
+            .cookie(new Cookie(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME, refreshToken)))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.code").value("INVALID_USER_CREDENTIALS"));
   }
 }
