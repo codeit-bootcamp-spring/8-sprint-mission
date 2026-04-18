@@ -19,6 +19,7 @@ import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.message.MessageNotFoundException;
 import com.sprint.mission.discodeit.service.MessageService;
@@ -65,7 +66,7 @@ public class MessageControllerTest {
 
     testChannel = new Channel(ChannelType.PUBLIC, "test channel", "test description");
     testAuthor = new User("testUser", "test@naver.com", "test1234", null);
-    testAuthorDto = new UserDto(authorId, "testUser", "test@naver.com", null, true);
+    testAuthorDto = new UserDto(authorId, "testUser", "test@naver.com", null, true, Role.USER);
     testMessage = new Message("안녕", testChannel, testAuthor, List.of());
     testMessageDto = new MessageDto(messageId, Instant.now(), Instant.now(), "안녕", channelId,
         testAuthorDto, List.of());

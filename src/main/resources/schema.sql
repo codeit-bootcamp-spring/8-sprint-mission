@@ -108,12 +108,5 @@ CREATE TABLE message_attachments
             ON DELETE CASCADE
 );
 
-CREATE TABLE persistent_logins
-(
-    username  VARCHAR(64)              NOT NULL,
-    series    VARCHAR(64) PRIMARY KEY,
-    token     VARCHAR(64)              NOT NULL,
-    last_used timestamp with time zone NOT NULL
-);
 
 

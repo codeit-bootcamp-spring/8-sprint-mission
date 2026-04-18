@@ -2,7 +2,7 @@ package com.sprint.mission.discodeit.slice.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.sprint.mission.discodeit.config.JpaConfig;
+import com.sprint.mission.discodeit.config.AppConfig;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
@@ -26,7 +26,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
-@Import(JpaConfig.class)
+@Import(AppConfig.class)
 @DataJpaTest
 @ActiveProfiles("test")
 @DisplayName("MessageRepository 테스트")

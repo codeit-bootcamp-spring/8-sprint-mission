@@ -83,7 +83,7 @@ public class UserServiceTest {
     mockProfileDto = new BinaryContentDto(profileId, "profile.png", (long) profileBytes.length,
         "image/png");
     mockUser = new User(username, email, password, mockProfile);
-    mockUserDto = new UserDto(userId, username, email, mockProfileDto, Role.USER);
+    mockUserDto = new UserDto(userId, username, email, mockProfileDto, true, Role.USER);
   }
 
   @Nested
@@ -253,7 +253,7 @@ public class UserServiceTest {
       });
 
       UserDto updatedDto = new UserDto(userId, userReq.newUsername(), userReq.newEmail(),
-          mockProfileDto, Role.USER);
+          mockProfileDto, true, Role.USER);
 
       given(userMapper.toDto(any(User.class))).willReturn(updatedDto);
 

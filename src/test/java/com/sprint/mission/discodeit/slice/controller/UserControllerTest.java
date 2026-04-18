@@ -60,7 +60,8 @@ public class UserControllerTest {
     testProfile = new BinaryContent("profile.png", 10L, "image/png");
     testProfileDto = new BinaryContentDto(profileId, "profile.png", 10L, "image/png");
     testUser = new User("testUser", "test@naver.com", "test1234", testProfile);
-    testUserDto = new UserDto(userId, "testUser", "test@naver.com", testProfileDto, Role.USER);
+    testUserDto = new UserDto(userId, "testUser", "test@naver.com", testProfileDto, true,
+        Role.USER);
   }
 
   @Test
@@ -144,7 +145,7 @@ public class UserControllerTest {
         userJson.getBytes(StandardCharsets.UTF_8));
 
     testUserDto = new UserDto(userId, "updateTestUser", "test@naver.com", testProfileDto,
-        Role.USER);
+        true, Role.USER);
     given(userService.update(eq(userId), eq(userReq), any())).willReturn(testUserDto);
 
     // when & then
