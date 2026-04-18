@@ -34,7 +34,7 @@ management:
     web:
       exposure:
         # 외부로 노출할 엔드포인트 지정
-        include: health,info,metrics,loggers
+        include: health,info
   endpoint:
     health:
       show-details: when-authorized
@@ -72,3 +72,14 @@ discodeit:
       presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600}
     local:
       root-path: C:\myWs\uploadedFiles
+
+  security:
+    remember-me:
+      key: ${REMEMBER_ME_KEY:discodeit-secret-key}
+    jwt:
+      # 환경 변수명 DISCODEIT_JWT_SECRET을 참조하고, 없을 경우 기본값 OR 비워둔다.
+      secret: ${DISCODEIT_JWT_SECRET}
+      # 액세스 토큰 유효 기간 (예: 1시간 = 3600000ms)
+      access-token-validity: 3600000
+      # 리프레시 토큰 유효 기간 (예: 7일 = 604800000ms)
+      refresh-token-validity: 604800000

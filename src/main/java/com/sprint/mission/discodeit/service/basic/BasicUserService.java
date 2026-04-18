@@ -14,7 +14,7 @@ import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
+import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.UserService;
 import java.util.List;
@@ -22,8 +22,6 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +37,7 @@ public class BasicUserService implements UserService {
   private final BinaryContentService binaryContentService;
   private final BinaryContentRepository binaryContentRepository;
   private final PasswordEncoder passwordEncoder;
-  private final SessionRegistry sessionRegistry;
+  private final JwtRegistry jwtRegistry;
 
   @Override
   @Transactional
@@ -63,7 +61,7 @@ public class BasicUserService implements UserService {
     User savedUser = userRepository.save(user);
 
     log.info("[User] create success userId={}", savedUser.getId());
-    return userMapper.toDto(user, isUserOnline(user.getId()));
+    return userMapper.toDto(user, isUserOnline(savedUser.getId()));
   }
 
   @Override
@@ -133,20 +131,21 @@ public class BasicUserService implements UserService {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new UserNotFoundException(userId));
 
+    // 권한이 이전과 같으면 로직 수행 X -> 즉시 반환
+    if (user.getRole().equals(newRole)) {
+      log.info("동일한 권한으로의 변경 요청 - userId: {}", userId);
+      return userMapper.toDto(user, isUserOnline(user.getId()));
+    }
+
+    // 변경 전 권한 (로그용)
+    UserRole oldRole = user.getRole();
+
     user.updateRole(newRole);
 
-    // 권한 변경 -> 세션 강제 만료
-    List<Object> allPrincipals = sessionRegistry.getAllPrincipals();
-    for (Object principal : allPrincipals) {
-      if (principal instanceof DiscodeitUserDetails userDetails) {
-        if (userDetails.getUserDto().id().equals(userId)) {
-          // 해당 유저의 모든 세션 찾아 만료 처리
-          sessionRegistry.getAllSessions(principal, false)
-              .forEach(SessionInformation::expireNow);
-        }
-      }
-    }
-    return userMapper.toDto(user, isUserOnline(user.getId()));
+    log.info("[AUTH_CHANGE] 권한 변경 - userId: {}, {} → {}", userId, oldRole, newRole);
+
+    jwtRegistry.invalidateJwtInformationByUserId(userId);
+    return userMapper.toDto(user, isUserOnline(userId));
   }
 
   // 비즈니스 로직 헬퍼 메서드
@@ -154,15 +153,6 @@ public class BasicUserService implements UserService {
     if (userRepository.existsByUsernameOrEmail(username, email)) {
       throw new UserAlreadyExistsException(username, email);
     }
-  }
-
-  // 온라인 여부 판단 (세션 레지스트리 활용)
-  private boolean isUserOnline(UUID userId) {
-    return sessionRegistry.getAllPrincipals().stream()
-        .filter(p -> p instanceof DiscodeitUserDetails)
-        .map(p -> (DiscodeitUserDetails) p)
-        .anyMatch(userDetails -> userDetails.getUserDto().id().equals(userId) &&
-            !sessionRegistry.getAllSessions(userDetails, false).isEmpty());
   }
 
   private void validateUpdateUser(User user, UserUpdateRequest request) {
@@ -194,5 +184,10 @@ public class BasicUserService implements UserService {
     return binaryContentRepository.findById(dto.id())
         .orElseThrow(
             () -> new BinaryContentNotFoundException(dto.id()));
+  }
+
+  // 온라인 여부 판단
+  private boolean isUserOnline(UUID userId) {
+    return jwtRegistry.hasActiveJwtInformationByUserId(userId);
   }
 }
