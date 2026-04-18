@@ -1,4 +1,4 @@
-package com.sprint.mission.discodeit.dto.dto;
+package com.sprint.mission.discodeit.DTO.dto;
 
 public record JwtDTO(
         UserDto userDto,
