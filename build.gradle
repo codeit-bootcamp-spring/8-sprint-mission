@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.sprint.mission'
-version = '2.0-M9'
+version = '2.1-M10'
 
 // 2. Repositories 블록은 최상위 레벨에 위치해야 합니다.
 repositories {
@@ -58,9 +58,17 @@ dependencies {
 
     // AWS S3 SDK 추가
     implementation 'software.amazon.awssdk:s3:2.30.0'
-    
+
     // Spring Security 의존성 추가
     implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // JWT 라이브러리 추가
+    implementation 'com.nimbusds:nimbus-jose-jwt:10.3'
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
 
 }
 

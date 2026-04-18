@@ -23,3 +23,14 @@ spring:
 logging:
   level:
     com.sprint.mission.discodeit: debug
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
+    org.springframework.security: trace
+
+discodeit:
+  setup:
+    default-password: password
+    admin:
+      username: admin
+      email: admin@discodeit.com
+      password: Admin123!

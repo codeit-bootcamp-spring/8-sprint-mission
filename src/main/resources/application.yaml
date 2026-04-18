@@ -32,20 +32,22 @@ spring:
         use_sql_comments: true
 
 # 3. BinaryContent 저장소 설정
+# JWT 설정 추가
 discodeit:
+  jwt:
+    secret: ${JWT_SECRET:default-secret-key-that-is-at-least-32-bytes-long!123}
+    access-expiration-ms: 3600000
+    refresh-expiration-ms: 604800000
   storage:
     type: local
     local:
       root-path: ./storage/binary-contents
+  jwt:
+    secret-key: your-very-long-and-secure-random-secret-key-placeholder
+    access-token-expiration: 3600000 # 1시간 (ms)
 
-# 4. SQL 로그 상세 설정
-logging:
-  level:
-    org.hibernate.SQL: debug
-    org.hibernate.orm.jdbc.bind: trace
-    org.springframework.security: trace
 
-# 5. Actuator 엔드포인트 설정 (Admin 서버가 데이터를 가져가는 통로)
+# 4. Actuator 엔드포인트 설정 (Admin 서버가 데이터를 가져가는 통로)
 management:
   endpoints:
     web:
@@ -57,10 +59,11 @@ management:
     info:
       enabled: true
 
-# 6. Actuator /info 노출 정보
+# 5. Actuator /info 노출 정보
 info:
   app:
     name: Discodeit
     version: 1.7.0
     java-version: "17"
     spring-boot-version: 3.5.9 # 실제 실행 중인 버전으로 수정
+

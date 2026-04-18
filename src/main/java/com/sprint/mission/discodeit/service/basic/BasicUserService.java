@@ -12,6 +12,7 @@ import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.service.UserService;
+import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -20,8 +21,6 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +35,7 @@ public class BasicUserService implements UserService {
 		private final BinaryContentRepository binaryContentRepository;
 		private final BinaryContentStorage binaryContentStorage;
 		private final PasswordEncoder passwordEncoder;
-		private final SessionRegistry sessionRegistry;
+		private final JwtRegistry jwtRegistry;
 
 		/**
 		 * 사용자 생성 (이메일/사용자명 중복 시 예외).
@@ -155,7 +154,8 @@ public class BasicUserService implements UserService {
 				User user = userRepository.findById(userId)
 						.orElseThrow(() -> new NoSuchElementException("User with id " + userId + " not found"));
 				user.updateRole(newRole);
-				invalidateUserSessions(userId);
+				// 권한 변경 시 토큰 강제 만료 처리로 로그아웃 유도
+				jwtRegistry.invalidateJwtInformationByUserId(userId);
 				log.info("사용자 권한 변경 완료, userId={}, role={}", userId, newRole);
 				return withOnline(userMapper.toDto(user));
 		}
@@ -182,31 +182,9 @@ public class BasicUserService implements UserService {
 						dto.username(),
 						dto.email(),
 						dto.profile(),
-						isUserOnline(dto.id()),
+						jwtRegistry.hasActiveJwtInformationByUserId(dto.id()),
 						dto.role()
 				);
 		}
 
-		private boolean isUserOnline(UUID userId) {
-				for (Object principal : sessionRegistry.getAllPrincipals()) {
-						if (principal instanceof DiscodeitUserDetails details
-								&& userId.equals(details.getUserDto().id())) {
-								List<SessionInformation> sessions = sessionRegistry.getAllSessions(principal, false);
-								if (!sessions.isEmpty()) {
-										return true;
-								}
-						}
-				}
-				return false;
-		}
-
-		private void invalidateUserSessions(UUID userId) {
-				for (Object principal : sessionRegistry.getAllPrincipals()) {
-						if (principal instanceof DiscodeitUserDetails details
-								&& userId.equals(details.getUserDto().id())) {
-								sessionRegistry.getAllSessions(principal, false)
-										.forEach(SessionInformation::expireNow);
-						}
-				}
-		}
 }

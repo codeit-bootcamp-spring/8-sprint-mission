@@ -31,10 +31,6 @@ import org.springframework.stereotype.Component;
 @Profile("!test")
 public class DataInitializer {
 
-  private static final String DEFAULT_PASSWORD = "password";
-  private static final String ADMIN_USERNAME = "admin";
-  private static final String ADMIN_EMAIL = "admin@discodeit.com";
-  private static final String ADMIN_PASSWORD = "Admin123!";
   private static final String[][] SEED_USERS = {
       {"buzz", "buzz@codeit.com"},
       {"jessie", "jessie@codeit.com"},
@@ -49,6 +45,7 @@ public class DataInitializer {
   private final ChannelRepository channelRepository;
   private final ReadStatusRepository readStatusRepository;
   private final Environment environment;
+  private final SetupProperties setupProperties;
 
   @PostConstruct
   public void init() {
@@ -66,13 +63,13 @@ public class DataInitializer {
     // To make manual testing smoother, seed accounts can create public channels.
     for (String[] u : SEED_USERS) {
       String username = u[0];
-      userRepository.findByUsername(username).ifPresent(user -> {
-        if (user.getRole() == Role.USER) {
-          user.updateRole(Role.CHANNEL_MANAGER);
-          userRepository.save(user);
-          log.info("Promoted seed user to CHANNEL_MANAGER: {}", username);
-        }
-      });
+      var user = userRepository.findByUsername(username)
+          .orElseThrow(() -> new IllegalStateException("Seed user not found: " + username));
+      if (user.getRole() == Role.USER) {
+        user.updateRole(Role.CHANNEL_MANAGER);
+        userRepository.save(user);
+        log.info("Promoted seed user to CHANNEL_MANAGER: {}", username);
+      }
     }
   }
 
@@ -80,18 +77,21 @@ public class DataInitializer {
     if (userRepository.existsByRole(Role.ADMIN)) {
       return;
     }
+
+    SetupProperties.Admin admin = setupProperties.getAdmin();
+
     try {
-      if (!userRepository.existsByUsername(ADMIN_USERNAME)) {
+      if (!userRepository.existsByUsername(admin.getUsername())) {
         userService.create(
-            new UserCreateRequest(ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD),
+            new UserCreateRequest(admin.getUsername(), admin.getEmail(), admin.getPassword()),
             Optional.empty()
         );
       }
-      userRepository.findByUsername(ADMIN_USERNAME).ifPresent(admin -> {
-        admin.updateRole(Role.ADMIN);
-        userRepository.save(admin);
-      });
-      log.info("Initialized admin account: {}", ADMIN_USERNAME);
+      var foundAdmin = userRepository.findByUsername(admin.getUsername())
+          .orElseThrow(() -> new IllegalStateException("Admin user not found after creation: " + admin.getUsername()));
+      foundAdmin.updateRole(Role.ADMIN);
+      userRepository.save(foundAdmin);
+      log.info("Initialized admin account: {}", admin.getUsername());
     } catch (Exception e) {
       log.warn("Could not initialize admin account: {}", e.getMessage());
     }
@@ -101,27 +101,28 @@ public class DataInitializer {
     for (String[] u : SEED_USERS) {
       String username = u[0];
       // Use eager-fetch query to avoid LazyInitializationException on profile
-      userRepository.findByUsernameWithProfile(username).ifPresent(user -> {
-        loadSeedProfileImage(username).ifPresent(profileRequest -> {
-          boolean hasRealProfile = user.getProfile() != null
-              && user.getProfile().getSize() != null
-              && user.getProfile().getSize() > 10_000;
-          if (!hasRealProfile) {
-            try {
-              BinaryContent binaryContent = new BinaryContent(
-                  profileRequest.fileName(),
-                  (long) profileRequest.bytes().length,
-                  profileRequest.contentType());
-              binaryContentRepository.save(binaryContent);
-              binaryContentStorage.put(binaryContent.getId(), profileRequest.bytes());
-              user.update(user.getUsername(), user.getEmail(), null, binaryContent);
-              userRepository.save(user);
-              log.info("Updated profile for seed user: {}", username);
-            } catch (Exception e) {
-              log.warn("Could not update profile for {}: {}", username, e.getMessage());
-            }
+      var user = userRepository.findByUsernameWithProfile(username)
+          .orElseThrow(() -> new IllegalStateException("Seed user not found: " + username));
+
+      loadSeedProfileImage(username).ifPresent(profileRequest -> {
+        boolean hasRealProfile = user.getProfile() != null
+            && user.getProfile().getSize() != null
+            && user.getProfile().getSize() > 10_000;
+        if (!hasRealProfile) {
+          try {
+            BinaryContent binaryContent = new BinaryContent(
+                profileRequest.fileName(),
+                (long) profileRequest.bytes().length,
+                profileRequest.contentType());
+            binaryContentRepository.save(binaryContent);
+            binaryContentStorage.put(binaryContent.getId(), profileRequest.bytes());
+            user.update(user.getUsername(), user.getEmail(), null, binaryContent);
+            userRepository.save(user);
+            log.info("Updated profile for seed user: {}", username);
+          } catch (Exception e) {
+            log.warn("Could not update profile for {}: {}", username, e.getMessage());
           }
-        });
+        }
       });
     }
   }
@@ -137,7 +138,7 @@ public class DataInitializer {
       try {
         Optional<BinaryContentCreateRequest> profileImage = loadSeedProfileImage(username);
         userService.create(
-            new UserCreateRequest(username, email, DEFAULT_PASSWORD),
+            new UserCreateRequest(username, email, setupProperties.getDefaultPassword()),
             profileImage
         );
         log.info("Created seed user: {} (profile: {})", username, profileImage.isPresent() ? "yes" : "no");
@@ -217,12 +218,13 @@ public class DataInitializer {
 
     Instant now = Instant.now();
     for (String[] u : SEED_USERS) {
-      userRepository.findByUsername(u[0]).ifPresent(user -> {
-        if (readStatusRepository.findByUserIdAndChannelId(user.getId(), defaultChannel.getId()).isEmpty()) {
-          readStatusRepository.save(new ReadStatus(user, defaultChannel, now));
-          log.debug("Created ReadStatus for user {} in default channel", user.getUsername());
-        }
-      });
+      var user = userRepository.findByUsername(u[0])
+          .orElseThrow(() -> new IllegalStateException("Seed user not found: " + u[0]));
+
+      if (readStatusRepository.findByUserIdAndChannelId(user.getId(), defaultChannel.getId()).isEmpty()) {
+        readStatusRepository.save(new ReadStatus(user, defaultChannel, now));
+        log.debug("Created ReadStatus for user {} in default channel", user.getUsername());
+      }
     }
   }
 
