@@ -3,7 +3,7 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.dto.dto.JwtDTO;
 import com.sprint.mission.discodeit.dto.dto.UserDto;
 import com.sprint.mission.discodeit.dto.request.UserRoleUpdateRequest;
-import com.sprint.mission.discodeit.DTO.response.ErrorResponse;
+import com.sprint.mission.discodeit.dto.response.ErrorResponse;
 import com.sprint.mission.discodeit.controller.api.AuthApi;
 import com.sprint.mission.discodeit.security.jwt.JwtTokenProvider;
 import com.sprint.mission.discodeit.security.jwt.store.JwtInformation;
