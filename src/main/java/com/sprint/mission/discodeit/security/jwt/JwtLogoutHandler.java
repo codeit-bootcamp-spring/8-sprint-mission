@@ -41,19 +41,17 @@ public class JwtLogoutHandler implements LogoutHandler {
                     .filter(cookie -> cookie.getName().equals(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME))
                     .findFirst()
                     .ifPresent(cookie -> {
-                        try {
-                            String refreshToken = cookie.getValue();
+                        String refreshToken = cookie.getValue();
 
-                            SignedJWT signedJWT = SignedJWT.parse(refreshToken);
-                            Object userIdClaim = signedJWT.getJWTClaimsSet().getClaim("userId");
-                            if (userIdClaim != null) {
-                                UUID userId = UUID.fromString(userIdClaim.toString());
+                        // Provider를 통해 userId를 추출(캡슐화)
+                        UUID userId = tokenProvider.getUserIdFromToken(refreshToken);
 
-                                jwtRegistry.invalidateJwtInformationByUserId(userId);
-                                log.info("[JwtLogoutHandler] RT 무효화 완료: userId={}", userId);
-                            }
-                        } catch (Exception e) {
-                            log.warn("[JwtLogoutHandler] RT 무효화 중 예외 발생: {}", e.getMessage());
+                        if (userId != null) {
+                            jwtRegistry.invalidateJwtInformationByUserId(userId);
+                            log.info("[JwtLogoutHandler] RT 무효화 완료: userId={}", userId);
+                        } else {
+                            jwtRegistry.invalidateByRefreshToken(refreshToken);
+                            log.warn("[JwtLogoutHandler] 유저 ID 파싱 실패. 해당 리프레시 토큰 단건 무효화 처리");
                         }
                     });
         }

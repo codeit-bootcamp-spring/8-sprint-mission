@@ -1,8 +1,9 @@
 package com.sprint.mission.discodeit.controller;
 
-import com.sprint.mission.discodeit.dto.dto.JwtDTO;
-import com.sprint.mission.discodeit.dto.dto.UserDto;
-import com.sprint.mission.discodeit.dto.request.UserRoleUpdateRequest;
+import com.sprint.mission.discodeit.DTO.dto.JwtDTO;
+import com.sprint.mission.discodeit.DTO.dto.UserDto;
+import com.sprint.mission.discodeit.DTO.request.UserRoleUpdateRequest;
+import com.sprint.mission.discodeit.DTO.response.ErrorResponse;
 import com.sprint.mission.discodeit.controller.api.AuthApi;
 import com.sprint.mission.discodeit.security.jwt.JwtTokenProvider;
 import com.sprint.mission.discodeit.security.jwt.store.JwtInformation;
@@ -52,7 +53,7 @@ public class AuthController implements AuthApi {
      * @return 재발급된 액세스 토큰
      */
     @PostMapping("/refresh")
-    public ResponseEntity<JwtDTO> refresh(
+    public ResponseEntity<?> refresh(
             // @CookieValue 어노테이션을 사용하면 HTTP 요청 헤더(Cookie)의 쿠키 값을 자동으로 추출해준다.
             @CookieValue(
                     // 쿠키 이름은 JwtTokenProvider 클래스에 정의된 상수 REFRESH_TOKEN_COOKIE_NAME을 사용한다.
@@ -63,9 +64,9 @@ public class AuthController implements AuthApi {
             String refreshToken,
             HttpServletResponse response) {
 
-        // 쿠키 값이 없거나(null) 유효하지 않으면 400 응답을 반환한다.
+        // 쿠키 값이 없거나(null) 유효하지 않으면 401 응답을 반환한다.
         if (refreshToken == null || !jwtTokenProvider.validateRefreshToken(refreshToken)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         if (!jwtRegistry.hasActiveJwtInformationByRefreshToken(refreshToken)) {
@@ -104,7 +105,9 @@ public class AuthController implements AuthApi {
             // 응답 바디 전송
             return ResponseEntity.ok(body);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            log.error("[AuthController] 토큰 재발급 실패", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("토큰 재발급 중 오류가 발생했습니다."));
         }
     }
 
