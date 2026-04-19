@@ -38,6 +38,7 @@ public class BinaryContentEventListener {
 
       log.error("[BinaryContentEventListener] 바이너리 데이터 저장 실패 - ID: {}, 파일명: {}, 원인: {}",
           event.binaryContentId(), event.fileName(), e.getMessage());
+      throw new RuntimeException(e);
     }
   }
 }

@@ -6,28 +6,27 @@ import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
+import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.service.NotificationService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-@Component
+// @Component
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationRequiredEventListener {
 
   private final ReadStatusRepository readStatusRepository;
   private final UserRepository userRepository;
-  private final NotificationService notificationService;
+  private final NotificationRepository notificationRepository;
 
   @Async("taskExecutor")
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -59,7 +58,7 @@ public class NotificationRequiredEventListener {
             content
         );
 
-        notificationService.send(notification);
+        notificationRepository.save(notification);
         log.debug("[NotificationRequiredEventListener] 알림 저장 완료 - 수신자: {}",
             readStatus.getUser().getUsername());
       }
@@ -67,6 +66,7 @@ public class NotificationRequiredEventListener {
     } catch (Exception e) {
       log.error("[NotificationRequiredEventListener] 메시지 생성 이벤트 알림 처리 중 오류 발생 - Event: {}", event,
           e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -91,7 +91,7 @@ public class NotificationRequiredEventListener {
           String.format("%s -> %s", previousRole, newRole)
       );
 
-      notificationService.send(notification);
+      notificationRepository.save(notification);
       log.info("[NotificationRequiredEventListener] 권한 변경 알림 저장 완료 - 대상자: {}", event.userName());
     } catch (UserNotFoundException e) {
       log.warn("[NotificationRequiredEventListener] 알림 실패 - 존재하지 않는 사용자 ID: {}",
@@ -99,6 +99,7 @@ public class NotificationRequiredEventListener {
     } catch (Exception e) {
       log.error("[NotificationRequiredEventListener] 권한 변경 이벤트 알림 처리 중 오류 발생 - Event: {}", event,
           e);
+      throw new RuntimeException(e);
     }
   }
 }
