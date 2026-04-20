@@ -1,44 +1,38 @@
 package com.sprint.mission.discodeit.config;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import org.springframework.cache.CacheManager;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import java.time.Duration;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.caffeine.CaffeineCache;
-import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
 
 @Configuration
 @EnableCaching
 public class CacheConfig {
 
   @Bean
-  public CacheManager cacheManager() {
-    SimpleCacheManager cacheManager = new SimpleCacheManager();
-
-    cacheManager.setCaches(List.of(
-            new CaffeineCache("channel",
-                Caffeine.newBuilder()
-                    .maximumSize(500)
-                    .recordStats()
-                    .build()),
-            new CaffeineCache("notification",
-                Caffeine.newBuilder()
-                    .expireAfterAccess(1, TimeUnit.HOURS)
-                    .maximumSize(1000)
-                    .recordStats()
-                    .build()),
-            new CaffeineCache("user",
-                Caffeine.newBuilder()
-                    .expireAfterAccess(1, TimeUnit.HOURS)
-                    .maximumSize(1000)
-                    .recordStats()
-                    .build())
-        )
+  public RedisCacheConfiguration redisCacheConfiguration(ObjectMapper objectMapper) {
+    ObjectMapper redisObjectMapper = objectMapper.copy();
+    redisObjectMapper.activateDefaultTyping(
+        LaissezFaireSubTypeValidator.instance,
+        DefaultTyping.EVERYTHING,
+        As.PROPERTY
     );
 
-    return cacheManager;
+    return RedisCacheConfiguration.defaultCacheConfig()
+        .serializeValuesWith(
+            RedisSerializationContext.SerializationPair.fromSerializer(
+                new GenericJackson2JsonRedisSerializer(redisObjectMapper)
+            )
+        )
+        .prefixCacheNameWith("discodeit:")
+        .entryTtl(Duration.ofSeconds(600))
+        .disableCachingNullValues();
   }
 }

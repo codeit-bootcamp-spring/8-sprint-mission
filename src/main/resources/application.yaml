@@ -19,7 +19,22 @@ spring:
       ddl-auto: none
 
   cache:
-    type: caffeine
+    type: redis
+    cache-names:
+      - channel
+      - notification
+      - user
+    caffeine:
+      spec: >
+        maximumSize=100,
+        expireAfterAccess=600s,
+        recordStats
+    redis:
+      enable-statistics: true
+    data:
+      redis:
+        host: ${REDIS_HOST:localhost}
+        port: ${REDIS_PORT:6379}
 
   kafka:
     bootstrap-servers: localhost:9092
