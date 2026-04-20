@@ -25,6 +25,7 @@ public class BasicNotificationService implements NotificationService {
   private final NotificationMapper notificationMapper;
 
   /*
+   * kafka 사용 안 할 경우 recover 메소드에서 notificationService.send로 사용
    * S3 업로드 실패(@Recover)와 같이 호출 측 트랜잭션이 이미 실패한 상태에서도
    * 알림을 독립적으로 저장해야 하는 경우를 위해 새 트랜잭션을 생성
    * 일반적인 성공 이벤트 리스너에서는 이 메서드 대신 Repository를 직접 호출하여

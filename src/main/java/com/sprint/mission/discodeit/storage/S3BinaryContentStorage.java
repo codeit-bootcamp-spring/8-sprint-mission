@@ -1,13 +1,9 @@
 package com.sprint.mission.discodeit.storage;
 
 import com.sprint.mission.discodeit.dto.BinaryContentDto;
-import com.sprint.mission.discodeit.entity.Notification;
-import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentSaveFailedException;
-import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
-import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.service.NotificationService;
 import jakarta.annotation.PreDestroy;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -17,8 +13,8 @@ import java.time.Duration;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,19 +42,13 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
   private final S3Properties s3Properties;
   private final S3Client s3Client;
   private final S3Presigner s3Presigner;
-  private final UserRepository userRepository;
-  private final NotificationService notificationService;
-  private final String adminUsername;
+  private final ApplicationEventPublisher eventPublisher;
 
   public S3BinaryContentStorage(S3Properties s3Properties,
-      UserRepository userRepository,
-      NotificationService notificationService,
-      @Value("${admin.username}") String adminUsername
+      ApplicationEventPublisher eventPublisher
   ) {
     this.s3Properties = s3Properties;
-    this.userRepository = userRepository;
-    this.notificationService = notificationService;
-    this.adminUsername = adminUsername;
+    this.eventPublisher = eventPublisher;
 
     StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(
         AwsBasicCredentials.create(s3Properties.getAccessKey(), s3Properties.getSecretKey()));
@@ -105,6 +95,7 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
    * 재시도가 모두 실패했을 때 실행될 메소드
    * 첫번째 파라미터: 실패 예외 타입
    * 뒤 파라미터: @Retryable 메소드의 파라미터 순서와 동일
+   * kafka를 사용하지 않을 경우:
    * put이 3번 실패하고 실행되기 때문에 트랜잭션은 실패 상태
    * 알림을 recover에서 save하려고 해도 db에 반영이 안됨
    * 따라서 service에서 새로운 트랜잭션의 save 메소드 호출
@@ -117,22 +108,13 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
     log.error("[S3BinaryContentStorage] S3 바이너리 저장 모두 실패! binaryContentId={}, error={}",
         binaryContentId, e.getMessage());
 
-    User receiver = userRepository.findByUsername(adminUsername)
-        .orElseThrow(() -> new UserNotFoundException(adminUsername));
-
-    String title = "S3 파일 업로드 실패";
     String requestId = MDC.get("requestId");
 
-    Notification notification = new Notification(
-        receiver,
-        title,
-        String.format("RequestId: %s\n BinaryContentId: %s\n Error: %s", requestId, binaryContentId,
-            e.getCause().getMessage())
-    );
+    S3UploadFailedEvent event = S3UploadFailedEvent.now(binaryContentId, requestId, e.getMessage());
 
-    notificationService.send(notification);
+    eventPublisher.publishEvent(event);
 
-    log.info("[S3BinaryContentStorage] S3 바이너리 저장 실패 알림 관리자에게 전달");
+    log.info("[S3BinaryContentStorage] Kafka로 실패 이벤트 전달 완료");
     return null;
   }
 

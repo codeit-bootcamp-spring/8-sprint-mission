@@ -13,13 +13,15 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-// @Component
+// @Component event Listener 기반
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationRequiredEventListener {
@@ -27,6 +29,7 @@ public class NotificationRequiredEventListener {
   private final ReadStatusRepository readStatusRepository;
   private final UserRepository userRepository;
   private final NotificationRepository notificationRepository;
+  private final CacheManager cacheManager;
 
   @Async("taskExecutor")
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -52,13 +55,15 @@ public class NotificationRequiredEventListener {
           targets.size(), event.authorName());
 
       for (ReadStatus readStatus : targets) {
+        User receiver = readStatus.getUser();
         Notification notification = new Notification(
-            readStatus.getUser(),
+            receiver,
             String.format("%s (#%s)", authorName, channelName),
             content
         );
 
         notificationRepository.save(notification);
+        evictNotificationCache(receiver.getId());
         log.debug("[NotificationRequiredEventListener] 알림 저장 완료 - 수신자: {}",
             readStatus.getUser().getUsername());
       }
@@ -92,6 +97,7 @@ public class NotificationRequiredEventListener {
       );
 
       notificationRepository.save(notification);
+      evictNotificationCache(receiver.getId());
       log.info("[NotificationRequiredEventListener] 권한 변경 알림 저장 완료 - 대상자: {}", event.userName());
     } catch (UserNotFoundException e) {
       log.warn("[NotificationRequiredEventListener] 알림 실패 - 존재하지 않는 사용자 ID: {}",
@@ -100,6 +106,15 @@ public class NotificationRequiredEventListener {
       log.error("[NotificationRequiredEventListener] 권한 변경 이벤트 알림 처리 중 오류 발생 - Event: {}", event,
           e);
       throw new RuntimeException(e);
+    }
+  }
+
+  private void evictNotificationCache(UUID userId) {
+    Cache cache = cacheManager.getCache("notification");
+
+    if (cache != null) {
+      cache.evict(userId);
+      log.debug("[NotificationRequiredEventListener] 사용자 알림 캐시 삭제 완료 - UserId: {}", userId);
     }
   }
 }

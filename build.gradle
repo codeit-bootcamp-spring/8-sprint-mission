@@ -43,6 +43,9 @@ dependencies {
     // Retry
     implementation 'org.springframework.retry:spring-retry'
 
+    // Event
+    implementation 'org.springframework.kafka:spring-kafka'
+
     // Cache
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine'
