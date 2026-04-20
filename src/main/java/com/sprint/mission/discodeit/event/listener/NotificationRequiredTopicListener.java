@@ -67,6 +67,11 @@ public class NotificationRequiredTopicListener {
         );
         notificationRepository.save(notification);
         evictNotificationCache(receiver.getId());
+        
+        Cache channelCache = cacheManager.getCache("channel");
+        if (channelCache != null) {
+          channelCache.evict(receiver.getId());
+        }
       }
       log.info("[NotificationRequiredTopicListener] 메시지 생성 알림 처리 완료 - 수신 대상: {}명", targets.size());
 
