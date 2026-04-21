@@ -8,6 +8,8 @@ import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
+import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentSaveFailedException;
+import com.sprint.mission.discodeit.exception.notification.NotificationFailedException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
@@ -67,7 +69,7 @@ public class NotificationRequiredTopicListener {
         );
         notificationRepository.save(notification);
         evictNotificationCache(receiver.getId());
-        
+
         Cache channelCache = cacheManager.getCache("channel");
         if (channelCache != null) {
           channelCache.evict(receiver.getId());
@@ -79,7 +81,7 @@ public class NotificationRequiredTopicListener {
       log.error("[NotificationRequiredTopicListener] 메시지 생성 이벤트 JSON 파싱 실패", e);
     } catch (Exception e) {
       log.error("[NotificationRequiredTopicListener] 메시지 생성 알림 처리 중 예외 발생", e);
-      throw new RuntimeException(e);
+      throw new NotificationFailedException(e);
     }
   }
 
@@ -107,7 +109,7 @@ public class NotificationRequiredTopicListener {
       log.error("[NotificationRequiredTopicListener] 권한 변경 이벤트 JSON 파싱 실패", e);
     } catch (Exception e) {
       log.error("[NotificationRequiredTopicListener] 권한 변경 알림 처리 중 예외 발생", e);
-      throw new RuntimeException(e);
+      throw new NotificationFailedException(e);
     }
   }
 
@@ -143,7 +145,7 @@ public class NotificationRequiredTopicListener {
       log.error("[NotificationRequiredTopicListener] S3 업로드 실패 이벤트 JSON 파싱 실패", e);
     } catch (Exception e) {
       log.error("[NotificationRequiredTopicListener] S3 업로드 실패 알림 처리 중 예외 발생", e);
-      throw new RuntimeException(e);
+      throw new BinaryContentSaveFailedException(e);
     }
   }
 

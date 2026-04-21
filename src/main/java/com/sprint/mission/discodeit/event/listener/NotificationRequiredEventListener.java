@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
+import com.sprint.mission.discodeit.exception.notification.NotificationFailedException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
@@ -71,7 +72,7 @@ public class NotificationRequiredEventListener {
     } catch (Exception e) {
       log.error("[NotificationRequiredEventListener] 메시지 생성 이벤트 알림 처리 중 오류 발생 - Event: {}", event,
           e);
-      throw new RuntimeException(e);
+      throw new NotificationFailedException(e);
     }
   }
 
@@ -105,7 +106,7 @@ public class NotificationRequiredEventListener {
     } catch (Exception e) {
       log.error("[NotificationRequiredEventListener] 권한 변경 이벤트 알림 처리 중 오류 발생 - Event: {}", event,
           e);
-      throw new RuntimeException(e);
+      throw new NotificationFailedException(e);
     }
   }
 
