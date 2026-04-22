@@ -7,6 +7,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: discodeit
+    env_file:
+      - .env
     ports:
       - "8081:80"
     environment:
@@ -31,6 +33,8 @@ services:
   db:
     image: postgres:16-alpine
     container_name: discodeit-db
+    env_file:
+      - .env
     environment:
       - POSTGRES_DB=discodeit
       - POSTGRES_USER=${POSTGRES_USER}
