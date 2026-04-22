@@ -16,16 +16,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-  @ExceptionHandler(AuthorizationDeniedException.class)
-  public ResponseEntity<ErrorResponse> handleAuthorizationDenied(
-      AuthorizationDeniedException exception) {
-    log.warn("인가 거부 발생: {}", exception.getMessage());
-    ErrorResponse response = new ErrorResponse(exception, HttpStatus.FORBIDDEN.value());
-    return ResponseEntity
-        .status(HttpStatus.FORBIDDEN)
-        .body(response);
-  }
-
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleException(Exception e) {
     log.error("예상치 못한 오류 발생: {}", e.getMessage(), e);
@@ -72,13 +62,30 @@ public class GlobalExceptionHandler {
         .body(response);
   }
 
+  @ExceptionHandler(AuthorizationDeniedException.class)
+  public ResponseEntity<ErrorResponse> handleAuthorizationDeniedException(
+      AuthorizationDeniedException ex) {
+    log.error("권한 거부 오류 발생: {}", ex.getMessage());
+    ErrorResponse response = new ErrorResponse(
+        Instant.now(),
+        "AUTHORIZATION_DENIED",
+        "요청에 대한 권한이 없습니다",
+        null,
+        ex.getClass().getSimpleName(),
+        HttpStatus.FORBIDDEN.value()
+    );
+    return ResponseEntity
+        .status(HttpStatus.FORBIDDEN)
+        .body(response);
+  }
+
   private HttpStatus determineHttpStatus(DiscodeitException exception) {
     ErrorCode errorCode = exception.getErrorCode();
     return switch (errorCode) {
       case USER_NOT_FOUND, CHANNEL_NOT_FOUND, MESSAGE_NOT_FOUND, BINARY_CONTENT_NOT_FOUND,
            READ_STATUS_NOT_FOUND -> HttpStatus.NOT_FOUND;
       case DUPLICATE_USER, DUPLICATE_READ_STATUS -> HttpStatus.CONFLICT;
-      case INVALID_USER_CREDENTIALS -> HttpStatus.UNAUTHORIZED;
+      case INVALID_USER_CREDENTIALS, INVALID_TOKEN, INVALID_USER_DETAILS -> HttpStatus.UNAUTHORIZED;
       case PRIVATE_CHANNEL_UPDATE, INVALID_REQUEST -> HttpStatus.BAD_REQUEST;
       case INTERNAL_SERVER_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR;
     };

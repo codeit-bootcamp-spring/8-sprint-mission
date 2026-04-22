@@ -6,7 +6,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -14,12 +13,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sprint.mission.discodeit.auth.service.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
-import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.service.UserService;
 import java.util.List;
@@ -28,16 +26,20 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WithMockUser
-@WebMvcTest(UserController.class)
+@WebMvcTest(value = UserController.class,
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.REGEX,
+        pattern = ".*\\.security\\.jwt\\..*"))
+@AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
 
   @Autowired
@@ -48,6 +50,7 @@ class UserControllerTest {
 
   @MockitoBean
   private UserService userService;
+
 
   @Test
   @DisplayName("사용자 생성 성공 테스트")
@@ -81,7 +84,14 @@ class UserControllerTest {
         MediaType.IMAGE_JPEG_VALUE
     );
 
-    UserDto createdUser = new UserDto(userId, "testuser", "test@example.com", profileDto, false, null);
+    UserDto createdUser = new UserDto(
+        userId,
+        "testuser",
+        "test@example.com",
+        profileDto,
+        false,
+        Role.USER
+    );
 
     given(userService.create(any(UserCreateRequest.class), any(Optional.class)))
         .willReturn(createdUser);
@@ -105,9 +115,9 @@ class UserControllerTest {
   void createUser_Failure_InvalidRequest() throws Exception {
     // Given
     UserCreateRequest invalidRequest = new UserCreateRequest(
-        "t",
-        "invalid-email",
-        "short"
+        "t", // 최소 길이 위반
+        "invalid-email", // 이메일 형식 위반
+        "short" // 비밀번호 정책 위반
     );
 
     MockMultipartFile userCreateRequestPart = new MockMultipartFile(
@@ -132,10 +142,26 @@ class UserControllerTest {
     UUID userId1 = UUID.randomUUID();
     UUID userId2 = UUID.randomUUID();
 
-    UserDto user1 = new UserDto(userId1, "user1", "user1@example.com", null, true, null);
-    UserDto user2 = new UserDto(userId2, "user2", "user2@example.com", null, false, null);
+    UserDto user1 = new UserDto(
+        userId1,
+        "user1",
+        "user1@example.com",
+        null,
+        true,
+        Role.USER
+    );
+
+    UserDto user2 = new UserDto(
+        userId2,
+        "user2",
+        "user2@example.com",
+        null,
+        false,
+        Role.USER
+    );
 
     List<UserDto> users = List.of(user1, user2);
+
     given(userService.findAll()).willReturn(users);
 
     // When & Then
@@ -156,25 +182,40 @@ class UserControllerTest {
     // Given
     UUID userId = UUID.randomUUID();
     UserUpdateRequest updateRequest = new UserUpdateRequest(
-        "updateduser", "updated@example.com", "UpdatedPassword1!"
+        "updateduser",
+        "updated@example.com",
+        "UpdatedPassword1!"
     );
-
-    User testUser = new User("updateduser", "updated@example.com", "password", null);
-    ReflectionTestUtils.setField(testUser, "id", userId);
-    DiscodeitUserDetails userDetails = new DiscodeitUserDetails(testUser);
 
     MockMultipartFile userUpdateRequestPart = new MockMultipartFile(
-        "userUpdateRequest", "", MediaType.APPLICATION_JSON_VALUE,
+        "userUpdateRequest",
+        "",
+        MediaType.APPLICATION_JSON_VALUE,
         objectMapper.writeValueAsBytes(updateRequest)
     );
+
     MockMultipartFile profilePart = new MockMultipartFile(
-        "profile", "updated-profile.jpg", MediaType.IMAGE_JPEG_VALUE, "updated-image".getBytes()
+        "profile",
+        "updated-profile.jpg",
+        MediaType.IMAGE_JPEG_VALUE,
+        "updated-image".getBytes()
     );
 
     BinaryContentDto profileDto = new BinaryContentDto(
-        UUID.randomUUID(), "updated-profile.jpg", 14L, MediaType.IMAGE_JPEG_VALUE
+        UUID.randomUUID(),
+        "updated-profile.jpg",
+        14L,
+        MediaType.IMAGE_JPEG_VALUE
     );
-    UserDto updatedUser = new UserDto(userId, "updateduser", "updated@example.com", profileDto, true, null);
+
+    UserDto updatedUser = new UserDto(
+        userId,
+        "updateduser",
+        "updated@example.com",
+        profileDto,
+        true,
+        Role.USER
+    );
 
     given(userService.update(eq(userId), any(UserUpdateRequest.class), any(Optional.class)))
         .willReturn(updatedUser);
@@ -184,9 +225,11 @@ class UserControllerTest {
             .file(userUpdateRequestPart)
             .file(profilePart)
             .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
-            .with(request -> { request.setMethod("PATCH"); return request; })
-            .with(csrf())
-            .with(user(userDetails)))
+            .with(request -> {
+              request.setMethod("PATCH");
+              return request;
+            })
+            .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(userId.toString()))
         .andExpect(jsonPath("$.username").value("updateduser"))
@@ -201,22 +244,27 @@ class UserControllerTest {
     // Given
     UUID nonExistentUserId = UUID.randomUUID();
     UserUpdateRequest updateRequest = new UserUpdateRequest(
-        "updateduser", "updated@example.com", "UpdatedPassword1!"
+        "updateduser",
+        "updated@example.com",
+        "UpdatedPassword1!"
     );
-
-    User testUser = new User("updateduser", "updated@example.com", "password", null);
-    ReflectionTestUtils.setField(testUser, "id", nonExistentUserId);
-    DiscodeitUserDetails userDetails = new DiscodeitUserDetails(testUser);
 
     MockMultipartFile userUpdateRequestPart = new MockMultipartFile(
-        "userUpdateRequest", "", MediaType.APPLICATION_JSON_VALUE,
+        "userUpdateRequest",
+        "",
+        MediaType.APPLICATION_JSON_VALUE,
         objectMapper.writeValueAsBytes(updateRequest)
     );
+
     MockMultipartFile profilePart = new MockMultipartFile(
-        "profile", "updated-profile.jpg", MediaType.IMAGE_JPEG_VALUE, "updated-image".getBytes()
+        "profile",
+        "updated-profile.jpg",
+        MediaType.IMAGE_JPEG_VALUE,
+        "updated-image".getBytes()
     );
 
-    given(userService.update(eq(nonExistentUserId), any(UserUpdateRequest.class), any(Optional.class)))
+    given(userService.update(eq(nonExistentUserId), any(UserUpdateRequest.class),
+        any(Optional.class)))
         .willThrow(UserNotFoundException.withId(nonExistentUserId));
 
     // When & Then
@@ -224,9 +272,11 @@ class UserControllerTest {
             .file(userUpdateRequestPart)
             .file(profilePart)
             .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
-            .with(request -> { request.setMethod("PATCH"); return request; })
-            .with(csrf())
-            .with(user(userDetails)))
+            .with(request -> {
+              request.setMethod("PATCH");
+              return request;
+            })
+            .with(csrf()))
         .andExpect(status().isNotFound());
   }
 
@@ -258,4 +308,4 @@ class UserControllerTest {
             .with(csrf()))
         .andExpect(status().isNotFound());
   }
-}
+} 

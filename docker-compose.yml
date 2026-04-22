@@ -1,34 +1,52 @@
+version: '3.8'
+
 services:
-  # 1. PostgreSQL 서비스 설정
-  db:
-    image: postgres:17-alpine
-    container_name: postgres-discodeit
+  app:
+    image: discodeit:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: discodeit
     ports:
-      - "54321:5432" # 로컬 PC에서 접속할 포트 매핑
-    env_file:
-      - .env # 보안을 위해 .env 파일에서 계정 정보 로드
+      - "8081:80"
     environment:
-      - POSTGRES_DB=${POSTGRES_DB_DEV}
-      - POSTGRES_USER=${POSTGRES_USER_DEV}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_DEV}
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/discodeit
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - STORAGE_TYPE=s3
+      - STORAGE_LOCAL_ROOT_PATH=.discodeit/storage
+      - AWS_S3_ACCESS_KEY=${AWS_S3_ACCESS_KEY}
+      - AWS_S3_SECRET_KEY=${AWS_S3_SECRET_KEY}
+      - AWS_S3_REGION=${AWS_S3_REGION}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - AWS_S3_PRESIGNED_URL_EXPIRATION=600
+    depends_on:
+      - db
     volumes:
-      # PostgreSQL 데이터 영속성 유지
-      - postgres_data:/var/lib/postgresql/data
-      # 초기 스키마 자동 실행을 위해 schema.sql을 지정된 경로에 마운트
+      - binary-content-storage:/app/.discodeit/storage
+    networks:
+      - discodeit-network
+
+  db:
+    image: postgres:16-alpine
+    container_name: discodeit-db
+    environment:
+      - POSTGRES_DB=discodeit
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
       - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks:
-      - discodeit-net
-    healthcheck: # DB가 완전히 준비되었는지 확인하는 로직
-      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d discodeit" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - discodeit-network
 
-# 볼륨 정의: 컨테이너가 삭제되어도 데이터는 남음
 volumes:
-  postgres_data:
-  discodeit_uploads:
+  postgres-data:
+  binary-content-storage:
 
 networks:
-  discodeit-net:
-    driver: bridge
+  discodeit-network:
+    driver: bridge 

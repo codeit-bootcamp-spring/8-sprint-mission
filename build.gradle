@@ -1,13 +1,12 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.9'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot' version '3.4.0'
+    id 'io.spring.dependency-management' version '1.1.6'
     id 'jacoco'
 }
 
 group = 'com.sprint.mission'
-version = '2.0-M10'
-description = 'Demo project for Spring Boot'
+version = '2.2-M11'
 
 java {
     toolchain {
@@ -19,10 +18,42 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+    testCompileOnly {
+        extendsFrom testAnnotationProcessor
+    }
 }
 
 repositories {
     mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'software.amazon.awssdk:s3:2.31.7'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'com.nimbusds:nimbus-jose-jwt:10.3'
+
+    runtimeOnly 'org.postgresql:postgresql'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'com.h2database:h2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
 }
 
 test {
@@ -35,57 +66,4 @@ jacocoTestReport {
         xml.required = true
         html.required = true
     }
-}
-
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
-    testImplementation 'org.springframework.security:spring-security-test'
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    testCompileOnly 'org.projectlombok:lombok'
-    testAnnotationProcessor 'org.projectlombok:lombok'
-
-    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
-
-    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
-
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    runtimeOnly 'org.postgresql:postgresql'
-    runtimeOnly 'com.h2database:h2'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    /* 유효성 검사를 위한 라이브러리 */
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-    /* HATEOAS를 위한 라이브러리 */
-    implementation 'org.springframework.boot:spring-boot-starter-hateoas'
-
-    /* Swagger UI 활성화를 위한 의존성 추가
-     *  v2.7.0 이상부터 Spring Boot 3.4(Spring Framework 6.2)와 호환된다.
-     *  해당 프로젝트에서는 최신 안정 버전인 2.8.14를 사용한다.
-     * */
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14'
-
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-    implementation 'de.codecentric:spring-boot-admin-starter-client:3.4.5'
-
-    implementation platform('software.amazon.awssdk:bom:2.21.29')
-
-    // Amazon S3 파일 업로드/다운로드/삭제를 위한 클라이언트
-    implementation 'software.amazon.awssdk:s3'
-
-    implementation 'com.nimbusds:nimbus-jose-jwt:10.3'
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
 }

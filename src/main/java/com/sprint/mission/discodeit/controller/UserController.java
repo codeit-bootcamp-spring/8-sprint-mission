@@ -41,14 +41,10 @@ public class UserController implements UserApi {
       @RequestPart(value = "profile", required = false) MultipartFile profile
   ) {
     log.info("사용자 생성 요청: {}", userCreateRequest);
-
     Optional<BinaryContentCreateRequest> profileRequest = Optional.ofNullable(profile)
         .flatMap(this::resolveProfileRequest);
-
     UserDto createdUser = userService.create(userCreateRequest, profileRequest);
-
     log.debug("사용자 생성 응답: {}", createdUser);
-
     return ResponseEntity
         .status(HttpStatus.CREATED)
         .body(createdUser);
@@ -67,8 +63,7 @@ public class UserController implements UserApi {
     log.info("사용자 수정 요청: id={}, request={}", userId, userUpdateRequest);
     Optional<BinaryContentCreateRequest> profileRequest = Optional.ofNullable(profile)
         .flatMap(this::resolveProfileRequest);
-    UserDto updatedUser = userService.update(userId, userUpdateRequest,
-        profileRequest);
+    UserDto updatedUser = userService.update(userId, userUpdateRequest, profileRequest);
     log.debug("사용자 수정 응답: {}", updatedUser);
     return ResponseEntity
         .status(HttpStatus.OK)
@@ -92,7 +87,6 @@ public class UserController implements UserApi {
         .status(HttpStatus.OK)
         .body(users);
   }
-
 
   private Optional<BinaryContentCreateRequest> resolveProfileRequest(MultipartFile profileFile) {
     if (profileFile.isEmpty()) {

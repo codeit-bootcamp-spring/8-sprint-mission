@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.controller.api;
 
-import com.sprint.mission.discodeit.auth.service.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.dto.data.ChannelDto;
 import com.sprint.mission.discodeit.dto.request.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelCreateRequest;
@@ -17,7 +16,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @Tag(name = "Channel", description = "Channel API")
 public interface ChannelApi {
@@ -86,6 +84,6 @@ public interface ChannelApi {
       )
   })
   ResponseEntity<List<ChannelDto>> findAll(
-      @AuthenticationPrincipal DiscodeitUserDetails currentUser
+      @Parameter(description = "조회할 User ID") UUID userId
   );
 } 

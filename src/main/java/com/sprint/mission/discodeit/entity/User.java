@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "users")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)  // JPA를 위한 기본 생성자
 public class User extends BaseUpdatableEntity {
 
   @Column(length = 50, nullable = false, unique = true)
@@ -29,7 +29,6 @@ public class User extends BaseUpdatableEntity {
   @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   @JoinColumn(name = "profile_id", columnDefinition = "uuid")
   private BinaryContent profile;
-
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private Role role = Role.USER;
@@ -58,7 +57,7 @@ public class User extends BaseUpdatableEntity {
   }
 
   public void updateRole(Role newRole) {
-    if (newRole != null) {
+    if (this.role != newRole) {
       this.role = newRole;
     }
   }
