@@ -10,9 +10,11 @@ CREATE TABLE binary_contents
 (
     id           UUID PRIMARY KEY,
     created_at   TIMESTAMPTZ  NOT NULL,
+    updated_at   TIMESTAMPTZ  NOT NULL,
     file_name    VARCHAR(255) NOT NULL,
     size         BIGINT       NOT NULL,
-    content_type VARCHAR(100) NOT NULL
+    content_type VARCHAR(100) NOT NULL,
+    status       varchar(20)  NOT NULL
 );
 
 -- 4. users 테이블
