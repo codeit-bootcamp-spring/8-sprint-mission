@@ -63,6 +63,14 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
       throw new IllegalArgumentException("bytes 값이 null 입니다.");
     }
 
+    try {
+      log.info("[SIMULATION] 3초 지연 발생 시작");
+      Thread.sleep(3000);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException(e);
+    }
+
     Path path = resolvePath(id);
 
     try {

@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -22,9 +23,10 @@ public class BinaryContentEventListener {
 
   // 메타데이터를 저장한 트랜잭션이 최종적으로 DB에 반영된 후에만 실행된다.
   // BinaryContentCreatedEvent 타입의 이벤트가 발생되면 아래의 메서드가 실행된다.
+  @Async("taskExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handleBinaryContentCreated(BinaryContentCreatedEvent event) {
-    log.info("[EVENT_LISTENER] 스토리지 저장 시작 binaryContentId={}", event.binaryContentId());
+    log.info("[ASYNC_EVENT] 스토리지 저장 시작 binaryContentId={}", event.binaryContentId());
 
     try {
 
