@@ -9,10 +9,14 @@ import com.sprint.mission.discodeit.service.NotificationService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -22,7 +26,9 @@ public class BasicNotificationService implements NotificationService {
   private final NotificationMapper notificationMapper;
 
   @Override
+  @Cacheable(value = "notificationsByUserId", key = "#receiverId")
   public List<NotificationDto> findAllByReceiverId(UUID receiverId) {
+    log.info("[CACHE_MISS] receiverId={} 의 알림 목록을 DB에서 조회합니다.", receiverId);
     return notificationRepository.findAllByReceiver_IdOrderByCreatedAtDesc(receiverId)
         .stream()
         .map(notificationMapper::toDto)
@@ -31,6 +37,7 @@ public class BasicNotificationService implements NotificationService {
 
   @Override
   @Transactional
+  @CacheEvict(value = "notificationsByUserId", key = "#requesterId")
   public void delete(UUID notificationId, UUID requesterId) {
     Notification notification = notificationRepository.findById(notificationId)
         .orElseThrow(() -> new NotificationNotFoundException(notificationId));

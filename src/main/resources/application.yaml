@@ -2,6 +2,18 @@ spring:
   application:
     name: discodeit
 
+  cache:
+    type: caffeine
+    cache-names:
+      - userList
+      - channelsByUserId
+      - notificationsByUserId
+    caffeine:
+      spec: >
+        maximumSize=100,
+        expireAfterAccess=600s,
+        recordStats
+
   servlet:
     multipart:
       max-file-size: 10MB       # 파일 1개 최대
@@ -34,11 +46,14 @@ management:
     web:
       exposure:
         # 외부로 노출할 엔드포인트 지정
-        include: health,info
+        include: health,info, caches
   endpoint:
     health:
       show-details: when-authorized
       show-components: always
+  observations:
+    annotations:
+      enabled: true
 
 # 애플리케이션 및 주요 설정 정보
 info:
