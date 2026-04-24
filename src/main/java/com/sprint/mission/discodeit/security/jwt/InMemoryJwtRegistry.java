@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Scheduled;
 
 
@@ -22,6 +23,7 @@ public class InMemoryJwtRegistry implements JwtRegistry {
   private final int maxActiveJwtCount;
   private final JwtTokenProvider jwtTokenProvider;
 
+  @CacheEvict(value = "users", key = "'all'")
   @Override
   public void registerJwtInformation(JwtInformation jwtInformation) {
     origin.compute(jwtInformation.getUserDto().id(), (key, queue) -> {
@@ -47,6 +49,7 @@ public class InMemoryJwtRegistry implements JwtRegistry {
     });
   }
 
+  @CacheEvict(value = "users", key = "'all'")
   @Override
   public void invalidateJwtInformationByUserId(UUID userId) {
     origin.computeIfPresent(userId, (key, queue) -> {
@@ -104,7 +107,7 @@ public class InMemoryJwtRegistry implements JwtRegistry {
       queue.removeIf(jwtInformation -> {
         boolean isExpired =
             !jwtTokenProvider.validateAccessToken(jwtInformation.getAccessToken()) ||
-                !jwtTokenProvider.validateRefreshToken(jwtInformation.getRefreshToken());
+            !jwtTokenProvider.validateRefreshToken(jwtInformation.getRefreshToken());
         if (isExpired) {
           removeTokenIndex(
               jwtInformation.getAccessToken(),
