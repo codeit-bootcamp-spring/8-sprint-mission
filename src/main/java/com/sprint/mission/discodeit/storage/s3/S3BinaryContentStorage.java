@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.entity.Notification;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.service.NotificationService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -44,8 +45,8 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
   private final String region;
   private final String bucket;
 
-  private final NotificationRepository notificationRepository;
   private final UserRepository userRepository;
+  private final NotificationService notificationService;
 
   @Value("${discodeit.storage.s3.presigned-url-expiration:600}") // 기본값 10분
   private long presignedUrlExpirationSeconds;
@@ -55,14 +56,14 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
       @Value("${discodeit.storage.s3.secret-key}") String secretKey,
       @Value("${discodeit.storage.s3.region}") String region,
       @Value("${discodeit.storage.s3.bucket}") String bucket,
-      NotificationRepository notificationRepository,
+      NotificationService notificationService,
       UserRepository userRepository
   ) {
     this.accessKey = accessKey;
     this.secretKey = secretKey;
     this.region = region;
     this.bucket = bucket;
-    this.notificationRepository = notificationRepository;
+    this.notificationService = notificationService;
     this.userRepository = userRepository;
   }
 
@@ -191,7 +192,8 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
     );
 
     if (admin != null) {
-      notificationRepository.save(new Notification(admin, title, content));
+      notificationService.create(admin, title, content);
+      log.info("서비스 메서드를 통해 관리자 알림 생성 완료 (캐시 무효화 포함)");
     } else {
       log.warn("관리자 계정을 찾을 수 없어 알림을 저장하지 못했습니다.");
     }

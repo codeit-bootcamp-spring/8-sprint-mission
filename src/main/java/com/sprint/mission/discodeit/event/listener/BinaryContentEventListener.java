@@ -1,9 +1,11 @@
 package com.sprint.mission.discodeit.event.listener;
 
+import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,18 +22,20 @@ public class BinaryContentEventListener {
 
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onBinaryContentCreated(BinaryContentCreatedEvent event) {
-    log.info("바이너리 업로드 시작: id={}", event.getBinaryContentId());
+    BinaryContent binaryContent = event.getBinaryContent();
+    UUID id = binaryContent.getId();
+
+    log.info("바이너리 업로드 시작: id={}", id);
 
     try {
-      binaryContentStorage.put(event.getBinaryContentId(), event.getBytes());
+      binaryContentStorage.put(id, event.getBytes());
 
-      binaryContentService.updateStatus(event.getBinaryContentId(), BinaryContentStatus.SUCCESS);
-      log.info("바이너리 업로드 성공 및 상태 변경 완료: id={}", event.getBinaryContentId());
+      binaryContentService.updateStatus(id, BinaryContentStatus.SUCCESS);
+      log.info("바이너리 업로드 성공 및 상태 변경 완료: id={}", id);
 
     } catch (Exception e) {
-      log.error("바이너리 업로드 중 오류 발생: id={}", event.getBinaryContentId(), e);
-
-      binaryContentService.updateStatus(event.getBinaryContentId(), BinaryContentStatus.FAIL);
+      log.error("바이너리 업로드 중 오류 발생: id={}", id, e);
+      binaryContentService.updateStatus(id, BinaryContentStatus.FAIL);
     }
   }
 }

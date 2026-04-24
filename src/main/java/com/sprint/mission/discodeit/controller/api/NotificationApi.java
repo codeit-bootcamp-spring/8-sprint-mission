@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
+import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 
 @Tag(name = "Notification", description = "알림 API")
 public interface NotificationApi {
@@ -24,7 +25,7 @@ public interface NotificationApi {
       )
   })
   ResponseEntity<List<NotificationDto>> findAllByReceiverId(
-      @Parameter(description = "수신자(내) ID") UUID receiverId
+      @Parameter(hidden = true) DiscodeitUserDetails userDetails
   );
 
   @Operation(summary = "알림 확인 (삭제)")
@@ -35,6 +36,6 @@ public interface NotificationApi {
   })
   ResponseEntity<Void> delete(
       @Parameter(description = "삭제할 알림 ID") UUID notificationId,
-      @Parameter(description = "요청자 ID") UUID requesterId
+      @Parameter(hidden = true) DiscodeitUserDetails userDetails
   );
 }

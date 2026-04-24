@@ -85,8 +85,7 @@ class BinaryContentApiIntegrationTest {
     // 첨부파일이 있는 메시지 생성
     MessageCreateRequest messageRequest = new MessageCreateRequest(
         "첨부파일이 있는 메시지입니다.",
-        channel.id(),
-        user.id()
+        channel.id()
     );
 
     byte[] fileContent = "테스트 파일 내용입니다.".getBytes();
@@ -96,7 +95,7 @@ class BinaryContentApiIntegrationTest {
         fileContent
     );
 
-    MessageDto message = messageService.create(messageRequest, List.of(attachmentRequest));
+    MessageDto message = messageService.create(messageRequest, user.id(), List.of(attachmentRequest));
     UUID binaryContentId = message.attachments().get(0).id();
 
     // When & Then
@@ -141,8 +140,7 @@ class BinaryContentApiIntegrationTest {
 
     MessageCreateRequest messageRequest = new MessageCreateRequest(
         "첨부파일이 있는 메시지입니다.",
-        channel.id(),
-        user.id()
+        channel.id()
     );
 
     // 첫 번째 첨부파일
@@ -160,10 +158,7 @@ class BinaryContentApiIntegrationTest {
     );
 
     // 첨부파일 두 개를 가진 메시지 생성
-    MessageDto message = messageService.create(
-        messageRequest,
-        List.of(attachmentRequest1, attachmentRequest2)
-    );
+    MessageDto message = messageService.create(messageRequest, user.id(), List.of(attachmentRequest1, attachmentRequest2));
 
     List<UUID> binaryContentIds = message.attachments().stream()
         .map(BinaryContentDto::id)

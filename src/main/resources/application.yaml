@@ -16,12 +16,17 @@ spring:
       - dev
   config:
     import: optional:file:.env[.properties]
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=100,expireAfterAccess=600s,recordStats
+
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,loggers
+        include: health,info,metrics,loggers,caches
   endpoint:
     health:
       show-details: always
@@ -51,9 +56,9 @@ info:
 
 discodeit:
   storage:
-    type: ${STORAGE_TYPE:local}  # local | s3 (기본값: local)
+    type: local  # local | s3 (기본값: local)
     local:
-      root-path: ${STORAGE_LOCAL_ROOT_PATH:.discodeit/storage}
+      root-path: .discodeit/storage
     s3:
       access-key: ${AWS_S3_ACCESS_KEY}
       secret-key: ${AWS_S3_SECRET_KEY}
@@ -62,7 +67,7 @@ discodeit:
       presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600} # (기본값: 10분)
   admin:
     username: ${DISCODEIT_ADMIN_USERNAME:admin}
-    email: ${DISCODEIT_ADMIN_EMAIL":admin@example.com}
+    email: ${DISCODEIT_ADMIN_EMAIL:admin@example.com}
     password: ${DISCODEIT_ADMIN_PASSWORD:admin1234}
   jwt:
     access-token:

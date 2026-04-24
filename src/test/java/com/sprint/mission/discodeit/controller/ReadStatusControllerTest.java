@@ -110,7 +110,7 @@ class ReadStatusControllerTest {
     UUID channelId = UUID.randomUUID();
     Instant newLastReadAt = Instant.now();
 
-    ReadStatusUpdateRequest updateRequest = new ReadStatusUpdateRequest(newLastReadAt);
+    ReadStatusUpdateRequest updateRequest = new ReadStatusUpdateRequest(newLastReadAt, null);
 
     ReadStatusDto updatedReadStatus = new ReadStatusDto(
         readStatusId,
@@ -141,7 +141,7 @@ class ReadStatusControllerTest {
     UUID nonExistentId = UUID.randomUUID();
     Instant newLastReadAt = Instant.now();
 
-    ReadStatusUpdateRequest updateRequest = new ReadStatusUpdateRequest(newLastReadAt);
+    ReadStatusUpdateRequest updateRequest = new ReadStatusUpdateRequest(newLastReadAt, null);
 
     given(readStatusService.update(eq(nonExistentId), any(ReadStatusUpdateRequest.class)))
         .willThrow(ReadStatusNotFoundException.withId(nonExistentId));

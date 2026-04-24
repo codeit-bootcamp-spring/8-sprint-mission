@@ -18,6 +18,8 @@ import com.sprint.mission.discodeit.service.ChannelService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +37,7 @@ public class BasicChannelService implements ChannelService {
   private final UserRepository userRepository;
   private final ChannelMapper channelMapper;
 
+  @CacheEvict(value = "channels", allEntries = true)
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   @Transactional
   @Override
@@ -46,9 +49,11 @@ public class BasicChannelService implements ChannelService {
 
     channelRepository.save(channel);
     log.info("채널 생성 완료: id={}, name={}", channel.getId(), channel.getName());
+    log.info("[Cache Evict] 공용 채널 생성으로 모든 채널 캐시를 초기화합니다.");
     return channelMapper.toDto(channel);
   }
 
+  @CacheEvict(value = "channels", allEntries = true)
   @Transactional
   @Override
   public ChannelDto create(PrivateChannelCreateRequest request) {
@@ -62,6 +67,7 @@ public class BasicChannelService implements ChannelService {
     readStatusRepository.saveAll(readStatuses);
 
     log.info("채널 생성 완료: id={}, name={}", channel.getId(), channel.getName());
+    log.info("[Cache Evict] 개인 채널 생성으로 채널 캐시를 초기화합니다.");
     return channelMapper.toDto(channel);
   }
 
@@ -73,9 +79,11 @@ public class BasicChannelService implements ChannelService {
         .orElseThrow(() -> ChannelNotFoundException.withId(channelId));
   }
 
+  @Cacheable(value = "channels", key = "#userId")
   @Transactional(readOnly = true)
   @Override
   public List<ChannelDto> findAllByUserId(UUID userId) {
+    log.info("[Cache Miss] DB에서 사용자의 채널 목록을 조회합니다: userId={}", userId);
     List<UUID> mySubscribedChannelIds = readStatusRepository.findAllByUserId(userId).stream()
         .map(ReadStatus::getChannel)
         .map(Channel::getId)
@@ -87,6 +95,7 @@ public class BasicChannelService implements ChannelService {
         .toList();
   }
 
+  @CacheEvict(value = "channels", allEntries = true)
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   @Transactional
   @Override
@@ -104,6 +113,7 @@ public class BasicChannelService implements ChannelService {
     return channelMapper.toDto(channel);
   }
 
+  @CacheEvict(value = "channels", allEntries = true)
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   @Transactional
   @Override
@@ -118,5 +128,6 @@ public class BasicChannelService implements ChannelService {
 
     channelRepository.deleteById(channelId);
     log.info("채널 삭제 완료: id={}", channelId);
+    log.info("[Cache Evict] 채널 삭제로 채널 캐시를 초기화합니다.");
   }
 }

@@ -51,11 +51,10 @@ public class BasicMessageService implements MessageService {
 
   @Transactional
   @Override
-  public MessageDto create(MessageCreateRequest messageCreateRequest,
+  public MessageDto create(MessageCreateRequest messageCreateRequest, UUID authorId,
       List<BinaryContentCreateRequest> binaryContentCreateRequests) {
     log.debug("메시지 생성 시작: request={}", messageCreateRequest);
     UUID channelId = messageCreateRequest.channelId();
-    UUID authorId = messageCreateRequest.authorId();
 
     Channel channel = channelRepository.findById(channelId)
         .orElseThrow(() -> ChannelNotFoundException.withId(channelId));
@@ -71,7 +70,11 @@ public class BasicMessageService implements MessageService {
           BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
               contentType);
           binaryContentRepository.save(binaryContent);
-          eventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
+          eventPublisher.publishEvent(new BinaryContentCreatedEvent(
+              binaryContent,
+              binaryContent.getCreatedAt(),
+              bytes
+          ));
           return binaryContent;
         })
         .toList();

@@ -19,6 +19,8 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,6 +39,7 @@ public class BasicUserService implements UserService {
   private final ApplicationEventPublisher eventPublisher;
   private final PasswordEncoder passwordEncoder;
 
+  @CacheEvict(value = "users", allEntries = true)
   @Transactional
   @Override
   public UserDto create(UserCreateRequest userCreateRequest,
@@ -62,7 +65,11 @@ public class BasicUserService implements UserService {
               contentType);
           binaryContentRepository.save(binaryContent);
 
-          eventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
+          eventPublisher.publishEvent(new BinaryContentCreatedEvent(
+              binaryContent,
+              binaryContent.getCreatedAt(),
+              bytes
+          ));
 
           return binaryContent;
         })
@@ -74,6 +81,7 @@ public class BasicUserService implements UserService {
 
     userRepository.save(user);
     log.info("사용자 생성 완료: id={}, username={}", user.getId(), username);
+    log.info("[Cache Evict] 새 사용자 생성으로 사용자 목록 캐시를 비웁니다.");
     return userMapper.toDto(user);
   }
 
@@ -91,6 +99,7 @@ public class BasicUserService implements UserService {
   @Transactional(readOnly = true)
   @Override
   public List<UserDto> findAll() {
+    log.info("[Cache Miss] DB에서 모든 사용자 목록을 가져옵니다.");
     log.debug("모든 사용자 조회 시작");
     List<UserDto> userDtos = userRepository.findAllWithProfile()
         .stream()
@@ -100,6 +109,7 @@ public class BasicUserService implements UserService {
     return userDtos;
   }
 
+  @CacheEvict(value = "users", allEntries = true)
   @PreAuthorize("principal.userDto.id == #userId")
   @Transactional
   @Override
@@ -133,7 +143,11 @@ public class BasicUserService implements UserService {
           BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
               contentType);
           binaryContentRepository.save(binaryContent);
-          eventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
+          eventPublisher.publishEvent(new BinaryContentCreatedEvent(
+              binaryContent,
+              binaryContent.getCreatedAt(),
+              bytes
+          ));
           return binaryContent;
         })
         .orElse(null);
@@ -144,9 +158,11 @@ public class BasicUserService implements UserService {
     user.update(newUsername, newEmail, encodedPassword, nullableProfile);
 
     log.info("사용자 수정 완료: id={}", userId);
+    log.info("[Cache Evict] 사용자 정보 수정으로 사용자 목록 캐시를 비웁니다.");
     return userMapper.toDto(user);
   }
 
+  @CacheEvict(value = "users", allEntries = true)
   @PreAuthorize("principal.userDto.id == #userId")
   @Transactional
   @Override
@@ -159,5 +175,6 @@ public class BasicUserService implements UserService {
 
     userRepository.deleteById(userId);
     log.info("사용자 삭제 완료: id={}", userId);
+    log.info("[Cache Evict] 사용자 삭제로 사용자 목록 캐시를 비웁니다.");
   }
 }

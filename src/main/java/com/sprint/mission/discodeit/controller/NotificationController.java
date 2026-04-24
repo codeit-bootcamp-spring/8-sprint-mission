@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 
 @Slf4j
 @RestController
@@ -24,16 +26,21 @@ public class NotificationController implements NotificationApi {
   private final NotificationService notificationService;
 
   @GetMapping
-  public ResponseEntity<List<NotificationDto>> findAllByReceiverId(@RequestParam UUID receiverId) {
-    List<NotificationDto> notifications = notificationService.findAllByReceiverId(receiverId);
+  public ResponseEntity<List<NotificationDto>> findAllByReceiverId(
+      @AuthenticationPrincipal DiscodeitUserDetails userDetails) {
+    if (userDetails == null) {
+      log.warn("userDetails가 전달되지 않았습니다. 빈 목록을 반환합니다.");
+      return ResponseEntity.ok(List.of());
+    }
+    List<NotificationDto> notifications = notificationService.findAllByReceiverId(userDetails.getUserDto().id());
     return ResponseEntity.ok(notifications);
   }
 
   @DeleteMapping("/{notificationId}")
   public ResponseEntity<Void> delete(
       @PathVariable UUID notificationId,
-      @RequestParam UUID requesterId) {
-    notificationService.delete(notificationId, requesterId);
+      @AuthenticationPrincipal DiscodeitUserDetails userDetails) {
+    notificationService.delete(notificationId, userDetails.getUserDto().id());
     return ResponseEntity.noContent().build();
   }
 }
