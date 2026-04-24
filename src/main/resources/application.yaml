@@ -17,9 +17,17 @@ spring:
   config:
     import: optional:file:.env[.properties]
   cache:
-    type: caffeine
-    caffeine:
-      spec: maximumSize=100,expireAfterAccess=600s,recordStats
+    type: redis
+    cache-names:
+      - channels
+      - notifications
+      - users
+    redis:
+      enable-statistics: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   kafka:
     bootstrap-servers: localhost:9092
     producer:
