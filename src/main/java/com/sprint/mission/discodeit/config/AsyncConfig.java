@@ -16,7 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 @EnableRetry
 public class AsyncConfig {
 
-  @Bean
+  @Bean(name = "eventTaskExecutor")
   public TaskExecutor taskExecutor() {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     executor.setCorePoolSize(5);

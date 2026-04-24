@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
-@Component
+//@Component
 @RequiredArgsConstructor
 public class NotificationRequiredEventListener {
 
@@ -40,7 +40,9 @@ public class NotificationRequiredEventListener {
 
     Channel channel = channelRepository.findById(message.getChannel().getId()).orElse(null);
     User author = userRepository.findById(message.getAuthor().getId()).orElse(null);
-    if (channel == null || author == null) return;
+    if (channel == null || author == null) {
+      return;
+    }
 
     List<Notification> notifications = readStatuses.stream()
         .filter(ReadStatus::isNotificationEnabled)
