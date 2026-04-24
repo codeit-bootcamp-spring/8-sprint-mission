@@ -1,12 +1,1 @@
-// settings.gradle
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-    }
-}
-plugins {
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.7.0'
-    // 참고: 현재 최신 버전은 0.8.0이나 0.7.0도 작동에 지장 없습니다.
-}
-
 rootProject.name = 'discodeit'
