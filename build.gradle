@@ -43,14 +43,14 @@ dependencies {
     // Retry
     implementation 'org.springframework.retry:spring-retry'
 
-    // Event
+    // Message
     implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
     // Cache
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-
 
     // DB
     runtimeOnly 'org.postgresql:postgresql'
