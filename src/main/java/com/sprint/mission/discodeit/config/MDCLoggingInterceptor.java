@@ -14,6 +14,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class MDCLoggingInterceptor implements HandlerInterceptor {
 
   public static final String MDC_REQUEST_ID = "requestId";
+  /** 디버깅·관리자 알림용 전체 요청 ID(UUID 문자열) */
+  public static final String MDC_REQUEST_ID_FULL = "requestIdFull";
   public static final String MDC_REQUEST_METHOD = "requestMethod";
   public static final String MDC_REQUEST_URI = "requestUri";
   public static final String HEADER_REQUEST_ID = "Discodeit-Request-ID";
@@ -30,6 +32,7 @@ public class MDCLoggingInterceptor implements HandlerInterceptor {
     request.setAttribute(HEADER_REQUEST_ID, fullId);
 
     MDC.put(MDC_REQUEST_ID, shortId);
+    MDC.put(MDC_REQUEST_ID_FULL, fullId);
     MDC.put(MDC_REQUEST_METHOD, request.getMethod());
     MDC.put(MDC_REQUEST_URI, request.getRequestURI());
     return true;
@@ -46,6 +49,7 @@ public class MDCLoggingInterceptor implements HandlerInterceptor {
       response.setHeader(HEADER_REQUEST_ID, requestId);
     }
     MDC.remove(MDC_REQUEST_ID);
+    MDC.remove(MDC_REQUEST_ID_FULL);
     MDC.remove(MDC_REQUEST_METHOD);
     MDC.remove(MDC_REQUEST_URI);
   }
