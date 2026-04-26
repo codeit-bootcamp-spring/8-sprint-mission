@@ -10,7 +10,7 @@ import org.springframework.validation.annotation.Validated;
 public record JwtProperties(
         @NotBlank String secret,
         @Positive long accessExpirationMs,
-        @Positive long refreshExpirationMs
+        @Positive long refreshExpirationMs,
+        @Positive int maxActiveJwtCount
 ) {
 }
-

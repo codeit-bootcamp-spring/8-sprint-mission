@@ -8,6 +8,7 @@ import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import jakarta.annotation.PostConstruct;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -18,7 +19,16 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
+    public static final String REFRESH_TOKEN_COOKIE_NAME = "REFRESH_TOKEN";
+
     private final JwtProperties jwtProperties;
+
+    @PostConstruct
+    public void init() {
+        if (jwtProperties.secret().getBytes().length < 32) {
+            throw new IllegalArgumentException("JWT Secret Key must be at least 32 bytes (256 bits) for HS256 algorithm.");
+        }
+    }
 
     // SecretKey 객체를 매번 바이트 배열로 생성하지 않고 재사용하기 위해 Signer/Verifier를 필드로 두거나
     // 키 자체를 캐싱할 수 있지만, 여기서는 직관성을 위해 유지하되 로직만 다듬었습니다.
@@ -93,6 +103,17 @@ public class JwtTokenProvider {
         } catch (ParseException e) {
             log.error("JWT 토큰 파싱 중 오류 발생: {}", e.getMessage());
             throw new RuntimeException("JWT 토큰에서 정보를 추출할 수 없습니다.", e);
+        }
+    }
+
+    public Instant getExpirationTimeFromToken(String token) {
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(token);
+            Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+            return expirationTime != null ? expirationTime.toInstant() : Instant.MIN;
+        } catch (ParseException e) {
+            log.warn("토큰에서 만료 시간을 파싱할 수 없습니다.", e);
+            throw new RuntimeException("토큰 파싱 실패", e);
         }
     }
 }
