@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.cache.CacheNames;
 import com.sprint.mission.discodeit.dto.data.NotificationDto;
 import com.sprint.mission.discodeit.entity.Notification;
 import com.sprint.mission.discodeit.entity.User;
@@ -12,6 +13,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,10 @@ public class BasicNotificationService implements NotificationService {
 
   @Override
   @Transactional(readOnly = true)
+  @Cacheable(
+      cacheNames = CacheNames.NOTIFICATIONS_BY_USER,
+      key = "@cacheSpelKeys.userIdFrom(#authentication)"
+  )
   public List<NotificationDto> findAllForCurrentUser(Authentication authentication) {
     UUID receiverId = currentUserId(authentication);
     return notificationRepository.findAllByReceiverForListing(receiverId).stream()
@@ -36,6 +43,10 @@ public class BasicNotificationService implements NotificationService {
 
   @Override
   @Transactional
+  @CacheEvict(
+      cacheNames = CacheNames.NOTIFICATIONS_BY_USER,
+      key = "@cacheSpelKeys.userIdFrom(#authentication)"
+  )
   public void delete(UUID notificationId, Authentication authentication) {
     UUID receiverId = currentUserId(authentication);
     Notification notification = notificationRepository.findById(notificationId)
@@ -49,6 +60,7 @@ public class BasicNotificationService implements NotificationService {
 
   @Override
   @Transactional
+  @CacheEvict(cacheNames = CacheNames.NOTIFICATIONS_BY_USER, key = "#receiverUserId")
   public void createForReceiver(UUID receiverUserId, String title, String content) {
     User receiver = userRepository.findById(receiverUserId).orElse(null);
     if (receiver == null) {

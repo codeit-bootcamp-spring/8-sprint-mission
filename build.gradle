@@ -29,6 +29,10 @@ dependencies {
     implementation 'org.springframework.retry:spring-retry'
     implementation 'org.springframework.boot:spring-boot-starter-aop'
 
+    // Spring Cache + Caffeine
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+
     // Spring Validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 

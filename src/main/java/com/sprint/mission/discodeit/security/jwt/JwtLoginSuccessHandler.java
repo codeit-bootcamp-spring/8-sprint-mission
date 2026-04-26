@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.cache.CacheNames;
 import com.sprint.mission.discodeit.dto.data.JwtDto;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
@@ -8,6 +9,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
@@ -24,6 +26,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
     private final ObjectMapper objectMapper;
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtRegistry jwtRegistry;
+    private final CacheManager cacheManager;
 
     @Override
     public void onAuthenticationSuccess(
@@ -44,6 +47,11 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
         // 등록 (동일 user 로그인 시 과거 토큰 무효화)
         JwtInformation jwtInfo = new JwtInformation(userDto, accessToken, refreshToken, accessExpiry, refreshExpiry);
         jwtRegistry.registerJwtInformation(jwtInfo);
+
+        var usersCache = cacheManager.getCache(CacheNames.USERS_ALL);
+        if (usersCache != null) {
+            usersCache.clear();
+        }
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME, refreshToken)
                 .httpOnly(true)

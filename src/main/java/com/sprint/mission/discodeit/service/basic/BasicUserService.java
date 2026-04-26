@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.cache.CacheNames;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.mapper.UserMapper;
@@ -21,6 +22,8 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,6 +48,7 @@ public class BasicUserService implements UserService {
 		 */
 		@Transactional
 		@Override
+		@CacheEvict(cacheNames = CacheNames.USERS_ALL, allEntries = true)
 		public UserDto create(UserCreateRequest userCreateRequest,
 				Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
 				String username = userCreateRequest.username();
@@ -90,6 +94,7 @@ public class BasicUserService implements UserService {
 		}
 
 		@Override
+		@Cacheable(cacheNames = CacheNames.USERS_ALL, key = "'all'")
 		public List<UserDto> findAll() {
 				return userRepository.findAllWithProfile()
 						.stream()
@@ -103,6 +108,7 @@ public class BasicUserService implements UserService {
 		 */
 		@Transactional
 		@Override
+		@CacheEvict(cacheNames = CacheNames.USERS_ALL, allEntries = true)
 		@PreAuthorize("@securityExpressionService.isCurrentUser(#userId, authentication)")
 		public UserDto update(UUID userId, UserUpdateRequest userUpdateRequest,
 				Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
@@ -151,6 +157,7 @@ public class BasicUserService implements UserService {
 
 		@Transactional
 		@Override
+		@CacheEvict(cacheNames = CacheNames.USERS_ALL, allEntries = true)
 		@PreAuthorize("hasRole('ADMIN')")
 		public UserDto updateRole(UUID userId, Role newRole) {
 				User user = userRepository.findById(userId)
@@ -172,6 +179,7 @@ public class BasicUserService implements UserService {
 		 */
 		@Transactional
 		@Override
+		@CacheEvict(cacheNames = CacheNames.USERS_ALL, allEntries = true)
 		@PreAuthorize("@securityExpressionService.isCurrentUser(#userId, authentication)")
 		public void delete(UUID userId) {
 				log.debug("사용자 삭제 시도, userId={}", userId);

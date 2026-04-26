@@ -1,8 +1,10 @@
 package com.sprint.mission.discodeit.security.jwt;
 
+import com.sprint.mission.discodeit.cache.CacheNames;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -16,6 +18,7 @@ import java.util.Arrays;
 public class JwtLogoutHandler implements LogoutHandler {
 
     private final JwtRegistry jwtRegistry;
+    private final CacheManager cacheManager;
 
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
@@ -38,6 +41,10 @@ public class JwtLogoutHandler implements LogoutHandler {
 
                         response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
                     });
+        }
+        var usersCache = cacheManager.getCache(CacheNames.USERS_ALL);
+        if (usersCache != null) {
+            usersCache.clear();
         }
     }
 }

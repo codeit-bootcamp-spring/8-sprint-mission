@@ -31,6 +31,15 @@ spring:
         format_sql: true
         use_sql_comments: true
 
+  # Caffeine: recordStats → /actuator/metrics/cache.* , /actuator/caches
+  cache:
+    type: caffeine
+    caffeine:
+      spec: >
+        maximumSize=100,
+        expireAfterAccess=600s,
+        recordStats
+
 # 3. BinaryContent 저장소 설정
 # JWT 설정 추가
 discodeit:
@@ -52,13 +61,23 @@ management:
       exposure:
         include: "*" # 모든 정보를 노출해서 Admin 서버가 잘 보이게 합니다
   endpoint:
+    caches:
+      enabled: true
     health:
       show-details: always
     info:
       enabled: true
+  metrics:
+    enable:
+      cache: true
   observations:
     annotations:
       enabled: true
+
+# 캐시 적용 전후 SQL 비교용 (동일 API 2회 호출 시 2회째 Hibernate SQL 감소 여부 확인)
+logging:
+  level:
+    org.hibernate.SQL: debug
 
 # 5. Actuator /info 노출 정보
 info:
