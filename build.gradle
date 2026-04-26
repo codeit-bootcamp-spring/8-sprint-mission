@@ -36,6 +36,10 @@ dependencies {
     // Spring Kafka
     implementation 'org.springframework.kafka:spring-kafka'
 
+    // Redis Cache
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
     // Spring Validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
