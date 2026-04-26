@@ -47,6 +47,7 @@ public class MessageController implements MessageApi {
 		/**
 		 * 메시지 생성 요청 처리 (첨부 파일 선택).
 		 */
+		@Timed("message.create.async")
 		@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 		public ResponseEntity<MessageDto> create(
 				@RequestPart(value = "messageCreateRequest", required = false) @Valid MessageCreateRequest messageCreateRequest,

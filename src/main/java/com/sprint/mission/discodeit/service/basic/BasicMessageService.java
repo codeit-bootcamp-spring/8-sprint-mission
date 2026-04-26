@@ -55,6 +55,7 @@ public class BasicMessageService implements MessageService {
 		@Override
 		public MessageDto create(MessageCreateRequest messageCreateRequest,
 				List<BinaryContentCreateRequest> binaryContentCreateRequests) {
+				long wallStartNs = System.nanoTime();
 				UUID channelId = messageCreateRequest.channelId();
 				UUID authorId = messageCreateRequest.authorId();
 				log.debug("메시지 생성, channelId={}, authorId={}, attachments={}",
@@ -103,8 +104,11 @@ public class BasicMessageService implements MessageService {
 								author.getUsername(),
 								channelDisplayName(channel),
 								content != null ? content : ""));
-				log.info("메시지 생성 완료, messageId={}, channelId={}, authorId={}",
-						message.getId(), channelId, authorId);
+				long wallMs = (System.nanoTime() - wallStartNs) / 1_000_000L;
+				log.info(
+						"메시지 생성 완료, messageId={}, channelId={}, authorId={}, wallTimeMs={} (첨부 {}건의 바이너리 저장은 AFTER_COMMIT 비동기 리스너에서 수행되며, "
+								+ "동기로 리스너까지 기다리면 첨부당 약 3초 지연이 그대로 API 응답 시간에 합산됩니다.)",
+						message.getId(), channelId, authorId, wallMs, binaryContentCreateRequests.size());
 				return messageMapper.toDto(message);
 		}
 

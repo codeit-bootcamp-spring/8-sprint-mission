@@ -56,6 +56,9 @@ management:
       show-details: always
     info:
       enabled: true
+  observations:
+    annotations:
+      enabled: true
 
 # 5. Actuator /info 노출 정보
 info:
