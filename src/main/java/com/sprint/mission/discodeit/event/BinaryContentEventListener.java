@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -20,6 +21,7 @@ public class BinaryContentEventListener {
 
   private final BinaryContentStorage binaryContentStorage;
   private final BinaryContentService binaryContentService;
+  private final ApplicationEventPublisher eventPublisher;
 
   // 메타데이터를 저장한 트랜잭션이 최종적으로 DB에 반영된 후에만 실행된다.
   // BinaryContentCreatedEvent 타입의 이벤트가 발생되면 아래의 메서드가 실행된다.
@@ -43,6 +45,9 @@ public class BinaryContentEventListener {
 
       // 실패 시 상태 업데이트
       binaryContentService.updateStatus(event.binaryContentId(), BinaryContentStatus.FAIL);
+
+      // S3 업로드 실패 이벤트 발행 (알림 서비스로 전달)
+      eventPublisher.publishEvent(new S3UploadFailedEvent(event.binaryContentId(), null));
     }
   }
 }

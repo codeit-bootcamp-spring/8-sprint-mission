@@ -20,12 +20,14 @@ import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.MessageService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -47,6 +49,7 @@ public class BasicMessageService implements MessageService {
   private final BinaryContentService binaryContentService;
   private final BinaryContentRepository binaryContentRepository;
   private final PageResponseMapper pageResponseMapper;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Override
   @Transactional
@@ -75,6 +78,14 @@ public class BasicMessageService implements MessageService {
     Message savedMessage = messageRepository.save(message);
 
     log.info("[MESSAGE] create success messageId={}", savedMessage.getId());
+
+    eventPublisher.publishEvent(new MessageCreatedEvent(
+        channel.getId(),
+        channel.getName(),
+        author.getId(),
+        author.getUsername(),
+        request.content()
+    ));
 
     return messageMapper.toDto(savedMessage);
   }

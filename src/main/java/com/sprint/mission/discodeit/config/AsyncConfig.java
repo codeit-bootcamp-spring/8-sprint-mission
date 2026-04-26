@@ -28,6 +28,18 @@ public class AsyncConfig {
     return executor;
   }
 
+  @Bean(name = "eventTaskExecutor")
+  public Executor eventTaskExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(5);
+    executor.setMaxPoolSize(10);
+    executor.setQueueCapacity(200);
+    executor.setThreadNamePrefix("EventAsync-");
+    executor.setTaskDecorator(new ContextCopyTaskDecorator());
+    executor.initialize();
+    return executor;
+  }
+
   /**
    * TaskDecorator: 부모 스레드의 Context를 자식(비동기) 스레드로 복사한다.
    */
