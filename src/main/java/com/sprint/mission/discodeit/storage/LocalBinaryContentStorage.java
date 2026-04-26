@@ -113,7 +113,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.parseMediaType(dto.contentType()));
     headers.setContentDisposition(
-        ContentDisposition.attachment()
+        ContentDisposition.inline()
             .filename(encodedFileName, StandardCharsets.UTF_8)
             .build()
     );

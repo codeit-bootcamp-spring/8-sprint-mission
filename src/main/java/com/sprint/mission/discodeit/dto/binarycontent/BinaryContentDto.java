@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.dto.binarycontent;
 
+import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import java.util.UUID;
 
 /*
@@ -12,13 +13,14 @@ import java.util.UUID;
     • fileName          : 파일 이름
     • size              : 파일 사이즈
     • contentType       : 파일 타입
-    • bytes             : 바이너리 데이터
+    • status            : 업로드 상태 (PROCESSING / SUCCESS / FAIL)
  */
 public record BinaryContentDto(
     UUID id,
     String fileName,
     Long size,
-    String contentType
+    String contentType,
+    BinaryContentStatus status
 ) {
 
 }
