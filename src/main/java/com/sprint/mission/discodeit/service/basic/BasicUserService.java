@@ -7,19 +7,20 @@ import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,10 +33,11 @@ public class BasicUserService implements UserService {
 
 		private final UserRepository userRepository;
 		private final UserMapper userMapper;
-		private final BinaryContentRepository binaryContentRepository;
-		private final BinaryContentStorage binaryContentStorage;
 		private final PasswordEncoder passwordEncoder;
+		private final BinaryContentRepository binaryContentRepository;
+		// private final BinaryContentStorage binaryContentStorage;
 		private final JwtRegistry jwtRegistry;
+		private final ApplicationEventPublisher applicationEventPublisher;
 
 		/**
 		 * 사용자 생성 (이메일/사용자명 중복 시 예외).
@@ -66,7 +68,7 @@ public class BasicUserService implements UserService {
 								BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
 										contentType);
 								binaryContentRepository.save(binaryContent);
-								binaryContentStorage.put(binaryContent.getId(), bytes);
+								applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
 								return binaryContent;
 						})
 						.orElse(null);
@@ -126,14 +128,13 @@ public class BasicUserService implements UserService {
 
 				BinaryContent nullableProfile = optionalProfileCreateRequest
 						.map(profileRequest -> {
-
 								String fileName = profileRequest.fileName();
 								String contentType = profileRequest.contentType();
 								byte[] bytes = profileRequest.bytes();
 								BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
 										contentType);
 								binaryContentRepository.save(binaryContent);
-								binaryContentStorage.put(binaryContent.getId(), bytes);
+								applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
 								return binaryContent;
 						})
 						.orElse(null);

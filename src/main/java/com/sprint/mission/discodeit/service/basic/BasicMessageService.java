@@ -9,6 +9,7 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
@@ -24,6 +25,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,12 +43,13 @@ public class BasicMessageService implements MessageService {
 		private final ChannelRepository channelRepository;
 		private final UserRepository userRepository;
 		private final MessageMapper messageMapper;
-		private final BinaryContentStorage binaryContentStorage;
+		// private final BinaryContentStorage binaryContentStorage;
 		private final BinaryContentRepository binaryContentRepository;
 		private final PageResponseMapper pageResponseMapper;
+		private final ApplicationEventPublisher applicationEventPublisher;
 
 		/**
-		 * 메시지 생성 (채널/작성자 없으면 예외).
+		 * 메시지 ?성 (채널/?성???으??외).
 		 */
 		@Transactional
 		@Override
@@ -78,7 +81,7 @@ public class BasicMessageService implements MessageService {
 								BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
 										contentType);
 								binaryContentRepository.save(binaryContent);
-								binaryContentStorage.put(binaryContent.getId(), bytes);
+								applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
 								return binaryContent;
 						})
 						.toList();
