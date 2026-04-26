@@ -40,6 +40,17 @@ spring:
         expireAfterAccess=600s,
         recordStats
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: discodeit-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
 # 3. BinaryContent 저장소 설정
 # JWT 설정 추가
 discodeit:
@@ -52,6 +63,9 @@ discodeit:
     type: local
     local:
       root-path: ./storage/binary-contents
+  notification:
+    local-event:
+      enabled: false
 
 
 # 4. Actuator 엔드포인트 설정 (Admin 서버가 데이터를 가져가는 통로)

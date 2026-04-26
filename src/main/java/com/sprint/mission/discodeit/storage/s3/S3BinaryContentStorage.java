@@ -2,10 +2,7 @@ package com.sprint.mission.discodeit.storage.s3;
 
 import com.sprint.mission.discodeit.config.MDCLoggingInterceptor;
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
-import com.sprint.mission.discodeit.entity.Role;
-import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.service.NotificationService;
+import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.io.InputStream;
 import java.net.URI;
@@ -13,15 +10,16 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
-import org.slf4j.MDC;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkException;
@@ -45,8 +43,7 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
 		private final long presignedUrlExpiration;
 		private final S3Client s3Client;
 		private final S3Presigner s3Presigner;
-		private final NotificationService notificationService;
-		private final UserRepository userRepository;
+		private final ApplicationEventPublisher applicationEventPublisher;
 
 		public S3BinaryContentStorage(
 				@Value("${discodeit.storage.s3.access-key}") String accessKey,
@@ -54,13 +51,11 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
 				@Value("${discodeit.storage.s3.region}") String region,
 				@Value("${discodeit.storage.s3.bucket}") String bucket,
 				@Value("${discodeit.storage.s3.presigned-url-expiration:600}") long presignedUrlExpiration,
-				NotificationService notificationService,
-				UserRepository userRepository
+				ApplicationEventPublisher applicationEventPublisher
 		) {
 				this.bucket = bucket;
 				this.presignedUrlExpiration = presignedUrlExpiration;
-				this.notificationService = notificationService;
-				this.userRepository = userRepository;
+				this.applicationEventPublisher = applicationEventPublisher;
 
 				AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
 				StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(
@@ -100,21 +95,13 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
 		@Recover
 		public UUID recoverPut(Throwable ex, UUID binaryContentId, byte[] bytes) {
 				String requestId = resolveRequestIdForFailureNotice();
-				String detailBody = buildAdminFailureNoticeBody(
+				applicationEventPublisher.publishEvent(new S3UploadFailedEvent(
+						OPERATION_NAME,
 						requestId,
 						binaryContentId,
 						bytes != null ? bytes.length : null,
-						ex);
-				try {
-						for (User admin : userRepository.findAllByRole(Role.ADMIN)) {
-								notificationService.createForReceiver(
-										admin.getId(),
-										"S3 바이너리 저장 재시도 실패",
-										detailBody);
-						}
-				} catch (Exception notifyEx) {
-						log.warn("관리자 실패 알림 전송 중 오류 (원인 S3 업로드 실패는 아래 로그 참고)", notifyEx);
-				}
+						ex.getMessage() != null ? ex.getMessage() : ex.toString()
+				));
 				log.error(
 						"S3 바이너리 업로드 최종 실패(재시도 소진), operation={}, requestId={}, binaryContentId={}, bytes={}, error={}",
 						OPERATION_NAME,
@@ -130,19 +117,6 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
 				return Optional.ofNullable(MDC.get(MDCLoggingInterceptor.MDC_REQUEST_ID_FULL))
 						.or(() -> Optional.ofNullable(MDC.get(MDCLoggingInterceptor.MDC_REQUEST_ID)))
 						.orElse("(MDC에 요청 ID 없음)");
-		}
-
-		private static String buildAdminFailureNoticeBody(
-				String requestId,
-				UUID binaryContentId,
-				Integer byteLength,
-				Throwable ex) {
-				String errorMessage = ex.getMessage() != null ? ex.getMessage() : ex.toString();
-				return "작업: " + OPERATION_NAME + "\n"
-						+ "RequestId: " + requestId + "\n"
-						+ "BinaryContentId: " + binaryContentId + "\n"
-						+ (byteLength != null ? "Bytes: " + byteLength + "\n" : "")
-						+ "Error: " + errorMessage;
 		}
 
 		@Override
