@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.sprint.mission.discodeit.dto.data.MessageDto;
@@ -24,7 +25,8 @@ import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +41,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.SliceImpl;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,10 +60,10 @@ class BasicMessageServiceTest {
 		private MessageMapper messageMapper;
 
 		@Mock
-		private BinaryContentStorage binaryContentStorage;
+		private BinaryContentRepository binaryContentRepository;
 
 		@Mock
-		private BinaryContentRepository binaryContentRepository;
+		private ApplicationEventPublisher applicationEventPublisher;
 
 		@Mock
 		private PageResponseMapper pageResponseMapper;
@@ -132,7 +135,8 @@ class BasicMessageServiceTest {
 				// then
 				assertThat(result).isEqualTo(messageDto);
 				verify(messageRepository).save(any(Message.class));
-				verify(binaryContentStorage).put(eq(attachment.getId()), any(byte[].class));
+				verify(applicationEventPublisher, times(1)).publishEvent(any(BinaryContentCreatedEvent.class));
+				verify(applicationEventPublisher, times(1)).publishEvent(any(MessageCreatedEvent.class));
 		}
 
 		@Test

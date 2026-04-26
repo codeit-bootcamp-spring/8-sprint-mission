@@ -84,6 +84,30 @@ public class GlobalExceptionHandler {
     return ResponseEntity.badRequest().body(body);
   }
 
+  @ExceptionHandler(IllegalStateException.class)
+  public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException e) {
+    if ("Unauthenticated".equals(e.getMessage())) {
+      ErrorResponse body = toErrorResponse(
+          Instant.now(),
+          "UNAUTHORIZED",
+          "인증이 필요합니다.",
+          Collections.emptyMap(),
+          e.getClass().getName(),
+          HttpStatus.UNAUTHORIZED.value()
+      );
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+    ErrorResponse body = toErrorResponse(
+        Instant.now(),
+        "INTERNAL_ERROR",
+        e.getMessage() != null ? e.getMessage() : "요청을 처리할 수 없습니다.",
+        Collections.emptyMap(),
+        e.getClass().getName(),
+        HttpStatus.INTERNAL_SERVER_ERROR.value()
+    );
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+  }
+
   @ExceptionHandler(NoSuchElementException.class)
   public ResponseEntity<ErrorResponse> handleNoSuchElement(NoSuchElementException e) {
     ErrorResponse body = toErrorResponse(

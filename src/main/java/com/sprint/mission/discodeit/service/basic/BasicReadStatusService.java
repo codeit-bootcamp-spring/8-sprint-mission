@@ -12,7 +12,6 @@ import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ReadStatusService;
-import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -74,12 +73,11 @@ public class BasicReadStatusService implements ReadStatusService {
 		@Transactional
 		@Override
 		public ReadStatusDto update(UUID readStatusId, ReadStatusUpdateRequest request) {
-				Instant newLastReadAt = request.newLastReadAt();
 				ReadStatus readStatus = readStatusRepository.findById(readStatusId)
 						.orElseThrow(
 								() -> new NoSuchElementException(
 										"ReadStatus with id " + readStatusId + " not found"));
-				readStatus.update(newLastReadAt);
+				readStatus.update(request.newLastReadAt(), request.newNotificationEnabled());
 				return readStatusMapper.toDto(readStatus);
 		}
 

@@ -10,6 +10,7 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
@@ -17,7 +18,6 @@ import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.MessageService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -95,6 +95,14 @@ public class BasicMessageService implements MessageService {
 				);
 
 				messageRepository.save(message);
+				applicationEventPublisher.publishEvent(
+						new MessageCreatedEvent(
+								message.getId(),
+								channel.getId(),
+								author.getId(),
+								author.getUsername(),
+								channelDisplayName(channel),
+								content != null ? content : ""));
 				log.info("메시지 생성 완료, messageId={}, channelId={}, authorId={}",
 						message.getId(), channelId, authorId);
 				return messageMapper.toDto(message);
@@ -190,5 +198,10 @@ public class BasicMessageService implements MessageService {
 				}
 				messageRepository.deleteById(messageId);
 				log.info("메시지 삭제 완료, messageId={}", messageId);
+		}
+
+		private static String channelDisplayName(Channel channel) {
+				String name = channel.getName();
+				return (name != null && !name.isBlank()) ? name : "채널";
 		}
 }

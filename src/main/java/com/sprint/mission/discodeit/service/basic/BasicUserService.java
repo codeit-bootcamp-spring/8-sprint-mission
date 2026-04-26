@@ -8,6 +8,7 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
@@ -154,9 +155,14 @@ public class BasicUserService implements UserService {
 		public UserDto updateRole(UUID userId, Role newRole) {
 				User user = userRepository.findById(userId)
 						.orElseThrow(() -> new NoSuchElementException("User with id " + userId + " not found"));
+				Role previousRole = user.getRole();
 				user.updateRole(newRole);
 				// 권한 변경 시 토큰 강제 만료 처리로 로그아웃 유도
 				jwtRegistry.invalidateJwtInformationByUserId(userId);
+				if (previousRole != newRole) {
+						applicationEventPublisher.publishEvent(
+								new RoleUpdatedEvent(userId, previousRole, newRole));
+				}
 				log.info("사용자 권한 변경 완료, userId={}, role={}", userId, newRole);
 				return withOnline(userMapper.toDto(user));
 		}
