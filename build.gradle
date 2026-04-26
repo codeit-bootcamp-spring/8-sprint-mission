@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.sprint.mission'
-version = '2.1-M10'
+version = '2.2-M11'
 
 // 2. Repositories 블록은 최상위 레벨에 위치해야 합니다.
 repositories {
