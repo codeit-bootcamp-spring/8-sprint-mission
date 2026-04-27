@@ -21,10 +21,10 @@ import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.service.UserService;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +37,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-@Disabled
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -56,6 +55,9 @@ class BinaryContentApiIntegrationTest {
 
   @Autowired
   private UserService userService;
+  
+  @Autowired
+  private BinaryContentStorage binaryContentStorage;
 
   @Autowired
   private ChannelService channelService;
@@ -87,7 +89,8 @@ class BinaryContentApiIntegrationTest {
     // 첨부파일이 있는 메시지 생성
     MessageCreateRequest messageRequest = new MessageCreateRequest(
         "첨부파일이 있는 메시지입니다.",
-        channel.id()
+        channel.id(),
+        user.id()
     );
 
     byte[] fileContent = "테스트 파일 내용입니다.".getBytes();
@@ -97,7 +100,7 @@ class BinaryContentApiIntegrationTest {
         fileContent
     );
 
-    MessageDto message = messageService.create(messageRequest, user.id(), List.of(attachmentRequest));
+    MessageDto message = messageService.create(messageRequest, List.of(attachmentRequest));
     UUID binaryContentId = message.attachments().get(0).id();
 
     // When & Then
@@ -142,7 +145,8 @@ class BinaryContentApiIntegrationTest {
 
     MessageCreateRequest messageRequest = new MessageCreateRequest(
         "첨부파일이 있는 메시지입니다.",
-        channel.id()
+        channel.id(),
+        user.id()
     );
 
     // 첫 번째 첨부파일
@@ -160,7 +164,10 @@ class BinaryContentApiIntegrationTest {
     );
 
     // 첨부파일 두 개를 가진 메시지 생성
-    MessageDto message = messageService.create(messageRequest, user.id(), List.of(attachmentRequest1, attachmentRequest2));
+    MessageDto message = messageService.create(
+        messageRequest,
+        List.of(attachmentRequest1, attachmentRequest2)
+    );
 
     List<UUID> binaryContentIds = message.attachments().stream()
         .map(BinaryContentDto::id)
@@ -190,6 +197,9 @@ class BinaryContentApiIntegrationTest {
     BinaryContentDto binaryContent = binaryContentService.create(createRequest);
     UUID binaryContentId = binaryContent.id();
 
+    // Manually store the file for test (skip status update due to transaction issues)
+    binaryContentStorage.put(binaryContentId, fileContent.getBytes());
+    
     // When & Then
     mockMvc.perform(get("/api/binaryContents/{binaryContentId}/download", binaryContentId))
         .andExpect(status().isOk())

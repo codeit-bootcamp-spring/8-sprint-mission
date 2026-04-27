@@ -23,25 +23,29 @@ public class KafkaProduceRequiredEventListener {
 
   @Async("eventTaskExecutor")
   @TransactionalEventListener
-  public void on(MessageCreatedEvent event) throws JsonProcessingException {
-    String payload = objectMapper.writeValueAsString(event);
-    kafkaTemplate.send("discodeit.MessageCreatedEvent", payload);
-    log.info("[Kafka] 메시지 생성 이벤트 전송 완료");
+  public void on(MessageCreatedEvent event) {
+    sendToKafka(event);
   }
 
   @Async("eventTaskExecutor")
   @TransactionalEventListener
-  public void on(RoleUpdatedEvent event) throws JsonProcessingException {
-    String payload = objectMapper.writeValueAsString(event);
-    kafkaTemplate.send("discodeit.RoleUpdatedEvent", payload);
-    log.info("[Kafka] 권한 변경 이벤트 전송 완료");
+  public void on(RoleUpdatedEvent event) {
+    sendToKafka(event);
   }
 
   @Async("eventTaskExecutor")
   @EventListener
-  public void on(S3UploadFailedEvent event) throws JsonProcessingException {
-    String payload = objectMapper.writeValueAsString(event);
-    kafkaTemplate.send("discodeit.S3UploadFailedEvent", payload);
-    log.info("[Kafka] S3 업로드 실패 이벤트 전송 완료");
+  public void on(S3UploadFailedEvent event) {
+    sendToKafka(event);
+  }
+
+  private <T> void sendToKafka(T event) {
+    try {
+      String payload = objectMapper.writeValueAsString(event);
+      kafkaTemplate.send("discodeit.".concat(event.getClass().getSimpleName()), payload);
+    } catch (JsonProcessingException e) {
+      log.error("Failed to send event to Kafka", e);
+      throw new RuntimeException(e);
+    }
   }
 }

@@ -1,19 +1,17 @@
 package com.sprint.mission.discodeit.event;
 
 import com.sprint.mission.discodeit.entity.Role;
-import com.sprint.mission.discodeit.entity.User;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.Getter;
 
 @Getter
-public class RoleUpdatedEvent {
+public class RoleUpdatedEvent extends UpdatedEvent<Role> {
 
-  private final User user;
-  private final Role oldRole;
-  private final Role newRole;
+  private final UUID userId;
 
-  public RoleUpdatedEvent(User user, Role oldRole, Role newRole) {
-    this.user = user;
-    this.oldRole = oldRole;
-    this.newRole = newRole;
+  public RoleUpdatedEvent(UUID userId, Role from, Role to, Instant updatedAt) {
+    super(from, to, updatedAt);
+    this.userId = userId;
   }
 }

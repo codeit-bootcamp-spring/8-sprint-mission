@@ -34,6 +34,8 @@ import org.springframework.security.web.authentication.Http403ForbiddenEntryPoin
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 @Slf4j
 @Configuration
@@ -68,17 +70,14 @@ public class SecurityConfig {
                 new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
         )
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
-            .requestMatchers(HttpMethod.POST, "/api/users", "/api/auth/login", "/api/auth/refresh",
-                "/api/auth/logout").permitAll()
-
-            .requestMatchers("/api/binaryContents/**").permitAll()
-
-            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**")
-            .permitAll()
-
-            .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico").permitAll()
-
+            .requestMatchers(
+                AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/auth/csrf-token"),
+                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/users"),
+                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/login"),
+                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/refresh"),
+                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/logout"),
+                new NegatedRequestMatcher(AntPathRequestMatcher.antMatcher("/api/**"))
+            ).permitAll()
             .anyRequest().authenticated()
         )
         .exceptionHandling(ex -> ex

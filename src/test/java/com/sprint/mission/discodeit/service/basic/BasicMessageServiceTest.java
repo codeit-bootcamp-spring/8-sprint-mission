@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.data.MessageDto;
+import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
@@ -30,6 +31,9 @@ import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import org.springframework.context.ApplicationEventPublisher;
+import com.sprint.mission.discodeit.event.message.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.message.MessageCreatedEvent;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -62,7 +66,7 @@ class BasicMessageServiceTest {
   private MessageMapper messageMapper;
 
   @Mock
-  private BinaryContentStorage binaryContentStorage;
+  private ApplicationEventPublisher eventPublisher;
 
   @Mock
   private BinaryContentRepository binaryContentRepository;
@@ -99,7 +103,7 @@ class BasicMessageServiceTest {
 
     attachment = new BinaryContent("test.txt", 100L, "text/plain");
     ReflectionTestUtils.setField(attachment, "id", UUID.randomUUID());
-    attachmentDto = new BinaryContentDto(attachment.getId(), "test.txt", 100L, "text/plain");
+    attachmentDto = new BinaryContentDto(attachment.getId(), "test.txt", 100L, "text/plain", BinaryContentStatus.SUCCESS);
 
     message = new Message(content, channel, author, List.of(attachment));
     ReflectionTestUtils.setField(message, "id", messageId);
@@ -119,7 +123,7 @@ class BasicMessageServiceTest {
   @DisplayName("메시지 생성 성공")
   void createMessage_Success() {
     // given
-    MessageCreateRequest request = new MessageCreateRequest(content, channelId);
+    MessageCreateRequest request = new MessageCreateRequest(content, channelId, authorId);
     BinaryContentCreateRequest attachmentRequest = new BinaryContentCreateRequest("test.txt",
         "text/plain", new byte[100]);
     List<BinaryContentCreateRequest> attachmentRequests = List.of(attachmentRequest);
@@ -135,23 +139,44 @@ class BasicMessageServiceTest {
     given(messageMapper.toDto(any(Message.class))).willReturn(messageDto);
 
     // when
-    MessageDto result = messageService.create(request, authorId, attachmentRequests);
+    MessageDto result = messageService.create(request, attachmentRequests);
 
     // then
     assertThat(result).isEqualTo(messageDto);
     verify(messageRepository).save(any(Message.class));
-    verify(binaryContentStorage).put(eq(attachment.getId()), any(byte[].class));
+    verify(eventPublisher).publishEvent(any(BinaryContentCreatedEvent.class));
+    verify(eventPublisher).publishEvent(any(MessageCreatedEvent.class));
+  }
+
+  @Test
+  @DisplayName("메시지 생성 시 MessageCreatedEvent 발행")
+  void createMessage_PublishesMessageCreatedEvent() {
+    // given
+    MessageCreateRequest request = new MessageCreateRequest(content, channelId, authorId);
+    List<BinaryContentCreateRequest> attachmentRequests = List.of();
+
+    given(channelRepository.findById(eq(channelId))).willReturn(Optional.of(channel));
+    given(userRepository.findById(eq(authorId))).willReturn(Optional.of(author));
+    given(messageRepository.save(any(Message.class))).willReturn(message);
+    given(messageMapper.toDto(any(Message.class))).willReturn(messageDto);
+
+    // when
+    MessageDto result = messageService.create(request, attachmentRequests);
+
+    // then
+    verify(eventPublisher).publishEvent(any(MessageCreatedEvent.class));
+    assertThat(result).isEqualTo(messageDto);
   }
 
   @Test
   @DisplayName("존재하지 않는 채널에 메시지 생성 시도 시 실패")
   void createMessage_WithNonExistentChannel_ThrowsException() {
     // given
-    MessageCreateRequest request = new MessageCreateRequest(content, channelId);
+    MessageCreateRequest request = new MessageCreateRequest(content, channelId, authorId);
     given(channelRepository.findById(eq(channelId))).willReturn(Optional.empty());
 
     // when & then
-    assertThatThrownBy(() -> messageService.create(request, authorId, List.of()))
+    assertThatThrownBy(() -> messageService.create(request, List.of()))
         .isInstanceOf(ChannelNotFoundException.class);
   }
 
@@ -159,12 +184,12 @@ class BasicMessageServiceTest {
   @DisplayName("존재하지 않는 작성자로 메시지 생성 시도 시 실패")
   void createMessage_WithNonExistentAuthor_ThrowsException() {
     // given
-    MessageCreateRequest request = new MessageCreateRequest(content, channelId);
+    MessageCreateRequest request = new MessageCreateRequest(content, channelId, authorId);
     given(channelRepository.findById(eq(channelId))).willReturn(Optional.of(channel));
     given(userRepository.findById(eq(authorId))).willReturn(Optional.empty());
 
     // when & then
-    assertThatThrownBy(() -> messageService.create(request, authorId, List.of()))
+    assertThatThrownBy(() -> messageService.create(request, List.of()))
         .isInstanceOf(UserNotFoundException.class);
   }
 

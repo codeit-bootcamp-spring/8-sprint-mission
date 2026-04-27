@@ -21,19 +21,18 @@ import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.MessageService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -44,17 +43,17 @@ public class BasicMessageService implements MessageService {
   private final ChannelRepository channelRepository;
   private final UserRepository userRepository;
   private final MessageMapper messageMapper;
-  //private final BinaryContentStorage binaryContentStorage; //나중에 지울거
-  private final ApplicationEventPublisher eventPublisher;
   private final BinaryContentRepository binaryContentRepository;
   private final PageResponseMapper pageResponseMapper;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   @Override
-  public MessageDto create(MessageCreateRequest messageCreateRequest, UUID authorId,
+  public MessageDto create(MessageCreateRequest messageCreateRequest,
       List<BinaryContentCreateRequest> binaryContentCreateRequests) {
     log.debug("메시지 생성 시작: request={}", messageCreateRequest);
     UUID channelId = messageCreateRequest.channelId();
+    UUID authorId = messageCreateRequest.authorId();
 
     Channel channel = channelRepository.findById(channelId)
         .orElseThrow(() -> ChannelNotFoundException.withId(channelId));
@@ -70,11 +69,11 @@ public class BasicMessageService implements MessageService {
           BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
               contentType);
           binaryContentRepository.save(binaryContent);
-          eventPublisher.publishEvent(new BinaryContentCreatedEvent(
-              binaryContent,
-              binaryContent.getCreatedAt(),
-              bytes
-          ));
+          eventPublisher.publishEvent(
+              new BinaryContentCreatedEvent(
+                  binaryContent, binaryContent.getCreatedAt(), bytes
+              )
+          );
           return binaryContent;
         })
         .toList();
@@ -88,9 +87,15 @@ public class BasicMessageService implements MessageService {
     );
 
     messageRepository.save(message);
+
     log.info("메시지 생성 완료: id={}, channelId={}", message.getId(), channelId);
-    eventPublisher.publishEvent(new MessageCreatedEvent(message));
-    return messageMapper.toDto(message);
+    MessageDto dto = messageMapper.toDto(message);
+    eventPublisher.publishEvent(
+        new MessageCreatedEvent(
+            dto, dto.createdAt()
+        )
+    );
+    return dto;
   }
 
   @Transactional(readOnly = true)

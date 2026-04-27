@@ -4,7 +4,6 @@ import com.sprint.mission.discodeit.dto.data.MessageDto;
 import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
-import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -43,8 +42,7 @@ public interface MessageApi {
       @Parameter(
           description = "Message 첨부 파일들",
           content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
-      ) List<MultipartFile> attachments,
-      @Parameter(hidden = true) DiscodeitUserDetails userDetails
+      ) List<MultipartFile> attachments
   );
 
   @Operation(summary = "Message 내용 수정")

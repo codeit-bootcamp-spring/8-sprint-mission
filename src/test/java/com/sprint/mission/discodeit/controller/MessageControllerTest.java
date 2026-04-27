@@ -67,7 +67,8 @@ class MessageControllerTest {
     UUID authorId = UUID.randomUUID();
     MessageCreateRequest createRequest = new MessageCreateRequest(
         "안녕하세요, 테스트 메시지입니다.",
-        channelId
+        channelId,
+        authorId
     );
 
     MockMultipartFile messageCreateRequestPart = new MockMultipartFile(
@@ -114,7 +115,7 @@ class MessageControllerTest {
         List.of(attachmentDto)
     );
 
-    given(messageService.create(any(MessageCreateRequest.class), any(UUID.class), any(List.class)))
+    given(messageService.create(any(MessageCreateRequest.class), any(List.class)))
         .willReturn(createdMessage);
 
     // When & Then
@@ -137,7 +138,8 @@ class MessageControllerTest {
     // Given
     MessageCreateRequest invalidRequest = new MessageCreateRequest(
         "", // 내용이 비어있음 (NotBlank 위반)
-        null // 채널 ID가 비어있음 (NotNull 위반)
+        null, // 채널 ID가 비어있음 (NotNull 위반)
+        null  // 작성자 ID가 비어있음 (NotNull 위반)
     );
 
     MockMultipartFile messageCreateRequestPart = new MockMultipartFile(

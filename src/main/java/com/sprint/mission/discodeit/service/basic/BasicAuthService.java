@@ -52,16 +52,14 @@ public class BasicAuthService implements AuthService {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> UserNotFoundException.withId(userId));
 
-    Role oldRole = user.getRole();
+    Role previousRole = user.getRole();
     Role newRole = request.newRole();
-
     user.updateRole(newRole);
 
     jwtRegistry.invalidateJwtInformationByUserId(userId);
-
-    eventPublisher.publishEvent(new RoleUpdatedEvent(user, oldRole, newRole));
-
-    log.info("사용자 권한 변경 이벤트 발행: id={}, {} -> {}", userId, oldRole, newRole);
+    eventPublisher.publishEvent(
+        new RoleUpdatedEvent(user.getId(), previousRole, newRole, user.getUpdatedAt())
+    );
 
     return userMapper.toDto(user);
   }
