@@ -1,24 +1,18 @@
 package com.sprint.mission.discodeit.event;
 
+import com.sprint.mission.discodeit.dto.MessageDto;
 import java.time.Instant;
-import java.util.UUID;
 
 public record MessageCreatedEvent(
-    UUID messageId,
-    String content,
-    UUID channelId,
-    String channelName,
-    UUID authorId,
-    String authorName,
+    MessageDto messageDto,
     Instant occurredAt
 ) {
 
   public static MessageCreatedEvent now(
-      UUID messageId, String content, UUID channelId, String channelName, UUID authorId,
-      String authorName
+      MessageDto messageDto
   ) {
     return new MessageCreatedEvent(
-        messageId, content, channelId, channelName, authorId, authorName, Instant.now()
+        messageDto, Instant.now()
     );
   }
 }

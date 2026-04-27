@@ -25,7 +25,7 @@ public class KafkaProduceRequiredEventListener {
   @TransactionalEventListener
   public void on(MessageCreatedEvent event) {
     try {
-      log.info("[KafkaProduceRequiredEventListener] 메시지 생성 이벤트 발행 시도: {}", event.messageId());
+      log.info("[KafkaProduceRequiredEventListener] 메시지 생성 이벤트 발행 시도: {}", event.messageDto().id());
       String payload = objectMapper.writeValueAsString(event);
       kafkaTemplate.send("discodeit.MessageCreatedEvent", payload);
     } catch (JsonProcessingException e) {

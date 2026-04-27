@@ -126,20 +126,16 @@ public class BasicMessageService implements MessageService {
 
     Message message = new Message(content, channel, author, attachments);
     Message savedMessage = messageRepository.save(message);
+    MessageDto savedMessageDto = messageMapper.toDto(savedMessage);
 
     MessageCreatedEvent event = MessageCreatedEvent.now(
-        savedMessage.getId(),
-        savedMessage.getContent(),
-        savedMessage.getChannel().getId(),
-        savedMessage.getChannel().getName(),
-        savedMessage.getAuthor().getId(),
-        savedMessage.getAuthor().getUsername()
+        savedMessageDto
     );
 
     eventPublisher.publishEvent(event);
 
     log.info("[MessageService] 메시지 생성 완료 - Id: {}", message.getId());
-    return messageMapper.toDto(message);
+    return savedMessageDto;
   }
 
   @Override

@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.event.listener;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Notification;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
@@ -9,9 +10,11 @@ import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentSaveFailedException;
+import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.notification.NotificationFailedException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.NotificationMapper;
+import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
@@ -40,6 +43,7 @@ public class NotificationRequiredTopicListener {
   private final CacheManager cacheManager;
   private final SseService sseService;
   private final NotificationMapper notificationMapper;
+  private final ChannelRepository channelRepository;
 
   @Value("${admin.username}")
   private String adminUsername;
@@ -50,13 +54,15 @@ public class NotificationRequiredTopicListener {
     try {
       MessageCreatedEvent event = objectMapper.readValue(kafkaEvent, MessageCreatedEvent.class);
       log.info("[NotificationRequiredTopicListener] 메시지 생성 알림 처리 시작 - MessageId: {}",
-          event.messageId());
+          event.messageDto().id());
 
-      UUID authorId = event.authorId();
-      UUID channelId = event.channelId();
-      String authorName = event.authorName();
-      String channelName = (event.channelName() == null) ? "비공개 채널" : event.channelName();
-      String content = event.content();
+      UUID authorId = event.messageDto().author().id();
+      UUID channelId = event.messageDto().channelId();
+      String authorName = event.messageDto().author().username();
+      Channel channel = channelRepository.findById(channelId)
+          .orElseThrow(() -> new ChannelNotFoundException(channelId));
+      String channelName = (channel.getName() == null) ? "비공개 채널" : channel.getName();
+      String content = event.messageDto().content();
 
       List<ReadStatus> targets = readStatusRepository.findAllByChannelId(channelId)
           .stream()
