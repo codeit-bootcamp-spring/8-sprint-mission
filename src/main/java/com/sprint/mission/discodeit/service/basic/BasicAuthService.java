@@ -11,6 +11,7 @@ import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.service.AuthService;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class BasicAuthService implements AuthService {
   private final UserMapper userMapper;
   private final JwtRegistry jwtRegistry;
   private final ApplicationEventPublisher eventPublisher;
+  private final SseService sseService;
 
   @Override
   public UserDto getCurrentUserInfo(DiscodeitUserDetails userDetails) {
@@ -58,6 +60,7 @@ public class BasicAuthService implements AuthService {
 
     user.updateRole(userRoleUpdateRequest.newRole());
     User updatedUser = userRepository.save(user);
+    UserDto updatedUserDto = userMapper.toDto(updatedUser);
 
     jwtRegistry.invalidateJwtInformationByUserId(user.getId());
 
@@ -70,6 +73,11 @@ public class BasicAuthService implements AuthService {
 
     eventPublisher.publishEvent(event);
 
-    return userMapper.toDto(user);
+    sseService.broadcast(
+        "users.updated",
+        updatedUserDto
+    );
+
+    return updatedUserDto;
   }
 }

@@ -15,6 +15,7 @@ import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class BasicChannelService implements ChannelService {
   private final MessageRepository messageRepository;
   private final UserRepository userRepository;
   private final ChannelMapper channelMapper;
+  private final SseService sseService;
 
   @CacheEvict(value = "channel", allEntries = true)
   @Transactional
@@ -48,10 +50,20 @@ public class BasicChannelService implements ChannelService {
     String description = channelCreateRequest.description();
 
     Channel channel = new Channel(ChannelType.PUBLIC, name, description);
-    channelRepository.save(channel);
+    Channel savedChannel = channelRepository.save(channel);
+    ChannelDto savedChannelDto = channelMapper.toDto(savedChannel);
+
+    try {
+      sseService.broadcast(
+          "channels.created",
+          savedChannelDto
+      );
+    } catch (Exception e) {
+      log.warn("[ChannelService] 실시간 알림 전송 실패 - 사유: {}", e.getMessage());
+    }
 
     log.info("[ChannelService] 공개 채널 생성 완료 - Id: {}", channel.getId());
-    return channelMapper.toDto(channel);
+    return savedChannelDto;
   }
 
   @CacheEvict(value = "channel", allEntries = true)
@@ -62,7 +74,18 @@ public class BasicChannelService implements ChannelService {
         channelCreateRequest.participantIds().size());
 
     Channel channel = new Channel(ChannelType.PRIVATE);
-    channelRepository.save(channel);
+    Channel savedChannel = channelRepository.save(channel);
+    ChannelDto savedChannelDto = channelMapper.toDto(savedChannel);
+
+    try {
+      sseService.send(
+          channelCreateRequest.participantIds(),
+          "channels.created",
+          savedChannelDto
+      );
+    } catch (Exception e) {
+      log.warn("[ChannelService] 실시간 알림 전송 실패 - 사유: {}", e.getMessage());
+    }
 
     List<ReadStatus> readStatusList = userRepository.findAllById(
             channelCreateRequest.participantIds())
@@ -74,7 +97,7 @@ public class BasicChannelService implements ChannelService {
 
     log.info("[ChannelService] 비공개 채널 생성 완료 - Id: {}, 생성된 읽음 상태 개수: {}", channel.getId(),
         readStatusList.size());
-    return channelMapper.toDto(channel);
+    return savedChannelDto;
   }
 
   @Override
@@ -111,9 +134,19 @@ public class BasicChannelService implements ChannelService {
     }
 
     channel.update(newName, newDescription);
+    ChannelDto updatedChannelDto = channelMapper.toDto(channel);
+
+    try {
+      sseService.broadcast(
+          "channels.updated",
+          updatedChannelDto
+      );
+    } catch (Exception e) {
+      log.warn("[ChannelService] 실시간 알림 전송 실패 - 사유: {}", e.getMessage());
+    }
 
     log.info("[ChannelService] 채널 수정 완료 - Id: {}", channelId);
-    return channelMapper.toDto(channel);
+    return updatedChannelDto;
   }
 
   @CacheEvict(value = "channel", allEntries = true)
@@ -123,14 +156,45 @@ public class BasicChannelService implements ChannelService {
   public void delete(UUID channelId) {
     log.info("[ChannelService] 채널 삭제 시작 - Id: {}", channelId);
 
-    if (!channelRepository.existsById(channelId)) {
-      log.warn("[ChannelService] 채널 삭제 실패 - 존재하지 않는 Id: {}", channelId);
-      throw new ChannelNotFoundException(channelId);
+    Channel channel = channelRepository.findById(channelId)
+        .orElseThrow(() -> {
+          log.warn("[ChannelService] 채널 삭제 실패 - 존재하지 않는 Id: {}", channelId);
+          return new ChannelNotFoundException(channelId);
+        });
+    ChannelDto channelDto = channelMapper.toDto(channel);
+
+    List<UUID> participantIds = Collections.emptyList();
+    if (channel.getType().equals(ChannelType.PRIVATE)) {
+      participantIds = readStatusRepository.findAllByChannelId(channelId)
+          .stream()
+          .map(readStatus -> readStatus.getUser().getId())
+          .toList();
     }
 
     messageRepository.deleteAllByChannelId(channelId);
     readStatusRepository.deleteAllByChannelId(channelId);
     channelRepository.deleteById(channelId);
+
+    if (channel.getType() == ChannelType.PUBLIC) {
+      try {
+        sseService.broadcast(
+            "channels.deleted",
+            channelDto
+        );
+      } catch (Exception e) {
+        log.warn("[ChannelService] 실시간 알림 전송 실패 - 사유: {}", e.getMessage());
+      }
+    } else {
+      try {
+        sseService.send(
+            participantIds,
+            "channels.deleted",
+            channelDto
+        );
+      } catch (Exception e) {
+        log.warn("[ChannelService] 실시간 알림 전송 실패 - 사유: {}", e.getMessage());
+      }
+    }
 
     log.info("[ChannelService] 채널 삭제 및 연관 정보(메시지, 읽음상태) 삭제 완료 - Id: {}", channelId);
   }

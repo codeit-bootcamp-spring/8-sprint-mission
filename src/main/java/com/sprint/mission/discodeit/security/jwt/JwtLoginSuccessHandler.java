@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.response.ErrorResponse;
 import com.sprint.mission.discodeit.entity.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.service.basic.SseService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,6 +32,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
   private final JwtTokenProvider tokenProvider;
   private final JwtRegistry jwtRegistry;
   private final CacheManager cacheManager;
+  private final SseService sseService;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -71,6 +73,16 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
         );
 
         evictCache(discodeitUserDetails.getUserDto().id());
+
+        try {
+          sseService.broadcast(
+              "users.updated",
+              onlineUserDto
+          );
+        } catch (Exception e) {
+          log.warn("[JwtLoginSuccessHandler] 실시간 알림 전송 실패 - 사유: {}", e.getMessage());
+        }
+
       } catch (Exception e) {
         ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
 

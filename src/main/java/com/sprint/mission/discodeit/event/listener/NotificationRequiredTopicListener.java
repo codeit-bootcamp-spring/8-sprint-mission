@@ -11,9 +11,11 @@ import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentSaveFailedException;
 import com.sprint.mission.discodeit.exception.notification.NotificationFailedException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
+import com.sprint.mission.discodeit.mapper.NotificationMapper;
 import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.service.basic.SseService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,8 @@ public class NotificationRequiredTopicListener {
   private final UserRepository userRepository;
   private final ObjectMapper objectMapper;
   private final CacheManager cacheManager;
+  private final SseService sseService;
+  private final NotificationMapper notificationMapper;
 
   @Value("${admin.username}")
   private String adminUsername;
@@ -68,6 +72,17 @@ public class NotificationRequiredTopicListener {
             content
         );
         notificationRepository.save(notification);
+        try {
+          sseService.send(
+              List.of(receiver.getId()),
+              "notifications.created",
+              notificationMapper.toDto(notification)
+          );
+        } catch (Exception e) {
+          log.warn("[NotificationRequiredTopicListener] 실시간 알림 전송 실패 - 수신자: {}, 사유: {}",
+              receiver.getId(), e.getMessage());
+        }
+
         evictNotificationCache(receiver.getId());
 
         Cache channelCache = cacheManager.getCache("channel");
@@ -102,9 +117,19 @@ public class NotificationRequiredTopicListener {
       );
 
       notificationRepository.save(notification);
+      try {
+        sseService.send(
+            List.of(receiver.getId()),
+            "notifications.created",
+            notificationMapper.toDto(notification)
+        );
+      } catch (Exception e) {
+        log.warn("[NotificationRequiredTopicListener] 실시간 알림 전송 실패 - 수신자: {}, 사유: {}",
+            receiver.getId(), e.getMessage());
+      }
+
       evictNotificationCache(event.userId());
       log.info("[NotificationRequiredTopicListener] 권한 변경 알림 처리 완료 - 대상자: {}", event.userName());
-
     } catch (JsonProcessingException e) {
       log.error("[NotificationRequiredTopicListener] 권한 변경 이벤트 JSON 파싱 실패", e);
     } catch (Exception e) {
@@ -137,6 +162,17 @@ public class NotificationRequiredTopicListener {
       );
 
       notificationRepository.save(notification);
+      try {
+        sseService.send(
+            List.of(admin.getId()),
+            "notifications.created",
+            notificationMapper.toDto(notification)
+        );
+      } catch (Exception e) {
+        log.warn("[NotificationRequiredTopicListener] 실시간 알림 전송 실패 - 수신자: {}, 사유: {}",
+            admin.getId(), e.getMessage());
+      }
+
       evictNotificationCache(admin.getId());
 
       log.info("[NotificationRequiredTopicListener] S3 업로드 실패 알림 처리 완료 - 관리자: {}",
