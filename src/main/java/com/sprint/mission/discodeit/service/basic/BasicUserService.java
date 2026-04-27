@@ -51,9 +51,9 @@ public class BasicUserService implements UserService {
     private final JwtRegistry jwtRegistry;
     private final ApplicationEventPublisher eventPublisher;
 
-    @Override
     @CacheEvict(value = "users", allEntries = true)
     @Transactional
+    @Override
     public UserDto create(UserCreateRequest request,
                           Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
         String username = request.username();
@@ -97,7 +97,7 @@ public class BasicUserService implements UserService {
         return userMapper.toDto(user, isOnline);
     }
 
-    @Cacheable(value = "users", key = "'all'")
+    @Cacheable(value = "users", key = "'all'", unless = "#result.isEmpty()")
     @Override
     public List<UserDto> findAll() {
         return userRepository.findAll().stream()
