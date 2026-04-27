@@ -34,6 +34,6 @@ public class BasicAuthService implements AuthService {
         Role newRole = updateRequest.newRole();
         user.updateRole(newRole);
 
-        return userMapper.toDto(user, false);
+        return userMapper.toDto(user);
     }
 }

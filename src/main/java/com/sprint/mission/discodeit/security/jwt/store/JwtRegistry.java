@@ -1,5 +1,7 @@
 package com.sprint.mission.discodeit.security.jwt.store;
 
+import org.springframework.scheduling.annotation.Scheduled;
+
 import java.util.UUID;
 
 public interface JwtRegistry {
@@ -17,4 +19,6 @@ public interface JwtRegistry {
     void rotateJwtInformation(String refreshToken, JwtInformation newJwtInformation);
 
     void invalidateByRefreshToken(String refreshToken);
+
+    void clearExpiredJwtInformation();
 }

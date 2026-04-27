@@ -85,7 +85,7 @@ public class BasicUserService implements UserService {
         log.info("Service: 유저 생성 완료 및 DB 저장 완료 - ID: {}", savedUser.getId());
 
 
-        return userMapper.toDto(savedUser, false);
+        return userMapper.toDto(savedUser);
     }
 
     @Override
@@ -94,24 +94,21 @@ public class BasicUserService implements UserService {
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
         boolean isOnline = isUserOnline(user.getId());
-        return userMapper.toDto(user, isOnline);
+        return userMapper.toDto(user);
     }
 
     @Cacheable(value = "users", key = "'all'", unless = "#result.isEmpty()")
     @Override
     public List<UserDto> findAll() {
         return userRepository.findAll().stream()
-                .map(user -> {
-                    boolean isOnline = isUserOnline(user.getId());
-                    return userMapper.toDto(user, isOnline);
-                })
+                .map(userMapper::toDto)
                 .toList();
     }
 
-    @Override
     @CacheEvict(value = "users", allEntries = true)
     @PreAuthorize("principal.userDto.id == #userId")
     @Transactional
+    @Override
     public UserDto update(UUID userId, UserUpdateRequest request,
                           Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
         String newUsername = request.newUsername();
@@ -164,14 +161,13 @@ public class BasicUserService implements UserService {
 
         log.info("Service: 유저 수정 완료 - ID: {}", userId);
 
-        boolean isOnline = isUserOnline(user.getId());
-        return userMapper.toDto(userRepository.save(user), isOnline);
+        return userMapper.toDto(user);
     }
 
-    @Override
     @CacheEvict(value = "users", allEntries = true)
     @PreAuthorize("principal.userDto.id == #userId")
     @Transactional
+    @Override
     public void delete(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
@@ -193,10 +189,10 @@ public class BasicUserService implements UserService {
         log.info("Service: 사용자 DB 삭제 완료 - ID: {}", userId);
     }
 
-    @Override
     @CacheEvict(value = "users", allEntries = true)
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
+    @Override
     public UserDto updateUserRole(UUID userId, Role newRole) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
@@ -212,7 +208,7 @@ public class BasicUserService implements UserService {
         log.info("[UserService] 사용자 권한 변경 및 JWT 무효화 완료!");
 
         // 세션이 무효화되어 오프라인 처리
-        return userMapper.toDto(user, false);
+        return userMapper.toDto(user);
     }
 
     //중복 코드 제거

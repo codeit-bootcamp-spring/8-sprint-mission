@@ -26,9 +26,12 @@ public class DiscodeitUserDetailsService implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + username));
 
-        UserDto userDto = userMapper.toDto(user, true);
+        UserDto userDto = userMapper.toDto(user);
         String password = user.getPassword();
 
-        return new DiscodeitUserDetails(userDto, password);
+        return new DiscodeitUserDetails(
+                userDto,
+                password
+        );
     }
 }
