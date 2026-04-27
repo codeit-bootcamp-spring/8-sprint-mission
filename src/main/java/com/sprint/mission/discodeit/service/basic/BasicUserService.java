@@ -6,11 +6,9 @@ import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.BinaryContentStatus;
-import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.event.BinaryContentDeletedEvent;
-import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.UserException.DuplicateEmailException;
 import com.sprint.mission.discodeit.exception.UserException.DuplicateUsernameException;
 import com.sprint.mission.discodeit.exception.UserException.UserNotFoundException;
@@ -92,15 +90,13 @@ public class BasicUserService implements UserService {
     public UserDto find(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
-
-        boolean isOnline = isUserOnline(user.getId());
         return userMapper.toDto(user);
     }
 
     @Cacheable(value = "users", key = "'all'", unless = "#result.isEmpty()")
     @Override
     public List<UserDto> findAll() {
-        return userRepository.findAll().stream()
+        return userRepository.findAllWithProfile().stream()
                 .map(userMapper::toDto)
                 .toList();
     }
@@ -189,28 +185,6 @@ public class BasicUserService implements UserService {
         log.info("Service: 사용자 DB 삭제 완료 - ID: {}", userId);
     }
 
-    @CacheEvict(value = "users", allEntries = true)
-    @PreAuthorize("hasRole('ADMIN')")
-    @Transactional
-    @Override
-    public UserDto updateUserRole(UUID userId, Role newRole) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-
-        Role oldRole = user.getRole();
-
-        user.updateRole(newRole);
-
-        updatedEvent(userId, oldRole, newRole);
-
-        jwtRegistry.invalidateJwtInformationByUserId(userId);
-
-        log.info("[UserService] 사용자 권한 변경 및 JWT 무효화 완료!");
-
-        // 세션이 무효화되어 오프라인 처리
-        return userMapper.toDto(user);
-    }
-
     //중복 코드 제거
     private BinaryContent saveBinaryContent(BinaryContentCreateRequest request) {
         String fileName = request.fileName();
@@ -240,19 +214,5 @@ public class BasicUserService implements UserService {
                 id
         );
         eventPublisher.publishEvent(event);
-    }
-
-    // 사용자의 권한 변경 후 이벤트 발생
-    private void updatedEvent(UUID id, Role oldRole, Role newRole) {
-        RoleUpdatedEvent event = new RoleUpdatedEvent(
-                id,
-                oldRole,
-                newRole
-        );
-        eventPublisher.publishEvent(event);
-    }
-
-    private boolean isUserOnline(UUID userId) {
-        return jwtRegistry.hasActiveJwtInformationByUserId(userId);
     }
 }

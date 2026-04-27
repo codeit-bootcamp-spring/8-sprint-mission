@@ -1,9 +1,14 @@
 package com.sprint.mission.discodeit.service;
 
 import com.sprint.mission.discodeit.dto.dto.UserDto;
-import com.sprint.mission.discodeit.dto.request.UserRoleUpdateRequest;
-import com.sprint.mission.discodeit.service.auth.DiscodeitUserDetails;
+import com.sprint.mission.discodeit.dto.request.RoleUpdateRequest;
+import com.sprint.mission.discodeit.security.jwt.store.JwtInformation;
+import jakarta.servlet.http.HttpServletResponse;
 
 public interface AuthService {
-    UserDto updateRoleInternal(UserRoleUpdateRequest userRoleUpdateRequest);
+    UserDto updateRole(RoleUpdateRequest request);
+
+    UserDto updateRoleInternal(RoleUpdateRequest request);
+
+    JwtInformation refreshToken(String refreshToken, HttpServletResponse response);
 }

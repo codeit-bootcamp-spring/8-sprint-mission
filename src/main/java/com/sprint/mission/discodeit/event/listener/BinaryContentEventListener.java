@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.UUID;
@@ -23,7 +22,7 @@ public class BinaryContentEventListener {
     private final BinaryContentService binaryContentService;
 
     @Async("notificationTaskExecutor")
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @TransactionalEventListener
     public void handleCreatedEvent(BinaryContentCreatedEvent event) {
         log.info("[BinaryContentEventListener] - 파일 저장 이벤트를 진행중...");
         UUID id = event.binaryContentId();
@@ -38,7 +37,7 @@ public class BinaryContentEventListener {
     }
 
     @Async("notificationTaskExecutor")
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @TransactionalEventListener
     public void handleDeletedEvent(BinaryContentDeletedEvent event) {
         log.info("[BinaryContentEventListener] - 파일 삭제 이벤트를 진행중...");
         UUID id = event.binaryContentId();
