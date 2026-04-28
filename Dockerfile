@@ -20,11 +20,11 @@ RUN ./gradlew clean bootJar --no-daemon
 FROM amazoncorretto:17-alpine AS runtime
 WORKDIR /app
 
-COPY --from=build /app/build/libs/discodeit-1.2-M8.jar app.jar
+COPY --from=build /app/build/libs/discodeit-3.0-M12.jar app.jar
 
 # 환경 변수 및 포트 설정
 ENV JVM_OPTS=""
-EXPOSE 80
+EXPOSE 8080
 
 # jar만 실행
 ENTRYPOINT ["sh", "-c", "java ${JVM_OPTS} -jar app.jar"]
