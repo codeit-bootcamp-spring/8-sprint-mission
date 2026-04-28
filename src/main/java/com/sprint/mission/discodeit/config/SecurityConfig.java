@@ -70,17 +70,20 @@ public class SecurityConfig {
                 new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
         )
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers(
-                AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/health"),
-                AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/auth/csrf-token"),
-                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/users"),
-                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/login"),
-                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/refresh"),
-                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/logout"),
-                AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/sse"),
-                new NegatedRequestMatcher(AntPathRequestMatcher.antMatcher("/api/**"))
-            ).permitAll()
-            .anyRequest().authenticated()
+
+//                .anyRequest().permitAll() //테스트용 주석
+
+                .requestMatchers(
+                    AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/health"),
+                    AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/auth/csrf-token"),
+                    AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/users"),
+                    AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/login"),
+                    AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/refresh"),
+                    AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/logout"),
+                    AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/sse"),
+                    new NegatedRequestMatcher(AntPathRequestMatcher.antMatcher("/api/**"))
+                ).permitAll()
+                .anyRequest().authenticated()  //테스트용 주석처리
         )
         .exceptionHandling(ex -> ex
             .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
