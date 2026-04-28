@@ -12,6 +12,7 @@ import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.service.SseService;
 import com.sprint.mission.discodeit.service.UserService;
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +37,7 @@ public class BasicUserService implements UserService {
   private final BinaryContentRepository binaryContentRepository;
   private final PasswordEncoder passwordEncoder;
   private final ApplicationEventPublisher eventPublisher;
+  private final SseService sseService;
 
   @CacheEvict(value = "users", key = "'all'")
   @Transactional
@@ -76,8 +78,12 @@ public class BasicUserService implements UserService {
     User user = new User(username, email, encodedPassword, nullableProfile);
 
     userRepository.save(user);
-    log.info("사용자 생성 완료: id={}, username={}", user.getId(), username);
-    return userMapper.toDto(user);
+    UserDto dto = userMapper.toDto(user);
+
+    sseService.broadcast("users.created", dto);
+
+    log.info("사용자 생성 및 SSE 방송 완료: id={}, username={}", dto.id(), dto.username());
+    return dto;
   }
 
   @Transactional(readOnly = true)
@@ -152,8 +158,10 @@ public class BasicUserService implements UserService {
         .orElse(user.getPassword());
     user.update(newUsername, newEmail, encodedPassword, nullableProfile);
 
-    log.info("사용자 수정 완료: id={}", userId);
-    return userMapper.toDto(user);
+    UserDto dto = userMapper.toDto(user);
+    sseService.broadcast("users.updated", dto);
+    log.info("사용자 수정 및 SSE 방송 완료: id={}", userId);
+    return dto;
   }
 
   @CacheEvict(value = "users", key = "'all'")
@@ -163,11 +171,12 @@ public class BasicUserService implements UserService {
   public void delete(UUID userId) {
     log.debug("사용자 삭제 시작: id={}", userId);
 
-    if (!userRepository.existsById(userId)) {
-      throw UserNotFoundException.withId(userId);
-    }
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> UserNotFoundException.withId(userId));
+    UserDto dto = userMapper.toDto(user);
 
     userRepository.deleteById(userId);
-    log.info("사용자 삭제 완료: id={}", userId);
+    sseService.broadcast("users.deleted", dto);
+    log.info("사용자 삭제 및 SSE 방송 완료: id={}", userId);
   }
 }
