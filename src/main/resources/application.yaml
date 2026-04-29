@@ -33,11 +33,11 @@ spring:
       enable-statistics: true
     data:
       redis:
-        host: ${REDIS_HOST:localhost}
+        host: ${REDIS_HOST:redis}
         port: ${REDIS_PORT:6379}
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:broker:29092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -47,6 +47,13 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
+async:
+  executors:
+    core-size: ${ASYNC_CORE_SIZE:2}
+    max-size: ${ASYNC_MAX_SIZE:4}
+    queue-capacity: ${ASYNC_QUEUE_CAPACITY:100}
+    keep-alive-second: ${ASYNC_KEEP_ALIVE:60}
+    
 admin:
   username: ${ADMIN_USERNAME}
   password: ${ADMIN_PASSWORD}
