@@ -10,7 +10,6 @@ public record BinaryContentCreatedEvent(
     BinaryContentDto binaryContentDto,
     byte[] data,
     BinaryContentType binaryContentType,
-    UUID userId,
     ChannelType channelType,
     List<UUID> participantIds,
     Instant occurredAt
@@ -20,12 +19,11 @@ public record BinaryContentCreatedEvent(
       BinaryContentDto binaryContentDto,
       byte[] data,
       BinaryContentType binaryContentType,
-      UUID userId,
       ChannelType channelType,
       List<UUID> participantIds
   ) {
     return new BinaryContentCreatedEvent(
-        binaryContentDto, data, binaryContentType, userId, channelType, participantIds,
+        binaryContentDto, data, binaryContentType, channelType, participantIds,
         Instant.now()
     );
   }

@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.dto.request.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.entity.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.DomainEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
@@ -30,7 +31,6 @@ public class BasicAuthService implements AuthService {
   private final UserMapper userMapper;
   private final JwtRegistry jwtRegistry;
   private final ApplicationEventPublisher eventPublisher;
-  private final SseService sseService;
 
   @Override
   public UserDto getCurrentUserInfo(DiscodeitUserDetails userDetails) {
@@ -72,10 +72,7 @@ public class BasicAuthService implements AuthService {
 
     eventPublisher.publishEvent(event);
 
-    sseService.broadcast(
-        "users.updated",
-        updatedUserDto
-    );
+    eventPublisher.publishEvent(new DomainEvent<>("users.updated", updatedUserDto, null));
 
     return updatedUserDto;
   }

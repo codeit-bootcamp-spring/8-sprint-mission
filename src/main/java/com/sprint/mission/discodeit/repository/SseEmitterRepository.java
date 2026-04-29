@@ -46,4 +46,8 @@ public class SseEmitterRepository {
   public List<UUID> findAllReceiverIds() {
     return new ArrayList<>(data.keySet());
   }
+
+  public ConcurrentMap<UUID, List<SseEmitter>> findAll() {
+    return data; // 전체 맵을 반환해서 서비스에서 순회할 수 있게 해줌
+  }
 }

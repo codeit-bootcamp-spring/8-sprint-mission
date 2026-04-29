@@ -3,13 +3,13 @@ package com.sprint.mission.discodeit.event.listener;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.base.BinaryContentStatus;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.DomainEvent;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentSaveFailedException;
 import com.sprint.mission.discodeit.service.BinaryContentService;
-import com.sprint.mission.discodeit.service.basic.SseService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -24,7 +24,7 @@ public class BinaryContentEventListener {
 
   private final BinaryContentStorage binaryContentStorage;
   private final BinaryContentService binaryContentService;
-  private final SseService sseService;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Async("taskExecutor")
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -37,55 +37,45 @@ public class BinaryContentEventListener {
       binaryContentStorage.put(event.binaryContentDto().id(), event.data());
       binaryContentService.updateStatus(event.binaryContentDto().id(), BinaryContentStatus.SUCCESS);
 
-      try {
-        switch (event.binaryContentType()) {
-          case PROFILE_IMAGE:
-            sseService.broadcast("binaryContents.updated", event.binaryContentDto());
-            break;
-          case MESSAGE_FILE:
-            if (ChannelType.PRIVATE.equals(event.channelType())) {
-              if (event.participantIds() != null && !event.participantIds().isEmpty()) {
-                sseService.send(event.participantIds(), "binaryContents.updated",
-                    event.binaryContentDto());
-              }
-            } else {
-              sseService.broadcast("binaryContents.updated", event.binaryContentDto());
-            }
-        }
-      } catch (Exception e) {
-        log.warn("[BinaryContentEventListener] 실시간 알림 전송 실패 - 사유: {}", e.getMessage());
-      }
+      publishUpdateEvent(event);
 
       log.info("[BinaryContentEventListener] 바이너리 데이터 저장 완료 - ID: {}",
           event.binaryContentDto().id());
     } catch (Exception e) {
       binaryContentService.updateStatus(event.binaryContentDto().id(), BinaryContentStatus.FAIL);
 
-      try {
-        switch (event.binaryContentType()) {
-          case PROFILE_IMAGE:
-            if (event.userId() != null) {
-              sseService.send(List.of(event.userId()), "binaryContents.updated",
-                  event.binaryContentDto());
-            }
-            break;
-          case MESSAGE_FILE:
-            if (ChannelType.PRIVATE.equals(event.channelType())) {
-              if (event.participantIds() != null && !event.participantIds().isEmpty()) {
-                sseService.send(event.participantIds(), "binaryContents.updated",
-                    event.binaryContentDto());
-              }
-            } else {
-              sseService.broadcast("binaryContents.updated", event.binaryContentDto());
-            }
-        }
-      } catch (Exception sseEx) {
-        log.warn("[BinaryContentEventListener] 실패 알림 발송 중 추가 오류 발생: {}", sseEx.getMessage());
-      }
+      publishUpdateEvent(event);
 
       log.error("[BinaryContentEventListener] 바이너리 데이터 저장 실패 - ID: {}, 파일명: {}, 원인: {}",
           event.binaryContentDto().id(), event.binaryContentDto().fileName(), e.getMessage());
       throw new BinaryContentSaveFailedException(e);
+    }
+  }
+
+  private void publishUpdateEvent(BinaryContentCreatedEvent event) {
+    try {
+      switch (event.binaryContentType()) {
+        case PROFILE_IMAGE:
+          // 성공/실패 상관없이 브로드캐스트
+          eventPublisher.publishEvent(
+              new DomainEvent<>("binaryContents.updated", event.binaryContentDto(), null));
+          break;
+
+        case MESSAGE_FILE:
+          if (ChannelType.PRIVATE.equals(event.channelType()) && event.participantIds() != null) {
+            // 비공개 채널은 참여자들에게만
+            eventPublisher.publishEvent(
+                new DomainEvent<>("binaryContents.updated", event.binaryContentDto(),
+                    event.participantIds()));
+          } else {
+            // 공개 채널은 브로드캐스트
+            eventPublisher.publishEvent(
+                new DomainEvent<>("binaryContents.updated", event.binaryContentDto(), null));
+          }
+          break;
+      }
+    } catch (Exception e) {
+      log.warn("[BinaryContentEventListener] 실시간 알림 전송 중 오류 발생: {}", e.getMessage());
     }
   }
 }

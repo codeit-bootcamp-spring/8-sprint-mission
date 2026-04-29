@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,7 +30,7 @@ public class SseService {
 
   // SseEmitter 객체 생성
   public SseEmitter connect(UUID receiverId, UUID lastEventId) {
-    SseEmitter emitter = new SseEmitter();
+    SseEmitter emitter = new SseEmitter(1000L * 60 * 30);
     sseEmitterRepository.save(receiverId, emitter);
 
     emitter.onCompletion(() -> {
@@ -89,6 +90,7 @@ public class SseService {
 
       // 해당 사용자의 SSE 연결이 없는 경우 스킵
       if (emitters == null || emitters.isEmpty()) {
+        log.warn("[SSE] 유저 {}는 현재 접속 중이 아닙니다. (Emitter 없음)", receiverId);
         continue;
       }
 
@@ -103,7 +105,7 @@ public class SseService {
           emitter.completeWithError(e);
           sseEmitterRepository.delete(receiverId, emitter);
         } catch (Exception e) {
-          log.error("[SseService] 알 수 없는 오류: {}", e.getMessage());
+          log.error("❌ [SSE] 알 수 없는 오류 발생 (유저: {}): ", receiverId, e);
         }
       }
     }
@@ -117,22 +119,26 @@ public class SseService {
   }
 
   // 주기적으로 ping을 보내서 만료된 SseEmitter 객체 삭제
-  @Scheduled(fixedDelay = 1000 * 60 * 30)
+  @Scheduled(fixedDelay = 1000 * 15)
   public void cleanUp() {
-    List<UUID> allReceiverIds = sseEmitterRepository.findAllReceiverIds();
+    ConcurrentMap<UUID, List<SseEmitter>> allData = sseEmitterRepository.findAll();
 
-    for (UUID receiverId : allReceiverIds) {
-      List<SseEmitter> emitters = sseEmitterRepository.findAllByReceiverId(receiverId);
-
-      for (SseEmitter emitter : emitters) {
-        // 만료 여부 검증
-        if (!ping(emitter)) {
+    allData.forEach((receiverId, emitters) -> {
+      emitters.removeIf(emitter -> {
+        try {
+          emitter.send(SseEmitter.event().name("ping").data("ping"));
+          return false; // 성공하면 리스트에 유지
+        } catch (IOException e) {
           log.info("[SseService] 핑 실패로 인한 정리: {}", receiverId);
-          emitter.complete();
-          sseEmitterRepository.delete(receiverId, emitter);
+          return true; // 실패하면 리스트에서 삭제
         }
+      });
+
+      // 4. 만약 리스트가 완전히 비었다면 메모리 관리를 위해 맵에서 ID 자체를 제거
+      if (emitters.isEmpty()) {
+        sseEmitterRepository.deleteById(receiverId);
       }
-    }
+    });
   }
 
   // 최초 연결 또는 만료 여부를 확인하기 위해 더미 이벤트 전송

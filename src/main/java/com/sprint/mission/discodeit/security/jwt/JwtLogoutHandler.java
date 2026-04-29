@@ -3,11 +3,11 @@ package com.sprint.mission.discodeit.security.jwt;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.sprint.mission.discodeit.dto.UserDto;
+import com.sprint.mission.discodeit.event.DomainEvent;
 import com.sprint.mission.discodeit.exception.DiscodeitException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.service.basic.SseService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,6 +16,9 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
@@ -29,7 +32,8 @@ public class JwtLogoutHandler implements LogoutHandler {
   private final JwtRegistry jwtRegistry;
   private final UserRepository userRepository;
   private final BinaryContentMapper binaryContentMapper;
-  private final SseService sseService;
+  private final ApplicationEventPublisher eventPublisher;
+  private final CacheManager cacheManager;
 
   @Override
   public void logout(HttpServletRequest request, HttpServletResponse response,
@@ -63,21 +67,23 @@ public class JwtLogoutHandler implements LogoutHandler {
                       user.getRole()
                   );
 
-                  try {
-                    sseService.broadcast(
-                        "users.updated",
-                        offlineUserDto
-                    );
-                  } catch (Exception e) {
-                    log.warn("[JwtLogoutHandler] 실시간 알림 전송 실패 - 사유: {}", e.getMessage());
+                  Cache userCache = cacheManager.getCache("user");
+                  if (userCache != null) {
+                    userCache.clear();
                   }
+
+                  Cache channelCache = cacheManager.getCache("channel");
+                  if (channelCache != null) {
+                    channelCache.clear();
+                  }
+                  eventPublisher.publishEvent(new DomainEvent<>("users.updated", offlineUserDto, null));
                 }
             );
 
             jwtRegistry.invalidateJwtInformationByUserId(userId);
           }
         } catch (Exception e) {
-          throw new DiscodeitException(ErrorCode.INVALID_TOKEN);
+          //throw new DiscodeitException(ErrorCode.INVALID_TOKEN);
         }
       });
     }

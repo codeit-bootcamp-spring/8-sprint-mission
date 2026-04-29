@@ -5,12 +5,10 @@ import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
-import com.sprint.mission.discodeit.entity.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.event.BinaryContentType;
-import com.sprint.mission.discodeit.exception.DiscodeitException;
-import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.event.DomainEvent;
 import com.sprint.mission.discodeit.exception.user.UserEmailAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.exception.user.UsernameAlreadyExistsException;
@@ -29,8 +27,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +42,6 @@ public class BasicUserService implements UserService {
   private final UserMapper userMapper;
   private final PasswordEncoder passwordEncoder;
   private final ApplicationEventPublisher eventPublisher;
-  private final SseService sseService;
   private final BinaryContentMapper binaryContentMapper;
 
   @CacheEvict(value = "user", allEntries = true)
@@ -59,15 +54,6 @@ public class BasicUserService implements UserService {
     String username = userCreateRequest.username();
     String email = userCreateRequest.email();
     String password = userCreateRequest.password();
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-    if (authentication == null
-        || !authentication.isAuthenticated()
-        || !(authentication.getPrincipal() instanceof DiscodeitUserDetails userDetails)) {
-      throw new DiscodeitException(ErrorCode.AUTHENTICATION_REQUIRED);
-    }
-
-    UUID userId = userDetails.getUserDto().id();
 
     if (userRepository.existsByUsername(username)) { // username 중복 확인
       log.warn("[UserService] 사용자 생성 실패 - 중복된 이름: {}", username);
@@ -94,7 +80,6 @@ public class BasicUserService implements UserService {
               binaryContentMapper.toDto(savedBinaryContent),
               bytes,
               BinaryContentType.PROFILE_IMAGE,
-              userId,
               null,
               Collections.emptyList()
           );
@@ -112,17 +97,9 @@ public class BasicUserService implements UserService {
     User savedUser = userRepository.save(user);
     UserDto savedUserDto = userMapper.toDto(savedUser);
 
-    try {
-      sseService.broadcast(
-          "users.created",
-          savedUserDto
-      );
-    } catch (Exception e) {
-      log.warn("[UserService] 실시간 알림 전송 실패 - 사유: {}", e.getMessage());
-    }
+    eventPublisher.publishEvent(new DomainEvent<>("users.updated", savedUserDto, null));
 
-    log.info("[UserService] 사용자 생성 완료 - ID: {},  프로필 여부: {}", user.getId(),
-        (profile != null));
+    log.info("[UserService] 사용자 생성 완료 - ID: {},  프로필 여부: {}", user.getId(), (profile != null));
     return savedUserDto;
   }
 
@@ -155,7 +132,6 @@ public class BasicUserService implements UserService {
     String newUsername = userUpdateRequest.newUsername();
     String newEmail = userUpdateRequest.newEmail();
     String newPassword = userUpdateRequest.newPassword();
-    String encryptedPassword = passwordEncoder.encode(newPassword);
 
     if (newUsername != null && !newUsername.equals(user.getUsername())) {
       if (userRepository.existsByUsername(newUsername)) { // username 중복 확인
@@ -169,6 +145,11 @@ public class BasicUserService implements UserService {
         log.warn("[UserService] 사용자 수정 실패 - 중복된 이메일: {}", newEmail);
         throw new UserEmailAlreadyExistsException(newEmail);
       }
+    }
+
+    String encryptedPassword = user.getPassword();
+    if (newPassword != null && !newPassword.isBlank()) {
+      encryptedPassword = passwordEncoder.encode(newPassword);
     }
 
     BinaryContent newProfile = null;
@@ -191,7 +172,6 @@ public class BasicUserService implements UserService {
           binaryContentMapper.toDto(updatedBinaryContent),
           bytes,
           BinaryContentType.PROFILE_IMAGE,
-          userId,
           null,
           Collections.emptyList()
       );
@@ -204,14 +184,7 @@ public class BasicUserService implements UserService {
     user.update(newUsername, newEmail, encryptedPassword, newProfile);
     UserDto updatedUserDto = userMapper.toDto(user);
 
-    try {
-      sseService.broadcast(
-          "users.updated",
-          updatedUserDto
-      );
-    } catch (Exception e) {
-      log.warn("[UserService] 실시간 알림 전송 실패 - 사유: {}", e.getMessage());
-    }
+    eventPublisher.publishEvent(new DomainEvent<>("users.updated", updatedUserDto, null));
 
     log.info("[UserService] 사용자 수정 완료 - ID: {}", userId);
     return updatedUserDto;
@@ -234,14 +207,7 @@ public class BasicUserService implements UserService {
 
     userRepository.deleteById(userId);
 
-    try {
-      sseService.broadcast(
-          "users.deleted",
-          userDto
-      );
-    } catch (Exception e) {
-      log.warn("[UserService] 실시간 알림 전송 실패 - 사유: {}", e.getMessage());
-    }
+    eventPublisher.publishEvent(new DomainEvent<>("users.deleted", userDto, null));
 
     log.info("[UserService] 사용자 삭제 완료 - ID: {}", user.getId());
   }

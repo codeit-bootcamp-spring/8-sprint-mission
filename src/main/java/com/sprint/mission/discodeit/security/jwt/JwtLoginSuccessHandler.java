@@ -6,8 +6,8 @@ import com.sprint.mission.discodeit.dto.JwtInformation;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.response.ErrorResponse;
 import com.sprint.mission.discodeit.entity.DiscodeitUserDetails;
+import com.sprint.mission.discodeit.event.DomainEvent;
 import com.sprint.mission.discodeit.exception.ErrorCode;
-import com.sprint.mission.discodeit.service.basic.SseService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -32,7 +33,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
   private final JwtTokenProvider tokenProvider;
   private final JwtRegistry jwtRegistry;
   private final CacheManager cacheManager;
-  private final SseService sseService;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -74,15 +75,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
         evictCache(discodeitUserDetails.getUserDto().id());
 
-        try {
-          sseService.broadcast(
-              "users.updated",
-              onlineUserDto
-          );
-        } catch (Exception e) {
-          log.warn("[JwtLoginSuccessHandler] 실시간 알림 전송 실패 - 사유: {}", e.getMessage());
-        }
-
+        eventPublisher.publishEvent(new DomainEvent<>("users.updated", onlineUserDto, null));
       } catch (Exception e) {
         ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
 
@@ -121,7 +114,6 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
     Cache userCache = cacheManager.getCache("user");
 
     if (userCache != null) {
-      userCache.evict(userId);
       userCache.clear();
       log.info("[JwtLoginSuccessHandler] 로그인 성공으로 인한 사용자 캐시 삭제: {}", userId);
     }

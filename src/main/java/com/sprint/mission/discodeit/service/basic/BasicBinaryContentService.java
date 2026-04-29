@@ -53,7 +53,6 @@ public class BasicBinaryContentService implements BinaryContentService {
         bytes,
         BinaryContentType.UNKNOWN,
         null,
-        null,
         Collections.emptyList()
     );
 

@@ -112,7 +112,6 @@ public class BasicMessageService implements MessageService {
               binaryContentMapper.toDto(savedBinaryContent),
               bytes,
               BinaryContentType.MESSAGE_FILE,
-              null,
               channel.getType(),
               participantIds
           );

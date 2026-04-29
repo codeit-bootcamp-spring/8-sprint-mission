@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Notification;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.DomainEvent;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
@@ -26,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,9 +43,9 @@ public class NotificationRequiredTopicListener {
   private final UserRepository userRepository;
   private final ObjectMapper objectMapper;
   private final CacheManager cacheManager;
-  private final SseService sseService;
   private final NotificationMapper notificationMapper;
   private final ChannelRepository channelRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Value("${admin.username}")
   private String adminUsername;
@@ -78,16 +80,10 @@ public class NotificationRequiredTopicListener {
             content
         );
         notificationRepository.save(notification);
-        try {
-          sseService.send(
-              List.of(receiver.getId()),
-              "notifications.created",
-              notificationMapper.toDto(notification)
-          );
-        } catch (Exception e) {
-          log.warn("[NotificationRequiredTopicListener] 실시간 알림 전송 실패 - 수신자: {}, 사유: {}",
-              receiver.getId(), e.getMessage());
-        }
+
+        eventPublisher.publishEvent(
+            new DomainEvent<>("notifications.created", notificationMapper.toDto(notification),
+                List.of(receiver.getId())));
 
         evictNotificationCache(receiver.getId());
 
@@ -123,16 +119,10 @@ public class NotificationRequiredTopicListener {
       );
 
       notificationRepository.save(notification);
-      try {
-        sseService.send(
-            List.of(receiver.getId()),
-            "notifications.created",
-            notificationMapper.toDto(notification)
-        );
-      } catch (Exception e) {
-        log.warn("[NotificationRequiredTopicListener] 실시간 알림 전송 실패 - 수신자: {}, 사유: {}",
-            receiver.getId(), e.getMessage());
-      }
+
+      eventPublisher.publishEvent(
+          new DomainEvent<>("notifications.created", notificationMapper.toDto(notification),
+              List.of(receiver.getId())));
 
       evictNotificationCache(event.userId());
       log.info("[NotificationRequiredTopicListener] 권한 변경 알림 처리 완료 - 대상자: {}", event.userName());
@@ -168,16 +158,10 @@ public class NotificationRequiredTopicListener {
       );
 
       notificationRepository.save(notification);
-      try {
-        sseService.send(
-            List.of(admin.getId()),
-            "notifications.created",
-            notificationMapper.toDto(notification)
-        );
-      } catch (Exception e) {
-        log.warn("[NotificationRequiredTopicListener] 실시간 알림 전송 실패 - 수신자: {}, 사유: {}",
-            admin.getId(), e.getMessage());
-      }
+
+      eventPublisher.publishEvent(
+          new DomainEvent<>("notifications.created", notificationMapper.toDto(notification),
+              List.of(admin.getId())));
 
       evictNotificationCache(admin.getId());
 
