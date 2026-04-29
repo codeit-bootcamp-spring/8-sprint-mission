@@ -7,8 +7,11 @@ import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
-import com.sprint.mission.discodeit.event.BinaryContentDeletedEvent;
+import com.sprint.mission.discodeit.event.Sse.BinaryContent.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.Sse.BinaryContent.BinaryContentDeletedEvent;
+import com.sprint.mission.discodeit.event.Sse.User.UserCreatedEvent;
+import com.sprint.mission.discodeit.event.Sse.User.UserDeletedEvent;
+import com.sprint.mission.discodeit.event.Sse.User.UserUpdatedEvent;
 import com.sprint.mission.discodeit.exception.UserException.DuplicateEmailException;
 import com.sprint.mission.discodeit.exception.UserException.DuplicateUsernameException;
 import com.sprint.mission.discodeit.exception.UserException.UserNotFoundException;
@@ -80,10 +83,13 @@ public class BasicUserService implements UserService {
         User user = new User(username, email, encodedPassword, profile);
         User savedUser = userRepository.save(user);
 
+        UserDto userDto = userMapper.toDto(savedUser);
+
+        eventPublisher.publishEvent(new UserCreatedEvent(userDto));
+
         log.info("Service: 유저 생성 완료 및 DB 저장 완료 - ID: {}", savedUser.getId());
 
-
-        return userMapper.toDto(savedUser);
+        return userDto;
     }
 
     @Override
@@ -155,9 +161,13 @@ public class BasicUserService implements UserService {
 
         user.update(request.newUsername(), request.newEmail(), encodedPassword, newProfile);
 
+        UserDto userDto = userMapper.toDto(user);
+
+        eventPublisher.publishEvent(new UserUpdatedEvent(userDto));
+
         log.info("Service: 유저 수정 완료 - ID: {}", userId);
 
-        return userMapper.toDto(user);
+        return userDto;
     }
 
     @CacheEvict(value = "users", allEntries = true)
@@ -165,6 +175,8 @@ public class BasicUserService implements UserService {
     @Transactional
     @Override
     public void delete(UUID userId) {
+        UserDto userDto = find(userId);
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     log.warn("Service - 사용자 삭제 실패(존재하지 않는 유저) - ID: {}", userId);
@@ -182,6 +194,9 @@ public class BasicUserService implements UserService {
         readStatusRepository.deleteAllByUserId(userId);
         messageRepository.deleteAllByAuthorId(userId);
         userRepository.delete(user);
+
+        eventPublisher.publishEvent(new UserDeletedEvent(userDto));
+
         log.info("Service: 사용자 DB 삭제 완료 - ID: {}", userId);
     }
 

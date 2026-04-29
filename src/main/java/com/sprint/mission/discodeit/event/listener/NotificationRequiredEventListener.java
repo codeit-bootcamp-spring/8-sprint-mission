@@ -7,15 +7,18 @@ import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
+import com.sprint.mission.discodeit.event.Sse.NotificationCreatedEvent;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.service.NotificationService;
+import com.sprint.mission.discodeit.service.Sse.SseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.Set;
@@ -31,8 +34,9 @@ public class NotificationRequiredEventListener {
     private String adminName;
 
     private final NotificationService notificationService;
-    private final ReadStatusRepository readStatusRepository;
     private final ChannelService channelService;
+
+    private final ReadStatusRepository readStatusRepository;
     private final UserRepository userRepository;
 
     @Async("notificationTaskExecutor")

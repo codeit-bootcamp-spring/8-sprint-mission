@@ -48,5 +48,35 @@ public class AsyncConfig implements AsyncConfigurer {
         return buildExecutor(core, max, queue, keepAlive, "noti-task-");
     }
 
+    @Bean(name = "userTaskExecutor")
+    public ThreadPoolTaskExecutor userTaskExecutor(
+            @Value("4") int core,
+            @Value("8") int max,
+            @Value("500") int queue,
+            @Value("60") int keepAlive
+    ) {
+        return buildExecutor(core, max, queue, keepAlive, "user-task-");
+    }
+
+    @Bean(name = "channelTaskExecutor")
+    public ThreadPoolTaskExecutor channelTaskExecutor(
+            @Value("4") int core,
+            @Value("8") int max,
+            @Value("500") int queue,
+            @Value("60") int keepAlive
+    ) {
+        return buildExecutor(core, max, queue, keepAlive, "channel-task-");
+    }
+
+    @Bean(name = "binaryContentTaskExecutor")
+    public ThreadPoolTaskExecutor binaryContentTaskExecutor(
+            @Value("4") int core,
+            @Value("8") int max,
+            @Value("500") int queue,
+            @Value("60") int keepAlive
+    ) {
+        return buildExecutor(core, max, queue, keepAlive, "binaryContent-task-");
+    }
+
 
 }

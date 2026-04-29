@@ -1,8 +1,8 @@
 package com.sprint.mission.discodeit.event.listener;
 
 import com.sprint.mission.discodeit.entity.BinaryContentStatus;
-import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
-import com.sprint.mission.discodeit.event.BinaryContentDeletedEvent;
+import com.sprint.mission.discodeit.event.Sse.BinaryContent.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.Sse.BinaryContent.BinaryContentDeletedEvent;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
