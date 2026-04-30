@@ -42,10 +42,20 @@ public class KafkaProduceRequiredEventListener {
     private <T> void sendKafka(T event) {
         try {
             String payload = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send("discodeit.".concat(event.getClass().getSimpleName()), payload);
+            String topic = "discodeit.".concat(event.getClass().getSimpleName());
+
+            kafkaTemplate.send(topic, payload)
+                    .whenComplete((result, ex) -> {
+                        if (ex != null) {
+                            log.error("[Kafka 전송 실패] Topic: {}, Reason: {}",
+                                    topic, ex.getMessage());
+                        } else {
+                            log.info("[Kafka 전송 성공] Topic: {}, Offset: {}",
+                                    topic, result.getRecordMetadata().offset());
+                        }
+                    });
         } catch (JsonProcessingException e) {
-            log.error("Kafka 전송 중 오류 발생", e);
-            throw new RuntimeException(e);
+            log.error("[Kafka 직렬화 실패], Event: {}", event.getClass().getSimpleName(), e);
         }
     }
 }

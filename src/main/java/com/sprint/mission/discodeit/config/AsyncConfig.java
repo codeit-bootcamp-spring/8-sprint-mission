@@ -1,5 +1,7 @@
 package com.sprint.mission.discodeit.config;
 
+import com.sprint.mission.discodeit.handler.CustomAsyncExceptionHandler;
+import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +14,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Configuration
 @EnableAsync
 public class AsyncConfig implements AsyncConfigurer {
+    @Override
+    public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
+        return new CustomAsyncExceptionHandler();
+    }
 
     private ThreadPoolTaskExecutor buildExecutor(int core, int max, int queue, int keepAlive, String prefix) {
 
@@ -42,6 +48,4 @@ public class AsyncConfig implements AsyncConfigurer {
     public ThreadPoolTaskExecutor notificationTaskExecutor() {
         return buildExecutor(4, 8, 500, 60, "noti-task-");
     }
-
-
 }
