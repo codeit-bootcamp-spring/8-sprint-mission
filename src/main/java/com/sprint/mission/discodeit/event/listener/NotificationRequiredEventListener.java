@@ -80,7 +80,7 @@ public class NotificationRequiredEventListener {
     public void on(S3UploadFailedEvent event) {
         String requestId = event.getRequestId();
         UUID binaryContentId = event.getBinaryContentId();
-        Throwable e = event.getE();
+        String e = event.getErrorMessage();
         log.info("[NotificationListener] S3UploadFailedEvent 수신");
 
         String title = "S3 파일 업로드 실패";
@@ -88,7 +88,7 @@ public class NotificationRequiredEventListener {
         StringBuilder sb = new StringBuilder();
         sb.append("RequestId: ").append(requestId).append("\n");
         sb.append("BinaryContentId: ").append(binaryContentId).append("\n");
-        sb.append("Error: ").append(e.getMessage()).append("\n");
+        sb.append("Error: ").append(e).append("\n");
 
         String content = sb.toString();
 

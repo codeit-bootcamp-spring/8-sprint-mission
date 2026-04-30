@@ -26,6 +26,7 @@ public class CacheConfig {
                 .allowIfSubType("com.sprint.mission.discodeit") // 프로젝트 패키지
                 .allowIfSubType("java.util") // List, Map
                 .allowIfSubType("java.time") // LocalDateTime
+                .allowIfSubType("java.lang")
                 .build();
 
         ObjectMapper redisObjectMapper = objectMapper.copy();
