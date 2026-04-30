@@ -109,8 +109,6 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
         applicationEventPublisher.publishEvent(
                 new S3UploadFailedEvent(binaryContentId, e)
         );
-
         throw new RuntimeException(e);
     }
-
 }
