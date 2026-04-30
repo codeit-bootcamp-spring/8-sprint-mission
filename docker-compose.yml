@@ -1,90 +1,153 @@
+version: '3.8'
+
 services:
-  app:
+  # 1. Reverse Proxy (Nginx)
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    container_name: nginx-proxy
+    ports:
+      - "3000:80" # Client -> localhost:3000
+    networks:
+      - external-network
+      - internal-network
+    depends_on:
+      backend:
+        condition: service_started
+    restart: unless-stopped
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
     image: discodeit:local
-    container_name: discodeit-app
+    container_name: spring-backend
     restart: unless-stopped
-
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
-
+      redis:
+        condition: service_started
+      broker:
+        condition: service_started
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - SERVER_FORWARD_HEADERS_STRATEGY=framework
+      - SERVER_PORT=${SERVER_PORT:-8080}
 
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-discodeit}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-discodeit_user}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-discodeit1234}
+      # Database
+      - SPRING_DATASOURCE_URL=${POSTGRES_URL}/${POSTGRES_DB}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
 
-      SERVER_PORT: ${SERVER_PORT:-8080}
-      JVM_OPTS: ${JVM_OPTS:--Xms256m -Xmx512m -XX:+UseG1GC}
+      # Redis
+      - SPRING_DATA_REDIS_HOST=${REDIS_HOST}
+      - SPRING_DATA_REDIS_PORT=${REDIS_PORT}
 
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      LOG_FILE_PATH: /app/logs/application.log
+      # Kafka
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+      - KAFKA_GROUP_ID=${KAFKA_GROUP_ID}
 
-      TZ: "Asia/Seoul"
-      # 외부 환경 변수로 절대 경로를 주입
-      DISCODEIT_STORAGE_LOCAL_ROOT_PATH: /app/data/uploadfiles
-    ports:
-      - "${APP_PORT:-8888}:${SERVER_PORT:-8080}"
-    env_file:
-      - .env
+      # JWT (추가된 부분)
+      - JWT_ACCESS_TOKEN=${JWT_ACCESS_TOKEN}
+      - JWT_REFRESH_TOKEN=${JWT_REFRESH_TOKEN}
+
+      # Admin (추가된 부분)
+      - DISCODEIT_ADMIN_USERNAME=${DISCODEIT_ADMIN_USERNAME}
+      - DISCODEIT_ADMIN_PASSWORD=${DISCODEIT_ADMIN_PASSWORD}
+      - DISCODEIT_ADMIN_EMAIL=${DISCODEIT_ADMIN_EMAIL}
+
+      # Storage
+      - STORAGE_TYPE=${STORAGE_TYPE}
+      - DISCODEIT_STORAGE_LOCAL_ROOT_PATH=/app/data/uploadfiles
+
+      # JVM & TZ
+      - JVM_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
+      - TZ=Asia/Seoul
+
+      - AWS_S3_ACCESS_KEY=${AWS_S3_ACCESS_KEY}
+      - AWS_S3_SECRET_KEY=${AWS_S3_SECRET_KEY}
+      - AWS_S3_REGION=${AWS_S3_REGION}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+
+      - STORAGE_TYPE=${STORAGE_TYPE}
     volumes:
       - app_logs:/app/logs
       - app_data:/app/data/uploadfiles
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:${SERVER_PORT:-8080}/actuator/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      interval: 10s
+      timeout: 5s
+      retries: 5
       start_period: 60s
     networks:
-      - discodeit-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-  postgres:
-    image: postgres:17
-    container_name: my-postgres
+      - internal-network # 외부망 차단
+
+  db:
+    image: postgres:17-alpine
+    container_name: postgres-db
     restart: unless-stopped
     environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-discodeit}
+      - POSTGRES_USER=${POSTGRES_USER:-discodeit_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-discodeit1234}
       - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --locale=C
-      - TZ="Asia/Seoul"
-    # 로컬 PostgreSQL과의 포트 방지를 위해
-    ports:
-      - "${POSTGRES_PORT:-54321}:5432"
+      - TZ=Asia/Seoul
+    networks:
+      - internal-network
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-discodeit_user} -d ${POSTGRES_DB:-discodeit}" ]
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
 
+  # Memory DB (Redis)
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis-cache
+    restart: unless-stopped
+    command: redis-server --appendonly yes
     networks:
-      - discodeit-network
+      - internal-network
+    volumes:
+      - redis_data:/data
+
+  # Message Broker (kafka)
+  broker:
+    image: apache/kafka:latest
+    container_name: kafka-broker
+    restart: unless-stopped
+    environment:
+      - KAFKA_NODE_ID=1
+      - KAFKA_PROCESS_ROLES=broker,controller
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@broker:29093
+      - KAFKA_LISTENERS=PLAINTEXT://:29092,CONTROLLER://:29093
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://broker:29092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_LOG_DIRS=/tmp/kraft-combined-logs
+      - CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
+    networks:
+      - internal-network
+
+networks:
+  external-network:
+    driver: bridge
+  internal-network:
+    driver: bridge
+    internal: true # 외부와 완전히 단절된 내부망
+
 volumes:
   postgres_data:
-    driver: local
     name: discodeit-postgres-data
   app_logs:
-    driver: local
     name: discodeit-app-logs
   app_data:
-    driver: local
     name: discodeit-app-data
-networks:
-  discodeit-network:
-    driver: bridge
-    name: discodeit-network
-
-
+  redis_data:
+    name: discodeit-redis-data

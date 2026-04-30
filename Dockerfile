@@ -16,14 +16,11 @@ RUN ./gradlew build -x test --no-daemon
 FROM amazoncorretto:17-alpine
 WORKDIR /app
 
-ARG PROJECT_NAME=discodeit
-ARG PROJECT_VERSION=1.2-M8
+ENV JVM_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC"
+ENV TZ=Asia/Seoul
 
-ENV PROJECT_NAME=${PROJECT_NAME}
-ENV PROJECT_VERSION=${PROJECT_VERSION}
-ENV JVM_OPTS=""
+COPY --from=builder /app/build/libs/*.jar ./app.jar
 
-COPY --from=builder /app/build/libs/${PROJECT_NAME}-${PROJECT_VERSION}.jar ./app.jar
-EXPOSE 80
+EXPOSE 8080
 
 ENTRYPOINT ["sh", "-c", "java $JVM_OPTS -jar app.jar"]
