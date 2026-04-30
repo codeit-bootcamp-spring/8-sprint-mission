@@ -30,7 +30,10 @@ public class SseMessageRepository {
         List<SseMessage> missedMessages = new ArrayList<>();
         boolean found = false;
         for (UUID id : eventIdQueue) {
-            if (found) missedMessages.add(messages.get(id));
+            if (found) {
+                SseMessage msg = messages.get(id);
+                if (msg != null) missedMessages.add(msg);
+            }
             if (id.equals(lastEventId)) found = true;
         }
         return missedMessages;

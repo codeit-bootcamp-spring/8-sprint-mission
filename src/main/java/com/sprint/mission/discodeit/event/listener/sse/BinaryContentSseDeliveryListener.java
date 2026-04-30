@@ -18,7 +18,7 @@ public class BinaryContentSseDeliveryListener {
 
     private final SseService sseService;
 
-    @Async("binaryContentTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(BinaryContentUpdatedEvent event) {
         UUID binaryContentId = event.binaryContentDto().id();

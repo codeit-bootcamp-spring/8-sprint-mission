@@ -19,7 +19,7 @@ public class NotificationSseDeliveryListener {
 
     private final SseService sseService;
 
-    @Async("notificationTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(NotificationCreatedEvent event) {
         UUID receiverId = event.notificationDto().receiverId();

@@ -39,7 +39,7 @@ public class NotificationRequiredEventListener {
     private final ReadStatusRepository readStatusRepository;
     private final UserRepository userRepository;
 
-    @Async("notificationTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener
     public void on(MessageCreatedEvent event) {
         MessageDto message = event.getData();
@@ -63,7 +63,7 @@ public class NotificationRequiredEventListener {
         notificationService.create(receiverIds, title, content);
     }
 
-    @Async("notificationTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener
     public void on(RoleUpdatedEvent event) {
         UUID userId = event.userId();
@@ -79,7 +79,7 @@ public class NotificationRequiredEventListener {
         log.info("[NotificationListener] 권한 변경 알림 생성 완료");
     }
 
-    @Async("notificationTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener
     public void on(S3UploadFailedEvent event) {
         String requestId = event.getRequestId();

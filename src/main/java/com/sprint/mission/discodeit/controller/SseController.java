@@ -31,11 +31,6 @@ public class SseController {
         UUID receiverId = principal.getUserDto().id();
         log.debug("[SseController] SSE 연결 요청 - receiverId: {}, lastEventId: {}", receiverId, lastEventStrId);
 
-        if (receiverId == null) {
-            log.warn("[SseController] 유효하지 않은 사용자 ID");
-            throw new IllegalArgumentException("사용자 ID는 필수입니다.");
-        }
-
         UUID lastEventId = null;
         if (lastEventStrId != null && !lastEventStrId.isEmpty()) {
             lastEventId = UUID.fromString(lastEventStrId);

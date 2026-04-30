@@ -21,7 +21,7 @@ public class BinaryContentEventListener {
     private final BinaryContentStorage binaryContentStorage;
     private final BinaryContentService binaryContentService;
 
-    @Async("notificationTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener
     public void handleCreatedEvent(BinaryContentCreatedEvent event) {
         log.info("[BinaryContentEventListener] - 파일 저장 이벤트를 진행중...");
@@ -36,7 +36,7 @@ public class BinaryContentEventListener {
         }
     }
 
-    @Async("notificationTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener
     public void handleDeletedEvent(BinaryContentDeletedEvent event) {
         log.info("[BinaryContentEventListener] - 파일 삭제 이벤트를 진행중...");

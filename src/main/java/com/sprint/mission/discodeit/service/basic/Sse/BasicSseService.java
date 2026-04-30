@@ -77,7 +77,6 @@ public class BasicSseService implements SseService {
         messageRepository.save(message);
 
         for (UUID receiverId : receiverIds) {
-            // userConnections에서 해당 사용자의 emitter를 가져온다.
             List<SseEmitter> emitters = emitterRepository.get(receiverId);
             if (emitters == null || emitters.isEmpty()) continue;
 
@@ -114,23 +113,23 @@ public class BasicSseService implements SseService {
         );
         messageRepository.save(message);
 
-        Set<SseEmitter> allEmitters = new HashSet<>();
-        emitterRepository.getAllUserEmitters().forEach(allEmitters::addAll);
-
         // 실패한 연결 수집 후 일괄 제거
         List<SseEmitter> failed = new ArrayList<>();
 
-        for (SseEmitter em : allEmitters) {
-            try {
-                em.send(SseEmitter.event()
-                        .name(eventName)
-                        .id(eventId.toString())
-                        .data(data)
-                );
-            } catch (IOException e) {
-                failed.add(em);
-            }
-        }
+        emitterRepository.getAllUserEmitters()
+                .stream()
+                .flatMap(Collection::stream)
+                .forEach(emitter -> {
+                    try {
+                        emitter.send(SseEmitter.event()
+                                .name(eventName)
+                                .id(eventId.toString())
+                                .data(data)
+                        );
+                    } catch (IOException e) {
+                        failed.add(emitter);
+                    }
+                });
 
         if (!failed.isEmpty()) {
             for (SseEmitter failedEmitter : failed) {
@@ -142,14 +141,19 @@ public class BasicSseService implements SseService {
     @Scheduled(fixedDelay = 30 * 60 * 1000)
     @Override
     public void cleanUp() {
-        // 모든 Emitter를 담기 위한 것
-        Set<SseEmitter> allEmitters = new HashSet<>();
-        emitterRepository.getAllUserEmitters().forEach(allEmitters::addAll);
+        List<SseEmitter> failed = new ArrayList<>();
 
-        for (SseEmitter emitter : allEmitters) {
-            if (!ping(emitter)) {
-                emitterRepository.removeByEmitter(emitter);
-            }
+        emitterRepository.getAllUserEmitters()
+                .stream()
+                .flatMap(Collection::stream)
+                .forEach(emitter -> {
+                    if (!ping(emitter)) {
+                        failed.add(emitter);
+                    }
+                });
+
+        for (SseEmitter failedEmitter : failed) {
+            emitterRepository.removeByEmitter(failedEmitter);
         }
     }
 

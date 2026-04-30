@@ -21,19 +21,19 @@ public class KafkaProduceRequiredEventListener {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    @Async("notificationTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener
     public void on(MessageCreatedEvent event) {
         sendKafka(event);
     }
 
-    @Async("notificationTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener
     public void on(RoleUpdatedEvent event) {
         sendKafka(event);
     }
 
-    @Async("notificationTaskExecutor")
+    @Async("asyncTaskExecutor")
     @EventListener
     public void on(S3UploadFailedEvent event) {
         sendKafka(event);

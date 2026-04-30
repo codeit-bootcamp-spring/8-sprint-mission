@@ -20,7 +20,7 @@ public class UserSseDeliveryListener {
 
     private final SseService sseService;
 
-    @Async("userTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(UserCreatedEvent event) {
         UUID userId = event.userDto().id();
@@ -32,7 +32,7 @@ public class UserSseDeliveryListener {
         }
     }
 
-    @Async("userTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(UserUpdatedEvent event) {
         UUID userId = event.userDto().id();
@@ -44,7 +44,7 @@ public class UserSseDeliveryListener {
         }
     }
 
-    @Async("userTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(UserDeletedEvent event) {
         UUID userId = event.userDto().id();

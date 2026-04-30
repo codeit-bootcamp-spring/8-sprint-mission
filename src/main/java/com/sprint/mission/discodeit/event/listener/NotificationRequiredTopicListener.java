@@ -51,6 +51,10 @@ public class NotificationRequiredTopicListener {
                     .stream().map(readStatus -> readStatus.getUser().getId())
                     .filter(receiverId -> !receiverId.equals(message.author().id()))
                     .collect(Collectors.toSet());
+
+            log.info("author id: {}", message.author().id());
+            log.info("receiverIds: {}", receiverIds);
+
             String title = message.author().username()
                     .concat(
                             channel.type().equals(ChannelType.PUBLIC) ?

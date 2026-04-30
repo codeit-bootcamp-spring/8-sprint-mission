@@ -20,7 +20,7 @@ public class ChannelSseDeliveryListener {
 
     private final SseService sseService;
 
-    @Async("channelTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(ChannelCreatedEvent event) {
         UUID channelId = event.channelDto().id();
@@ -37,7 +37,7 @@ public class ChannelSseDeliveryListener {
         }
     }
 
-    @Async("channelTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(ChannelUpdatedEvent event) {
         UUID channelId = event.channelDto().id();
@@ -49,7 +49,7 @@ public class ChannelSseDeliveryListener {
         }
     }
 
-    @Async("channelTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(ChannelDeletedEvent event) {
         UUID channelId = event.channelDto().id();
