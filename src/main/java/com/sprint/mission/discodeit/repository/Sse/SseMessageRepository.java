@@ -26,13 +26,17 @@ public class SseMessageRepository {
         messages.put(message.id(), message);
     }
 
-    public List<SseMessage> restore(UUID lastEventId) {
+    public List<SseMessage> restore(UUID receiverId, UUID lastEventId) {
         List<SseMessage> missedMessages = new ArrayList<>();
         boolean found = false;
         for (UUID id : eventIdQueue) {
             if (found) {
                 SseMessage msg = messages.get(id);
-                if (msg != null) missedMessages.add(msg);
+                if (msg != null) {
+                    if (msg.receiverIds() == null || msg.receiverIds().contains(receiverId)) {
+                        missedMessages.add(msg);
+                    }
+                }
             }
             if (id.equals(lastEventId)) found = true;
         }

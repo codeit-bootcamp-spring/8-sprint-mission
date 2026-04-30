@@ -47,7 +47,7 @@ public class BasicSseService implements SseService {
 
         // 유실된 메시지 복원
         if (lastEventId != null) {
-            List<SseMessage> missedMessages = messageRepository.restore(lastEventId);
+            List<SseMessage> missedMessages = messageRepository.restore(receiverId, lastEventId);
             for (SseMessage msg : missedMessages) {
                 try {
                     emitter.send(SseEmitter.event()
@@ -72,7 +72,8 @@ public class BasicSseService implements SseService {
         SseMessage message = new SseMessage(
                 eventId,
                 eventName,
-                data
+                data,
+                new HashSet<>(receiverIds)
         );
         messageRepository.save(message);
 
@@ -109,7 +110,8 @@ public class BasicSseService implements SseService {
         SseMessage message = new SseMessage(
                 eventId,
                 eventName,
-                data
+                data,
+                null
         );
         messageRepository.save(message);
 
