@@ -44,6 +44,7 @@ public enum ErrorCode {
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "A003", "해당 리소스에 대한 접근 권한이 없습니다."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A004", "유효하지 않은 토큰입니다."),
 
+
     // Notification
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "N001", "알림을 찾을 수 없습니다."),
     NOTIFICATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "N002", "요청자 본인의 알림에 대해서만 수행할 수 있습니다.");

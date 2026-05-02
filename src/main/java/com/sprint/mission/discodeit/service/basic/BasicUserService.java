@@ -116,6 +116,8 @@ public class BasicUserService implements UserService {
         String newUsername = request.newUsername();
         String newEmail = request.newEmail();
 
+        boolean requiredRelogin = false;
+
         log.info("Service: 유저 수정 요청 - ID: {}", userId);
 
         User user = userRepository.findById(userId)
@@ -130,6 +132,7 @@ public class BasicUserService implements UserService {
                 log.warn("Service: 유저 수정 실패(이미 해당 유저 이름 존재) - username: {}", newUsername);
                 throw new DuplicateUsernameException(newUsername);
             }
+            requiredRelogin = true;
         }
 
         // 기존 유저의 이메일과 요청한 이메일 다를 경우, 같으면 넘어감
@@ -156,6 +159,7 @@ public class BasicUserService implements UserService {
         String encodedPassword = user.getPassword();
         if (request.newPassword() != null) {
             encodedPassword = passwordEncoder.encode(request.newPassword());
+            requiredRelogin = true;
             log.debug("Service: 사용자 비밀번호 수정 및 암호화 완료");
         }
 
@@ -164,6 +168,11 @@ public class BasicUserService implements UserService {
         UserDto userDto = userMapper.toDto(user);
 
         eventPublisher.publishEvent(new UserUpdatedEvent(userDto));
+
+        if (requiredRelogin) {
+            jwtRegistry.invalidateJwtInformationByUserId(userId);
+            log.info("Service: 주요 정보 (username/password) 변경으로 기존 토큰 무효화 ID: {}", userId);
+        }
 
         log.info("Service: 유저 수정 완료 - ID: {}", userId);
 
