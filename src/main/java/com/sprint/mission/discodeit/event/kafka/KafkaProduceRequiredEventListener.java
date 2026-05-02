@@ -45,6 +45,7 @@ public class KafkaProduceRequiredEventListener {
       kafkaTemplate.send("discodeit.".concat(event.getClass().getSimpleName()), payload);
     } catch (JsonProcessingException e) {
       log.error("Failed to send event to Kafka", e);
+      throw new RuntimeException(e);
     }
   }
 }
