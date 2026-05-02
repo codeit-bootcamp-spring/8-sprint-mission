@@ -44,6 +44,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
   }
 
   public UUID put(UUID binaryContentId, byte[] bytes) {
+    // 비동기 처리(업로드/상태 변경) 흐름 확인을 위한 인위적 지연
     delay(4);
     Path filePath = resolvePath(binaryContentId);
     if (Files.exists(filePath)) {
@@ -72,6 +73,15 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
 
   private Path resolvePath(UUID key) {
     return root.resolve(key.toString());
+  }
+
+  private void delay(int seconds) {
+    try {
+      Thread.sleep(seconds * 1000L);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException("Thread was interrupted", e);
+    }
   }
 
   @Override

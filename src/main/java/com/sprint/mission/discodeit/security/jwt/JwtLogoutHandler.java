@@ -20,21 +20,28 @@ public class JwtLogoutHandler implements LogoutHandler {
   private final JwtRegistry jwtRegistry;
 
   @Override
-  public void logout(HttpServletRequest request, HttpServletResponse response,
-      Authentication authentication) {
+  public void logout(
+      HttpServletRequest request,
+      HttpServletResponse response,
+      Authentication authentication
+  ) {
 
     // Clear refresh token cookie
     Cookie refreshTokenExpirationCookie = tokenProvider.genereateRefreshTokenExpirationCookie();
     response.addCookie(refreshTokenExpirationCookie);
 
-    Arrays.stream(request.getCookies())
-        .filter(cookie -> cookie.getName().equals(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME))
-        .findFirst()
-        .ifPresent(cookie -> {
-          String refreshToken = cookie.getValue();
-          UUID userId = tokenProvider.getUserId(refreshToken);
-          jwtRegistry.invalidateJwtInformationByUserId(userId);
-        });
+    Cookie[] cookies = request.getCookies();
+
+    if (cookies != null) {
+      Arrays.stream(cookies)
+          .filter(cookie -> cookie.getName().equals(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME))
+          .findFirst()
+          .ifPresent(cookie -> {
+            String refreshToken = cookie.getValue();
+            UUID userId = tokenProvider.getUserId(refreshToken);
+            jwtRegistry.invalidateJwtInformationByUserId(userId);
+          });
+    }
 
     log.debug("JWT logout handler executed - refresh token cookie cleared");
   }
