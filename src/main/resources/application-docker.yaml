@@ -13,3 +13,6 @@ spring:
       port: ${SPRING_DATA_REDIS_PORT:6379}
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:broker:29092}
+
+# 인스턴스별 WS/SSE Kafka consumer group (예: K8s Pod 이름). 미지정 시 기본값은 JVM 기동 시 random.uuid.
+# discodeit.kafka.realtime-push-group-id: discodeit-realtime-push-${POD_NAME}

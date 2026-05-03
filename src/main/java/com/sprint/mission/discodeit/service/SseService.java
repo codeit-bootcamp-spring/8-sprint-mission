@@ -11,8 +11,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import com.sprint.mission.discodeit.event.kafka.RealtimePushEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,7 @@ public class SseService {
 	private final ObjectMapper objectMapper;
 	private final SseEmitterRepository sseEmitterRepository;
 	private final SseMessageRepository sseMessageRepository;
+	private final ObjectProvider<RealtimePushEventPublisher> realtimePushEventPublisher;
 
 	public SseEmitter connect(UUID receiverId, UUID lastEventId) {
 		if (lastEventId != null) {
@@ -67,16 +70,16 @@ public class SseService {
 			throw new IllegalArgumentException("SSE 페이로드 직렬화 실패", e);
 		}
 		UUID eventId = sseMessageRepository.save(eventName, json, false, distinct);
-		for (UUID receiverId : distinct) {
-			for (SseEmitter emitter : sseEmitterRepository.findByReceiverId(receiverId)) {
-				try {
-					deliver(emitter, eventName, json, eventId);
-				} catch (IOException | IllegalStateException e) {
-					log.debug("SSE 전송 실패, receiverId={}, eventName={}", receiverId, eventName, e);
-					sseEmitterRepository.deleteByReceiverId(receiverId, emitter);
-				}
+		RealtimePushEventPublisher publisher = realtimePushEventPublisher.getIfAvailable();
+		if (publisher != null) {
+			try {
+				publisher.publishSseTargeted(distinct, eventName, json, eventId);
+			} catch (JsonProcessingException e) {
+				throw new IllegalArgumentException("SSE Kafka 페이로드 직렬화 실패", e);
 			}
+			return;
 		}
+		deliverToLocalReceivers(distinct, eventName, json, eventId);
 	}
 
 	public void broadcast(String eventName, Object data) {
@@ -87,6 +90,34 @@ public class SseService {
 			throw new IllegalArgumentException("SSE 페이로드 직렬화 실패", e);
 		}
 		UUID eventId = sseMessageRepository.save(eventName, json, true, List.of());
+		RealtimePushEventPublisher publisher = realtimePushEventPublisher.getIfAvailable();
+		if (publisher != null) {
+			try {
+				publisher.publishSseBroadcast(eventName, json, eventId);
+			} catch (JsonProcessingException e) {
+				throw new IllegalArgumentException("SSE Kafka 페이로드 직렬화 실패", e);
+			}
+			return;
+		}
+		deliverBroadcastToLocalEmitters(eventName, json, eventId);
+	}
+
+	/** Kafka 수신 측: 이 JVM에 붙어 있는 SSE 클라이언트로만 전달합니다. */
+	public void deliverToLocalReceivers(Collection<UUID> receiverIds, String eventName, String dataJson, UUID eventId) {
+		for (UUID receiverId : receiverIds) {
+			for (SseEmitter emitter : sseEmitterRepository.findByReceiverId(receiverId)) {
+				try {
+					deliver(emitter, eventName, dataJson, eventId);
+				} catch (IOException | IllegalStateException e) {
+					log.debug("SSE 전송 실패, receiverId={}, eventName={}", receiverId, eventName, e);
+					sseEmitterRepository.deleteByReceiverId(receiverId, emitter);
+				}
+			}
+		}
+	}
+
+	/** Kafka 수신 측: 이 JVM의 모든 SSE 연결로 브로드캐스트합니다. */
+	public void deliverBroadcastToLocalEmitters(String eventName, String dataJson, UUID eventId) {
 		for (Map.Entry<UUID, List<SseEmitter>> entry : sseEmitterRepository.entries()) {
 			UUID receiverId = entry.getKey();
 			List<SseEmitter> emitters = entry.getValue();
@@ -99,7 +130,7 @@ public class SseService {
 			}
 			for (SseEmitter emitter : snapshot) {
 				try {
-					deliver(emitter, eventName, json, eventId);
+					deliver(emitter, eventName, dataJson, eventId);
 				} catch (IOException | IllegalStateException e) {
 					log.debug("SSE broadcast 실패, receiverId={}, eventName={}", receiverId, eventName, e);
 					sseEmitterRepository.deleteByReceiverId(receiverId, emitter);

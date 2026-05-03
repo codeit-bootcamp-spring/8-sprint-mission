@@ -1,9 +1,13 @@
-# 배포 아키텍처: Nginx(3000) → Backend(내부) + PostgreSQL / Redis / Kafka (외부 포트 없음)
+# 배포 아키텍처: Nginx(3000) → Backend x3(replicas) + PostgreSQL / Redis / Kafka (외부 포트 없음)
+# 다이어그램의 Backend-1~3: Compose deploy.replicas:3으로 동일 스펙 태스크 3개 (DNS: backend → Task IP들)
 services:
   nginx:
     build:
       context: .
       dockerfile: deploy/nginx/Dockerfile
+      args:
+        # round_robin | least_conn | ip_hash | weight — 변경 후: docker compose build nginx && docker compose up -d
+        NGINX_LB_STRATEGY: round_robin
     ports:
       - "3000:80"
     depends_on:
@@ -15,6 +19,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    deploy:
+      mode: replicated
+      replicas: 3
     environment:
       SPRING_PROFILES_ACTIVE: prod,docker
       SERVER_PORT: "8080"

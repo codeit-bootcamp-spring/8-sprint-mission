@@ -71,6 +71,9 @@ discodeit:
   notification:
     local-event:
       enabled: false
+  # WS/SSE Kafka 소비자: 인스턴스마다 전부 수신하려면 consumer group을 노드별로 유일하게 둡니다.
+  kafka:
+    realtime-push-group-id: ${DISCODEIT_KAFKA_REALTIME_PUSH_GROUP_ID:discodeit-realtime-push-${spring.application.name}-${random.uuid}}
   # 초기 시드/관리자 계정 (DataInitializer). 프로덕션에서는 환경 변수로 덮어쓰세요.
   setup:
     default-password: ${SETUP_DEFAULT_PASSWORD:password}
