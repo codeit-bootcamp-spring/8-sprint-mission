@@ -143,6 +143,11 @@ public class NotificationRequiredTopicListener {
         cache.evict(receiver.getId());
       }
 
+      eventPublisher.publishEvent(new NotificationCreatedEvent(
+          receiver.getId(),
+          notificationMapper.toDto(notification)
+      ));
+
       log.info("[KAFKA_CONSUMER] S3UploadFailedEvent 처리 완료 userId={}", receiver.getId());
     } catch (JsonProcessingException e) {
       log.error("[KAFKA_CONSUMER] S3UploadFailedEvent 역직렬화 실패 - 메시지 건너뜀", e);
