@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
+import java.io.File;
+import java.nio.file.Files;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -73,7 +76,14 @@ public class BasicUserService implements UserService {
 								BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
 										contentType);
 								binaryContentRepository.save(binaryContent);
-								applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
+								
+								try {
+										File tempFile = File.createTempFile("upload-", ".tmp");
+										Files.write(tempFile.toPath(), bytes);
+										applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), tempFile));
+								} catch (IOException e) {
+										throw new RuntimeException("Failed to create temporary file for upload", e);
+								}
 								return binaryContent;
 						})
 						.orElse(null);
@@ -141,7 +151,14 @@ public class BasicUserService implements UserService {
 								BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
 										contentType);
 								binaryContentRepository.save(binaryContent);
-								applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
+
+								try {
+										File tempFile = File.createTempFile("upload-", ".tmp");
+										Files.write(tempFile.toPath(), bytes);
+										applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), tempFile));
+								} catch (IOException e) {
+										throw new RuntimeException("Failed to create temporary file for upload", e);
+								}
 								return binaryContent;
 						})
 						.orElse(null);

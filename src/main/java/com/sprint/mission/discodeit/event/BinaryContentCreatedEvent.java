@@ -2,6 +2,5 @@ package com.sprint.mission.discodeit.event;
 
 import java.util.UUID;
 
-public record BinaryContentCreatedEvent(UUID binaryContentId, byte[] bytes) {
+public record BinaryContentCreatedEvent(UUID binaryContentId, java.io.File tempFile) {
 }
-

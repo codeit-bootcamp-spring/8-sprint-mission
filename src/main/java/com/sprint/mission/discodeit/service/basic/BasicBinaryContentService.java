@@ -14,6 +14,8 @@ import java.util.UUID;
 import java.util.List;
 import java.util.Base64;
 import java.io.IOException;
+import java.io.File;
+import java.nio.file.Files;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +47,15 @@ public class BasicBinaryContentService implements BinaryContentService {
 						contentType);
 				BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length, contentType);
 				binaryContentRepository.save(binaryContent);
-				applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
+
+				try {
+						File tempFile = File.createTempFile("upload-", ".tmp");
+						Files.write(tempFile.toPath(), bytes);
+						applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), tempFile));
+				} catch (IOException e) {
+						throw new RuntimeException("Failed to create temporary file for upload", e);
+				}
+
 				log.info("파일 업로드 완료, binaryContentId={}, fileName={}, size={}",
 						binaryContent.getId(), fileName, bytes.length);
 

@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.nio.file.Files;
+
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -28,13 +30,21 @@ public class BinaryContentEventListener {
     public void handleBinaryContentCreatedEvent(BinaryContentCreatedEvent event) {
         log.info("바이너리 콘텐츠 저장 이벤트 수신: binaryContentId={}", event.binaryContentId());
         try {
-            binaryContentStorage.put(event.binaryContentId(), event.bytes());
+            byte[] bytes = Files.readAllBytes(event.tempFile().toPath());
+            binaryContentStorage.put(event.binaryContentId(), bytes);
             log.info("바이너리 콘텐츠 저장 완료: binaryContentId={}", event.binaryContentId());
             updateStatus(event.binaryContentId(), BinaryContentStatus.SUCCESS);
         } catch (Exception e) {
             log.error("바이너리 콘텐츠 저장 실패: binaryContentId={}", event.binaryContentId(), e);
             updateStatus(event.binaryContentId(), BinaryContentStatus.FAIL);
-            throw e;
+            throw new RuntimeException(e);
+        } finally {
+            if (event.tempFile() != null && event.tempFile().exists()) {
+                boolean deleted = event.tempFile().delete();
+                if (!deleted) {
+                    log.warn("임시 파일 삭제 실패: {}", event.tempFile().getAbsolutePath());
+                }
+            }
         }
     }
 
