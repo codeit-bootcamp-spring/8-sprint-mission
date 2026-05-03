@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -60,9 +61,10 @@ public class NotificationRequiredTopicListener {
 
       notificationRepository.saveAll(notifications);
 
-      targets.forEach(target ->
-          cacheManager.getCache("notificationsByUserId").evict(target.getUser().getId())
-      );
+      Cache cache = cacheManager.getCache("notificationsByUserId");
+      if (cache != null) {
+        targets.forEach(target -> cache.evict(target.getUser().getId()));
+      }
 
       notifications.forEach(notification ->
           eventPublisher.publishEvent(new NotificationCreatedEvent(
@@ -73,7 +75,8 @@ public class NotificationRequiredTopicListener {
 
       log.info("[KAFKA_CONSUMER] MessageCreatedEvent 처리 완료 channelId={}, 알림 수={}", event.channelId(), notifications.size());
     } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
+      // 역직렬화 실패는 재시도해도 의미 없으므로 예외를 전파하지 않고 offset을 커밋한다.
+      log.error("[KAFKA_CONSUMER] MessageCreatedEvent 역직렬화 실패 - 메시지 건너뜀", e);
     }
   }
 
@@ -91,7 +94,10 @@ public class NotificationRequiredTopicListener {
       );
       notificationRepository.save(notification);
 
-      cacheManager.getCache("notificationsByUserId").evict(event.userId());
+      Cache cache = cacheManager.getCache("notificationsByUserId");
+      if (cache != null) {
+        cache.evict(event.userId());
+      }
 
       eventPublisher.publishEvent(new NotificationCreatedEvent(
           user.getId(),
@@ -100,7 +106,7 @@ public class NotificationRequiredTopicListener {
 
       log.info("[KAFKA_CONSUMER] RoleUpdatedEvent 처리 완료 userId={}", event.userId());
     } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
+      log.error("[KAFKA_CONSUMER] RoleUpdatedEvent 역직렬화 실패 - 메시지 건너뜀", e);
     }
   }
 
@@ -132,11 +138,14 @@ public class NotificationRequiredTopicListener {
       );
       notificationRepository.save(notification);
 
-      cacheManager.getCache("notificationsByUserId").evict(receiver.getId());
+      Cache cache = cacheManager.getCache("notificationsByUserId");
+      if (cache != null) {
+        cache.evict(receiver.getId());
+      }
 
       log.info("[KAFKA_CONSUMER] S3UploadFailedEvent 처리 완료 userId={}", receiver.getId());
     } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
+      log.error("[KAFKA_CONSUMER] S3UploadFailedEvent 역직렬화 실패 - 메시지 건너뜀", e);
     }
   }
 }

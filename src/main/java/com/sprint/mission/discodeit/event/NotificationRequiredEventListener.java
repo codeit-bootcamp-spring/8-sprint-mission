@@ -8,6 +8,7 @@ import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Async;
@@ -48,9 +49,10 @@ public class NotificationRequiredEventListener {
     notificationRepository.saveAll(notifications);
 
     // 수신자들의 캐시 무효화
-    targets.forEach(target -> {
-      cacheManager.getCache("notificationsByUserId").evict(target.getUser().getId());
-    });
+    Cache cache = cacheManager.getCache("notificationsByUserId");
+    if (cache != null) {
+      targets.forEach(target -> cache.evict(target.getUser().getId()));
+    }
   }
 
   @Async("taskExecutor")
@@ -65,6 +67,9 @@ public class NotificationRequiredEventListener {
     );
     notificationRepository.save(notification);
 
-    cacheManager.getCache("notificationsByUserId").evict(event.userId());
+    Cache roleCache = cacheManager.getCache("notificationsByUserId");
+    if (roleCache != null) {
+      roleCache.evict(event.userId());
+    }
   }
 }

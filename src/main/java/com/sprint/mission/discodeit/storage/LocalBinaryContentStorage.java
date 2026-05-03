@@ -63,6 +63,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
       throw new IllegalArgumentException("bytes 값이 null 입니다.");
     }
 
+    // FIXME - 비동기 업로드 테스트용 지연 코드, 운영 배포 시 반드시 삭제할 것
     try {
       log.info("[SIMULATION] 3초 지연 발생 시작");
       Thread.sleep(3000);

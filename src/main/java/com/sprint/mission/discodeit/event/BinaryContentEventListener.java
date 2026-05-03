@@ -50,7 +50,7 @@ public class BinaryContentEventListener {
       binaryContentService.updateStatus(event.binaryContentId(), BinaryContentStatus.FAIL);
 
       // S3 업로드 실패 이벤트 발행 (알림 서비스로 전달)
-      eventPublisher.publishEvent(new S3UploadFailedEvent(event.binaryContentId(), null));
+      eventPublisher.publishEvent(new S3UploadFailedEvent(event.binaryContentId()));
       eventPublisher.publishEvent(
           new BinaryContentStatusUpdatedEvent(binaryContentService.findById(event.binaryContentId()))
       );
