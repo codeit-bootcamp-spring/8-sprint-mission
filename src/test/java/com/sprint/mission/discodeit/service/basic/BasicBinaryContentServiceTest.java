@@ -10,9 +10,11 @@ import static org.mockito.Mockito.verify;
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import java.util.NoSuchElementException;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,6 +41,9 @@ class BasicBinaryContentServiceTest {
 
 		@Mock
 		private BinaryContentStorage binaryContentStorage;
+
+		@Mock
+		private ApplicationEventPublisher applicationEventPublisher;
 
 		@InjectMocks
 		private BasicBinaryContentService binaryContentService;
@@ -63,7 +69,8 @@ class BasicBinaryContentServiceTest {
 						binaryContentId,
 						fileName,
 						(long) bytes.length,
-						contentType
+						contentType,
+						BinaryContentStatus.PROCESSING
 				);
 		}
 
@@ -87,7 +94,7 @@ class BasicBinaryContentServiceTest {
 				// then
 				assertThat(result).isEqualTo(binaryContentDto);
 				verify(binaryContentRepository).save(any(BinaryContent.class));
-				verify(binaryContentStorage).put(binaryContentId, bytes);
+				verify(applicationEventPublisher).publishEvent(any(BinaryContentCreatedEvent.class));
 		}
 
 		@Test
@@ -132,8 +139,10 @@ class BasicBinaryContentServiceTest {
 
 				List<BinaryContent> contents = Arrays.asList(content1, content2);
 
-				BinaryContentDto dto1 = new BinaryContentDto(id1, "file1.jpg", 100L, "image/jpeg");
-				BinaryContentDto dto2 = new BinaryContentDto(id2, "file2.jpg", 200L, "image/png");
+				BinaryContentDto dto1 = new BinaryContentDto(id1, "file1.jpg", 100L, "image/jpeg",
+						BinaryContentStatus.SUCCESS);
+				BinaryContentDto dto2 = new BinaryContentDto(id2, "file2.jpg", 200L, "image/png",
+						BinaryContentStatus.SUCCESS);
 
 				given(binaryContentRepository.findAllById(eq(ids))).willReturn(contents);
 				given(binaryContentMapper.toDto(eq(content1))).willReturn(dto1);

@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
+import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
@@ -17,6 +18,7 @@ import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -97,6 +99,18 @@ public class DataInitializer {
     }
   }
 
+  /** DB에는 프로필이 있으나 로컬 스토리지 파일이 없는 경우(비동기 저장 실패 등). */
+  private boolean seedProfileFileMissingOnDisk(BinaryContent profile) {
+    try (InputStream in = binaryContentStorage.get(profile.getId())) {
+      return in.read() == -1;
+    } catch (NoSuchElementException e) {
+      return true;
+    } catch (IOException e) {
+      log.debug("시드 프로필 파일 확인 실패 id={}: {}", profile.getId(), e.getMessage());
+      return true;
+    }
+  }
+
   private void ensureSeedUserProfiles() {
     for (String[] u : SEED_USERS) {
       String username = u[0];
@@ -105,10 +119,11 @@ public class DataInitializer {
           .orElseThrow(() -> new IllegalStateException("Seed user not found: " + username));
 
       loadSeedProfileImage(username).ifPresent(profileRequest -> {
-        boolean hasRealProfile = user.getProfile() != null
-            && user.getProfile().getSize() != null
-            && user.getProfile().getSize() > 10_000;
-        if (!hasRealProfile) {
+        boolean needsProfileFix = user.getProfile() == null
+            || user.getProfile().getSize() == null
+            || user.getProfile().getSize() <= 10_000
+            || seedProfileFileMissingOnDisk(user.getProfile());
+        if (needsProfileFix) {
           try {
             BinaryContent binaryContent = new BinaryContent(
                 profileRequest.fileName(),
@@ -116,6 +131,8 @@ public class DataInitializer {
                 profileRequest.contentType());
             binaryContentRepository.save(binaryContent);
             binaryContentStorage.put(binaryContent.getId(), profileRequest.bytes());
+            binaryContent.updateStatus(BinaryContentStatus.SUCCESS);
+            binaryContentRepository.save(binaryContent);
             user.update(user.getUsername(), user.getEmail(), null, binaryContent);
             userRepository.save(user);
             log.info("Updated profile for seed user: {}", username);
@@ -160,15 +177,20 @@ public class DataInitializer {
       0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, (byte) 0xAE, 0x42, 0x60, (byte) 0x82
   };
 
+  /**
+   * 프로필 시드 이미지: {@code static/{username}.png} 우선, 없으면 {@code seed-profiles/} 동일 이름(png/svg).
+   */
   private Optional<BinaryContentCreateRequest> loadSeedProfileImage(String username) {
     try {
-      ClassPathResource pngResource = new ClassPathResource("seed-profiles/" + username + ".png");
-      ClassPathResource svgResource = new ClassPathResource("seed-profiles/" + username + ".svg");
+      ClassPathResource staticPng = new ClassPathResource("static/" + username + ".png");
+      ClassPathResource seedPng = new ClassPathResource("seed-profiles/" + username + ".png");
+      ClassPathResource staticSvg = new ClassPathResource("static/" + username + ".svg");
+      ClassPathResource seedSvg = new ClassPathResource("seed-profiles/" + username + ".svg");
       byte[] bytes;
       String contentType;
       String fileName;
-      if (pngResource.exists()) {
-        try (InputStream is = pngResource.getInputStream()) {
+      if (staticPng.exists()) {
+        try (InputStream is = staticPng.getInputStream()) {
           bytes = is.readAllBytes();
         }
         if (bytes.length == 0) {
@@ -176,8 +198,29 @@ public class DataInitializer {
         }
         contentType = "image/png";
         fileName = username + ".png";
-      } else if (svgResource.exists()) {
-        try (InputStream is = svgResource.getInputStream()) {
+      } else if (seedPng.exists()) {
+        try (InputStream is = seedPng.getInputStream()) {
+          bytes = is.readAllBytes();
+        }
+        if (bytes.length == 0) {
+          bytes = MINIMAL_PNG;
+        }
+        contentType = "image/png";
+        fileName = username + ".png";
+      } else if (staticSvg.exists()) {
+        try (InputStream is = staticSvg.getInputStream()) {
+          bytes = is.readAllBytes();
+        }
+        if (bytes.length == 0) {
+          bytes = MINIMAL_PNG;
+          contentType = "image/png";
+          fileName = username + ".png";
+        } else {
+          contentType = "image/svg+xml";
+          fileName = username + ".svg";
+        }
+      } else if (seedSvg.exists()) {
+        try (InputStream is = seedSvg.getInputStream()) {
           bytes = is.readAllBytes();
         }
         if (bytes.length == 0) {

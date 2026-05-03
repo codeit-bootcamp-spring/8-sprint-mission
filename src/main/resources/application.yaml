@@ -34,9 +34,10 @@ spring:
   cache:
     type: redis
     cache-names:
-      - channels
-      - notifications
-      - users
+      # @Cacheable 이름과 동일해야 함 (CacheNames.java)
+      - channelsByUser
+      - notificationsByUser
+      - usersAll
     redis:
       enable-statistics: true
   data:
@@ -70,6 +71,13 @@ discodeit:
   notification:
     local-event:
       enabled: false
+  # 초기 시드/관리자 계정 (DataInitializer). 프로덕션에서는 환경 변수로 덮어쓰세요.
+  setup:
+    default-password: ${SETUP_DEFAULT_PASSWORD:password}
+    admin:
+      username: ${SETUP_ADMIN_USERNAME:admin}
+      email: ${SETUP_ADMIN_EMAIL:admin@discodeit.com}
+      password: ${SETUP_ADMIN_PASSWORD:Admin123!}
 
 
 # 4. Actuator 엔드포인트 설정 (Admin 서버가 데이터를 가져가는 통로)

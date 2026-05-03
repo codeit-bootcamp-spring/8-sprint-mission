@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Optional;
@@ -52,6 +53,7 @@ public class AuthController {
     @PostMapping(path = "refresh")
     public ResponseEntity<?> refresh(
             @CookieValue(value = JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
+            HttpServletRequest request,
             HttpServletResponse response
     ) {
         if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken) || !jwtRegistry.hasActiveJwtInformationByRefreshToken(refreshToken)) {
@@ -75,7 +77,7 @@ public class AuthController {
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME, newRefreshToken)
                 .httpOnly(true)
-                .secure(true) // HTTPS 환경에서만 전송
+                .secure(request.isSecure())
                 .sameSite("Strict") // CSRF 공격 방지
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60)

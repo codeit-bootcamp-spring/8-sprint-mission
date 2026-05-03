@@ -9,6 +9,7 @@ import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import java.io.InputStream;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.List;
@@ -63,7 +64,8 @@ public class BasicBinaryContentService implements BinaryContentService {
 						binaryContent.getId(),
 						binaryContent.getFileName(),
 						binaryContent.getSize(),
-						binaryContent.getContentType()
+						binaryContent.getContentType(),
+						binaryContent.getStatus()
 				);
 		}
 
@@ -81,15 +83,29 @@ public class BasicBinaryContentService implements BinaryContentService {
 		@Override
 		public BinaryContentWithBytesDto findWithBytes(UUID binaryContentId) {
 				BinaryContentDto dto = find(binaryContentId);
-				try {
-						byte[] bytes = binaryContentStorage.get(binaryContentId).readAllBytes();
+				try (InputStream in = binaryContentStorage.get(binaryContentId)) {
+						byte[] bytes = in.readAllBytes();
 						String base64 = Base64.getEncoder().encodeToString(bytes);
+						BinaryContentStatus status = dto.status() == BinaryContentStatus.FAIL
+								? BinaryContentStatus.FAIL
+								: BinaryContentStatus.SUCCESS;
 						return new BinaryContentWithBytesDto(
 								dto.id(),
 								dto.fileName(),
 								dto.size(),
 								dto.contentType(),
+								status,
 								base64
+						);
+				} catch (NoSuchElementException e) {
+						log.debug("바이너리 파일 없음(비동기 저장 대기), binaryContentId={}", binaryContentId);
+						return new BinaryContentWithBytesDto(
+								dto.id(),
+								dto.fileName(),
+								dto.size(),
+								dto.contentType(),
+								dto.status(),
+								""
 						);
 				} catch (IOException e) {
 						log.error("바이너리 읽기 실패, binaryContentId={}", binaryContentId, e);

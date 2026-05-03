@@ -5,24 +5,21 @@ import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.cache.CacheNames;
-import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
-import java.io.File;
-import java.nio.file.Files;
-import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -42,7 +39,7 @@ public class BasicUserService implements UserService {
 		private final UserMapper userMapper;
 		private final PasswordEncoder passwordEncoder;
 		private final BinaryContentRepository binaryContentRepository;
-		// private final BinaryContentStorage binaryContentStorage;
+		private final BinaryContentStorage binaryContentStorage;
 		private final JwtRegistry jwtRegistry;
 		private final ApplicationEventPublisher applicationEventPublisher;
 
@@ -76,14 +73,7 @@ public class BasicUserService implements UserService {
 								BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
 										contentType);
 								binaryContentRepository.save(binaryContent);
-								
-								try {
-										File tempFile = File.createTempFile("upload-", ".tmp");
-										Files.write(tempFile.toPath(), bytes);
-										applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), tempFile));
-								} catch (IOException e) {
-										throw new RuntimeException("Failed to create temporary file for upload", e);
-								}
+								persistProfileBinaryToStorage(binaryContent, bytes);
 								return binaryContent;
 						})
 						.orElse(null);
@@ -104,6 +94,7 @@ public class BasicUserService implements UserService {
 		}
 
 		@Override
+		@Transactional(readOnly = true)
 		@Cacheable(cacheNames = CacheNames.USERS_ALL, key = "'all'")
 		public List<UserDto> findAll() {
 				return userRepository.findAllWithProfile()
@@ -151,14 +142,7 @@ public class BasicUserService implements UserService {
 								BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
 										contentType);
 								binaryContentRepository.save(binaryContent);
-
-								try {
-										File tempFile = File.createTempFile("upload-", ".tmp");
-										Files.write(tempFile.toPath(), bytes);
-										applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), tempFile));
-								} catch (IOException e) {
-										throw new RuntimeException("Failed to create temporary file for upload", e);
-								}
+								persistProfileBinaryToStorage(binaryContent, bytes);
 								return binaryContent;
 						})
 						.orElse(null);
@@ -217,6 +201,15 @@ public class BasicUserService implements UserService {
 						jwtRegistry.hasActiveJwtInformationByUserId(dto.id()),
 						dto.role()
 				);
+		}
+
+		/**
+		 * 프로필은 UI가 곧바로 조회하므로 이벤트 비동기 저장 대신 동기로 스토리지에 기록한다.
+		 */
+		private void persistProfileBinaryToStorage(BinaryContent binaryContent, byte[] bytes) {
+				binaryContentStorage.put(binaryContent.getId(), bytes);
+				binaryContent.updateStatus(BinaryContentStatus.SUCCESS);
+				binaryContentRepository.save(binaryContent);
 		}
 
 }

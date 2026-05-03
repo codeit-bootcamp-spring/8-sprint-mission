@@ -1,13 +1,11 @@
 package com.sprint.mission.discodeit.event.listener;
 
-import com.sprint.mission.discodeit.config.AsyncConfig;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +22,6 @@ public class BinaryContentEventListener {
     private final BinaryContentStorage binaryContentStorage;
     private final BinaryContentService binaryContentService;
 
-    @Async(AsyncConfig.ASYNC_EXECUTOR)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleBinaryContentCreatedEvent(BinaryContentCreatedEvent event) {

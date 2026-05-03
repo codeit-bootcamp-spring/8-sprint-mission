@@ -43,9 +43,13 @@ public class InMemoryJwtRegistry implements JwtRegistry {
 
     @Override
     public boolean hasActiveJwtInformationByAccessToken(String accessToken) {
+        if (accessToken == null || accessToken.isEmpty()) {
+            return false;
+        }
+        String normalized = accessToken.trim();
         return origin.values().stream()
                 .flatMap(Queue::stream)
-                .anyMatch(info -> info.getAccessToken().equals(accessToken));
+                .anyMatch(info -> normalized.equals(info.getAccessToken().trim()));
     }
 
     @Override
