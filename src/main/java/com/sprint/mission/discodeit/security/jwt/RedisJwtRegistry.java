@@ -2,13 +2,12 @@ package com.sprint.mission.discodeit.security.jwt;
 
 import com.sprint.mission.discodeit.dto.JwtInformation;
 import com.sprint.mission.discodeit.event.UserLogInOutEvent;
-import com.sprint.mission.discodeit.redis.RedisLockProvider.RedisLockAcquisitionException;
 import com.sprint.mission.discodeit.redis.RedisLockProvider;
+import com.sprint.mission.discodeit.redis.RedisLockProvider.RedisLockAcquisitionException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;

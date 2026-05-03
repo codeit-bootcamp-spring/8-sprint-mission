@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -32,7 +31,6 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
   private final JwtTokenProvider tokenProvider;
   private final JwtRegistry jwtRegistry;
   private final CacheManager cacheManager;
-  private final ApplicationEventPublisher eventPublisher;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -73,7 +71,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
         );
 
         evictCache(discodeitUserDetails.getUserDto().id());
-        
+
       } catch (Exception e) {
         ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
 

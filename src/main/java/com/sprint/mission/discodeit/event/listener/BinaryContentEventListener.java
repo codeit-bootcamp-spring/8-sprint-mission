@@ -3,12 +3,14 @@ package com.sprint.mission.discodeit.event.listener;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.base.BinaryContentStatus;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
 import com.sprint.mission.discodeit.event.SseBroadcastMessage;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentSaveFailedException;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -27,7 +29,6 @@ public class BinaryContentEventListener {
   private final ApplicationEventPublisher eventPublisher;
 
   @Async("taskExecutor")
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onBinaryContentCreated(BinaryContentCreatedEvent event) {
     log.info("[BinaryContentEventListener] 바이너리 데이터 저장 시작 - ID: {}, 파일명: {}",
@@ -46,9 +47,12 @@ public class BinaryContentEventListener {
 
       publishUpdateEvent(event);
 
+      String requestId = MDC.get("requestId");
+      eventPublisher.publishEvent(
+          S3UploadFailedEvent.now(event.binaryContentDto().id(), requestId, e.getMessage()));
+
       log.error("[BinaryContentEventListener] 바이너리 데이터 저장 실패 - ID: {}, 파일명: {}, 원인: {}",
           event.binaryContentDto().id(), event.binaryContentDto().fileName(), e.getMessage());
-      throw new BinaryContentSaveFailedException(e);
     }
   }
 
