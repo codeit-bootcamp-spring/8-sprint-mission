@@ -30,7 +30,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}?currentSchema=discodeit_schema
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       STORAGE_TYPE: ${STORAGE_TYPE:-local}
       DISCODEIT_STORAGE_LOCAL_ROOT_PATH: /app/uploadedFiles
       AWS_S3_ACCESS_KEY: ${AWS_S3_ACCESS_KEY:-}
@@ -80,10 +80,17 @@ services:
   kafka:
     image: apache/kafka:latest
     container_name: discodeit-kafka
+    ports:
+      - "9092:9092"   # 로컬 개발 시 Spring 앱이 localhost:9092로 접근
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      # PLAINTEXT     : Docker 내부 컨테이너 간 통신 (app 서비스 → kafka:29092)
+      # PLAINTEXT_HOST: 호스트 머신에서 접근 (로컬 Spring 앱 → localhost:9092)
+      # CONTROLLER    : KRaft 컨트롤러 전용
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://kafka:29093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -91,13 +98,12 @@ services:
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_NODE_ID: 1
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://kafka:29093
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
     networks:
       - internal-network
+      - kafka-dev-network   # internal:true 가 아닌 네트워크여야 ports: 바인딩이 동작
 
 # ─── Networks ──────────────────────────────────────────────────────────────────
 networks:
@@ -107,6 +113,9 @@ networks:
   # App ↔ DB / Redis / Kafka 통신 (외부 네트워크 차단)
   internal-network:
     internal: true
+
+  # 로컬 개발용: 호스트 → Kafka 포트 바인딩을 위해 internal:true 없이 사용
+  kafka-dev-network:
 
 # ─── Volumes ───────────────────────────────────────────────────────────────────
 volumes:
