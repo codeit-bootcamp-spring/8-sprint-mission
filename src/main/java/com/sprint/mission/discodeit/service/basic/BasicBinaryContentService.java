@@ -62,7 +62,7 @@ public class BasicBinaryContentService implements BinaryContentService {
 				return binaryContentRepository.findById(binaryContentId)
 						.map(binaryContentMapper::toDto)
 						.orElseThrow(() -> {
-								log.warn("바이?�리 조회 ?�패: ?�음, binaryContentId={}", binaryContentId);
+								log.warn("바이너리 조회 실패: 없음, binaryContentId={}", binaryContentId);
 								return new NoSuchElementException(
 										"BinaryContent with id " + binaryContentId + " not found");
 						});
@@ -82,7 +82,7 @@ public class BasicBinaryContentService implements BinaryContentService {
 								base64
 						);
 				} catch (IOException e) {
-						log.error("바이?�리 ?�기 ?�패, binaryContentId={}", binaryContentId, e);
+						log.error("바이너리 읽기 실패, binaryContentId={}", binaryContentId, e);
 						throw new RuntimeException("Failed to read binary content: " + binaryContentId, e);
 				}
 		}
@@ -97,14 +97,14 @@ public class BasicBinaryContentService implements BinaryContentService {
 		@Transactional
 		@Override
 		public void delete(UUID binaryContentId) {
-				log.debug("바이?리 ?? ?도, binaryContentId={}", binaryContentId);
+				log.debug("바이너리 삭제 시도, binaryContentId={}", binaryContentId);
 				if (!binaryContentRepository.existsById(binaryContentId)) {
-						log.warn("바이?리 ?? ?패: ?음, binaryContentId={}", binaryContentId);
+						log.warn("바이너리 삭제 실패: 없음, binaryContentId={}", binaryContentId);
 						throw new NoSuchElementException(
 								"BinaryContent with id " + binaryContentId + " not found");
 				}
 				binaryContentRepository.deleteById(binaryContentId);
-				log.info("바이?리 ?? ?료, binaryContentId={}", binaryContentId);
+				log.info("바이너리 삭제 완료, binaryContentId={}", binaryContentId);
 		}
 
 		@Transactional(propagation = Propagation.REQUIRES_NEW)
