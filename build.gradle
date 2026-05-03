@@ -29,15 +29,13 @@ dependencies {
     implementation 'org.springframework.retry:spring-retry'
     implementation 'org.springframework.boot:spring-boot-starter-aop'
 
-    // Spring Cache + Caffeine
+    // Spring Cache
     implementation 'org.springframework.boot:spring-boot-starter-cache'
-    implementation 'com.github.ben-manes.caffeine:caffeine'
 
     // Spring Kafka
     implementation 'org.springframework.kafka:spring-kafka'
 
     // Redis Cache
-    implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // Spring Validation

@@ -31,18 +31,12 @@ spring:
         format_sql: true
         use_sql_comments: true
 
-  # Caffeine: recordStats → /actuator/metrics/cache.* , /actuator/caches
   cache:
     type: redis
     cache-names:
       - channels
       - notifications
       - users
-    caffeine:
-      spec: >
-        maximumSize=100,
-        expireAfterAccess=600s,
-        recordStats
     redis:
       enable-statistics: true
   data:
