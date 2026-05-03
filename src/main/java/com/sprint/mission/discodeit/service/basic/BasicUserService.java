@@ -8,6 +8,7 @@ import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserRole;
+import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
@@ -21,6 +22,9 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -38,9 +42,11 @@ public class BasicUserService implements UserService {
   private final BinaryContentRepository binaryContentRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtRegistry jwtRegistry;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Override
   @Transactional
+  @CacheEvict(value = "userList", allEntries = true) // 사용자 추가 시 전체 목록 캐시 무효화
   public UserDto create(UserCreateRequest request, BinaryContentCreateRequest profileRequest) {
 
     log.info("[USER] create start username={}, email={}", request.username(), request.email());
@@ -73,7 +79,9 @@ public class BasicUserService implements UserService {
   }
 
   @Override
+  @Cacheable(value = "userList") // 조회 시 캐시 저장
   public List<UserDto> findAll() {
+    log.info("[CACHE_MISS] DB에서 사용자 목록을 조회합니다.");
     return userRepository.findAll().stream()
         .map(user -> userMapper.toDto(user, isUserOnline(user.getId())))
         .toList();
@@ -82,6 +90,7 @@ public class BasicUserService implements UserService {
   @Override
   @Transactional
   @PreAuthorize("#userId == authentication.principal.userDto.id")
+  @CacheEvict(value = "userList", allEntries = true)
   public UserDto update(UUID userId, UserUpdateRequest request,
       BinaryContentCreateRequest profileRequest) {
 
@@ -113,6 +122,7 @@ public class BasicUserService implements UserService {
   @Override
   @Transactional
   @PreAuthorize("#id == authentication.principal.userDto.id")
+  @CacheEvict(value = "userList", allEntries = true) // 삭제 시 무효화
   public void delete(UUID id) {
     log.info("[USER] delete start userId={}", id);
 
@@ -127,6 +137,7 @@ public class BasicUserService implements UserService {
   @Override
   @Transactional
   @PreAuthorize("hasRole('ADMIN')")
+  @CacheEvict(value = "userList", allEntries = true)
   public UserDto updateRole(UUID userId, UserRole newRole) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new UserNotFoundException(userId));
@@ -143,6 +154,8 @@ public class BasicUserService implements UserService {
     user.updateRole(newRole);
 
     log.info("[AUTH_CHANGE] 권한 변경 - userId: {}, {} → {}", userId, oldRole, newRole);
+
+    eventPublisher.publishEvent(new RoleUpdatedEvent(userId, oldRole, newRole));
 
     jwtRegistry.invalidateJwtInformationByUserId(userId);
     return userMapper.toDto(user, isUserOnline(userId));

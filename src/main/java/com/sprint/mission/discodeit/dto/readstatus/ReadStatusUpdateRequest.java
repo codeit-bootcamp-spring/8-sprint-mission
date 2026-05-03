@@ -10,12 +10,16 @@ import java.time.Instant;
     ReadStatus 수정용 DTO
 
     [필드 설명]
-    • newLastReadAt        : 변경할 읽을 시각
+    • newLastReadAt              : 변경할 읽을 시각
+    • notificationEnabled        : 알림 여부
  */
 public record ReadStatusUpdateRequest(
 
     @NotNull
-    Instant newLastReadAt
+    Instant newLastReadAt,
+    
+    @NotNull
+    Boolean notificationEnabled
 ) {
 
 }

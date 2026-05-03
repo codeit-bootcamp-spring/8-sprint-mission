@@ -76,6 +76,16 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
 
     implementation 'com.nimbusds:nimbus-jose-jwt:10.3'
+
+    // Spring Retry 및 AOP 의존성 추가
+    implementation 'org.springframework.retry:spring-retry'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+
+    // Spring Kafka
+    implementation 'org.springframework.kafka:spring-kafka'
 }
 
 tasks.named('test') {

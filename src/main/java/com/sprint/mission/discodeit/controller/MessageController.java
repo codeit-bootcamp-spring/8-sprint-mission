@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.dto.message.MessageDto;
 import com.sprint.mission.discodeit.dto.message.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.service.MessageService;
+import io.micrometer.core.annotation.Timed;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
@@ -26,7 +27,8 @@ public class MessageController implements MessageApi {
 
   private final MessageService messageService;
 
-  // 메시지 생성 (GET-only 미션 대응)
+  // 메시지 생성
+  @Timed("message.create.async")
   @Override
   public ResponseEntity<MessageDto> create(
       MessageCreateRequest messageCreateRequest,

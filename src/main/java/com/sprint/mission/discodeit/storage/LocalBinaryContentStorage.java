@@ -63,6 +63,14 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
       throw new IllegalArgumentException("bytes 값이 null 입니다.");
     }
 
+    try {
+      log.info("[SIMULATION] 3초 지연 발생 시작");
+      Thread.sleep(3000);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException(e);
+    }
+
     Path path = resolvePath(id);
 
     try {
@@ -105,7 +113,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.parseMediaType(dto.contentType()));
     headers.setContentDisposition(
-        ContentDisposition.attachment()
+        ContentDisposition.inline()
             .filename(encodedFileName, StandardCharsets.UTF_8)
             .build()
     );

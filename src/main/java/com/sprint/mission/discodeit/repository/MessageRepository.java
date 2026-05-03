@@ -23,4 +23,6 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
   List<Message> findAllByChannel_Id(UUID channelId);
 
   boolean existsByIdAndAuthorId(UUID id, UUID authorId);
+
+  Optional<Message> findFirstByAttachments_Id(UUID attachmentId);
 }

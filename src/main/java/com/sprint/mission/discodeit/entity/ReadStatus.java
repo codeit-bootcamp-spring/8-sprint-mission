@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
     • user                   : 유저 객체
     • channel                : 채널 객체
     • lastReadAt             : 마지막으로 메시지를 읽은 시간
+    • notificationEnabled    : 알림 여부
 
  */
 @Entity
@@ -43,15 +44,24 @@ public class ReadStatus extends BaseUpdatableEntity {
   @Column(name = "last_read_at", nullable = false)
   private Instant lastReadAt;
 
+  @Column(name = "notification_enabled", nullable = false)
+  private boolean notificationEnabled;
+
   public ReadStatus(User user, Channel channel, Instant lastReadAt) {
     this.user = user;
     this.channel = channel;
     this.lastReadAt = lastReadAt;
+    // PRIVATE 채널은 true, PUBLIC 채널은 false
+    this.notificationEnabled = (channel.getType() == ChannelType.PRIVATE);
   }
 
-  public void update(Instant newLastReadAt) {
+  public void update(Instant newLastReadAt, Boolean notificationEnabled) {
     if (newLastReadAt != null) {
       this.lastReadAt = newLastReadAt;
+    }
+
+    if (notificationEnabled != null) {
+      this.notificationEnabled = notificationEnabled;
     }
   }
 }
