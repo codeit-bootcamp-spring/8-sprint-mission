@@ -47,7 +47,8 @@ public class NotificationRequiredTopicListener {
       }
       log.debug("Kafka MessageCreatedEvent 처리 완료, messageId={}", event.messageId());
     } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
+      log.error("Kafka 메시지 역직렬화 실패 — 메시지를 skip합니다. topic={}, error={}",
+          "discodeit.MessageCreatedEvent", e.getMessage());
     }
   }
 
@@ -62,7 +63,8 @@ public class NotificationRequiredTopicListener {
           content);
       log.debug("Kafka RoleUpdatedEvent 처리 완료, userId={}", event.userId());
     } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
+      log.error("Kafka 메시지 역직렬화 실패 — 메시지를 skip합니다. topic={}, error={}",
+          "discodeit.RoleUpdatedEvent", e.getMessage());
     }
   }
 
@@ -82,7 +84,8 @@ public class NotificationRequiredTopicListener {
               body));
       log.debug("Kafka S3UploadFailedEvent 수신, binaryContentId={}", event.binaryContentId());
     } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
+      log.error("Kafka 메시지 역직렬화 실패 — 메시지를 skip합니다. topic={}, error={}",
+          "discodeit.S3UploadFailedEvent", e.getMessage());
     }
   }
 
