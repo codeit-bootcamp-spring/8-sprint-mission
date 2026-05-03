@@ -11,7 +11,7 @@ public class CacheSpelKeys {
   public UUID userIdFrom(Authentication authentication) {
     if (authentication == null
         || !(authentication.getPrincipal() instanceof DiscodeitUserDetails details)) {
-      throw new IllegalStateException("Unauthenticated");
+      throw new com.sprint.mission.discodeit.exception.UnauthenticatedException("Unauthenticated");
     }
     return details.getUserDto().id();
   }
