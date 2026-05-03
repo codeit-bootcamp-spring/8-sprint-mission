@@ -8,6 +8,8 @@ import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
+import com.sprint.mission.discodeit.service.SseEventNames;
+import com.sprint.mission.discodeit.service.SseService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.io.InputStream;
 import java.util.NoSuchElementException;
@@ -34,6 +36,7 @@ public class BasicBinaryContentService implements BinaryContentService {
 		private final BinaryContentStorage binaryContentStorage;
 		private final ApplicationEventPublisher applicationEventPublisher;
 		private final BinaryContentMapper binaryContentMapper;
+		private final SseService sseService;
 
 		/**
 		 * 파일 업로드 (프로필 사진, 첨부파일 등).
@@ -139,6 +142,8 @@ public class BasicBinaryContentService implements BinaryContentService {
 				BinaryContent binaryContent = binaryContentRepository.findById(binaryContentId)
 						.orElseThrow(() -> new NoSuchElementException("BinaryContent with id " + binaryContentId + " not found"));
 				binaryContent.updateStatus(status);
-				return binaryContentMapper.toDto(binaryContent);
+				BinaryContentDto dto = binaryContentMapper.toDto(binaryContent);
+				sseService.broadcast(SseEventNames.BINARY_CONTENTS_UPDATED, dto);
+				return dto;
 		}
 }

@@ -13,6 +13,9 @@ import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.service.BinaryContentService;
+import com.sprint.mission.discodeit.service.SseEventNames;
+import com.sprint.mission.discodeit.service.SseService;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
@@ -42,6 +45,8 @@ public class BasicUserService implements UserService {
 		private final BinaryContentStorage binaryContentStorage;
 		private final JwtRegistry jwtRegistry;
 		private final ApplicationEventPublisher applicationEventPublisher;
+		private final SseService sseService;
+		private final BinaryContentService binaryContentService;
 
 		/**
 		 * 사용자 생성 (이메일/사용자명 중복 시 예외).
@@ -82,7 +87,9 @@ public class BasicUserService implements UserService {
 				User user = new User(username, email, password, Role.USER, nullableProfile);
 				userRepository.save(user);
 				log.info("사용자 생성 완료, id={}, username={}", user.getId(), username);
-				return withOnline(userMapper.toDto(user));
+				UserDto dto = withOnline(userMapper.toDto(user));
+				sseService.broadcast(SseEventNames.USERS_CREATED, dto);
+				return dto;
 		}
 
 		@Override
@@ -153,7 +160,9 @@ public class BasicUserService implements UserService {
 				}
 				user.update(newUsername, newEmail, newPassword, nullableProfile);
 				log.info("사용자 수정 완료, userId={}, username={}", userId, newUsername);
-				return withOnline(userMapper.toDto(user));
+				UserDto dto = withOnline(userMapper.toDto(user));
+				sseService.broadcast(SseEventNames.USERS_UPDATED, dto);
+				return dto;
 		}
 
 		@Transactional
@@ -172,7 +181,9 @@ public class BasicUserService implements UserService {
 								new RoleUpdatedEvent(userId, previousRole, newRole));
 				}
 				log.info("사용자 권한 변경 완료, userId={}, role={}", userId, newRole);
-				return withOnline(userMapper.toDto(user));
+				UserDto dto = withOnline(userMapper.toDto(user));
+				sseService.broadcast(SseEventNames.USERS_UPDATED, dto);
+				return dto;
 		}
 
 		/**
@@ -188,7 +199,9 @@ public class BasicUserService implements UserService {
 						log.warn("사용자 삭제 실패: 사용자 없음, userId={}", userId);
 						throw new NoSuchElementException("User with id " + userId + " not found");
 				}
+				UserDto snapshot = find(userId);
 				userRepository.deleteById(userId);
+				sseService.broadcast(SseEventNames.USERS_DELETED, snapshot);
 				log.info("사용자 삭제 완료, userId={}", userId);
 		}
 
@@ -210,6 +223,8 @@ public class BasicUserService implements UserService {
 				binaryContentStorage.put(binaryContent.getId(), bytes);
 				binaryContent.updateStatus(BinaryContentStatus.SUCCESS);
 				binaryContentRepository.save(binaryContent);
+				sseService.broadcast(SseEventNames.BINARY_CONTENTS_UPDATED,
+						binaryContentService.find(binaryContent.getId()));
 		}
 
 }
