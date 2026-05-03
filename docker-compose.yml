@@ -21,7 +21,7 @@ services:
     restart: on-failure
 
   db:
-    image: postgres:16
+    image: postgres:17
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
