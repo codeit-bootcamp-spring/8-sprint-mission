@@ -50,7 +50,7 @@ public class BasicMessageService implements MessageService {
     private final ApplicationEventPublisher applicationEventPublisher;
 
     /**
-     * 메시지 ?성 (채널/?성???으??외).
+     * 메시지 생성 (채널/작성자 없으면 예외).
      */
     @Transactional
     @Override
@@ -106,9 +106,11 @@ public class BasicMessageService implements MessageService {
                         channelDisplayName(channel),
                         content != null ? content : ""));
         long wallMs = (System.nanoTime() - wallStartNs) / 1_000_000L;
+
+        // 첨부 파일 바이너리 저장은 AFTER_COMMIT 비동기 리스너에서 수행됩니다.
+        // 동기로 리스너까지 기다리면 첨부당 약 3초 지연이 그대로 API 응답 시간에 합산되므로 비동기로 처리합니다.
         log.info(
-                "메시지 생성 완료, messageId={}, channelId={}, authorId={}, wallTimeMs={} (첨부 {}건의 바이너리 저장은 AFTER_COMMIT 비동기 리스너에서 수행되며, "
-                        + "동기로 리스너까지 기다리면 첨부당 약 3초 지연이 그대로 API 응답 시간에 합산됩니다.)",
+                "메시지 생성 완료, messageId={}, channelId={}, authorId={}, wallTimeMs={}, attachmentsCount={}",
                 message.getId(), channelId, authorId, wallMs, binaryContentCreateRequests.size());
         return messageMapper.toDto(message);
     }
