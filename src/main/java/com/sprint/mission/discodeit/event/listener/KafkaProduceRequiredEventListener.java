@@ -13,6 +13,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
@@ -24,7 +25,7 @@ public class KafkaProduceRequiredEventListener {
   private final ObjectMapper objectMapper;
 
   @Async("taskExecutor")
-  @TransactionalEventListener
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void on(MessageCreatedEvent event) {
     try {
       log.info("[KafkaProduceRequiredEventListener] 메시지 생성 이벤트 발행 시도: {}", event.messageDto().id());
@@ -38,7 +39,7 @@ public class KafkaProduceRequiredEventListener {
   }
 
   @Async("taskExecutor")
-  @TransactionalEventListener
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void on(RoleUpdatedEvent event) {
     try {
       log.info("[KafkaProduceRequiredEventListener] 권한 변경 이벤트 발행 시도: {}", event.userId());
