@@ -12,6 +12,7 @@ import org.springframework.core.task.TaskDecorator;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -49,11 +50,13 @@ public class AsyncConfig implements AsyncConfigurer {
   public TaskDecorator mdcTaskDecorator() {
     return runnable -> {
       Map<String, String> mdcContext = MDC.getCopyOfContextMap();
-      SecurityContext securityContext = SecurityContextHolder.getContext();
+      Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
       return () -> {
         try {
-          SecurityContextHolder.setContext(securityContext);
+          SecurityContext childContext = SecurityContextHolder.createEmptyContext();
+          childContext.setAuthentication(auth);
+          SecurityContextHolder.setContext(childContext);
 
           if (mdcContext != null) {
             MDC.setContextMap(mdcContext);
