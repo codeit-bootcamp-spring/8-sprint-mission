@@ -3,17 +3,13 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:54321/${POSTGRES_DB_DEV}
-    username: ${POSTGRES_USER_DEV}
-    password: ${POSTGRES_PASSWORD_DEV}
+    url: jdbc:postgresql://localhost:5432/discodeit
+    username: discodeit_user
+    password: discodeit1234
   jpa:
-    hibernate:
-      ddl-auto: update
-
     properties:
       hibernate:
         format_sql: true
-        ddl-auto:
 
 logging:
   level:
@@ -21,7 +17,6 @@ logging:
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
     org.springframework.security: trace
-    org.springframework.web: debug
 
 management:
   endpoint:

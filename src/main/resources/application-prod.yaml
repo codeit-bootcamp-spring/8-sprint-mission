@@ -3,12 +3,10 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://${POSTGRES_URL_PROD}/${POSTGRES_DB_PROD}
-    username: ${POSTGRES_USER_PROD}
-    password: ${POSTGRES_PASSWORD_PROD}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
   jpa:
-    hibernate:
-      ddl-auto: validate
     properties:
       hibernate:
         format_sql: false
@@ -16,9 +14,7 @@ spring:
 logging:
   level:
     com.sprint.mission.discodeit: info
-    org.hibernate.SQL: warn
-    org.hibernate.orm.jdbc.bind: warn
-    org.springframework.security: warn
+    org.hibernate.SQL: info
 
 management:
   endpoint:

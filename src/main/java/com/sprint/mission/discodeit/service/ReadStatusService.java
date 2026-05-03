@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface ReadStatusService {
 
-  ReadStatusDto create(UUID userId, ReadStatusCreateRequest request);
+  ReadStatusDto create(ReadStatusCreateRequest request);
 
   ReadStatusDto find(UUID readStatusId);
 

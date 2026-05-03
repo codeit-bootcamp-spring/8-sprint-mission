@@ -31,6 +31,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-@WithMockUser(roles = "CHANNEL_MANAGER")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class BinaryContentApiIntegrationTest {
 
   @Autowired
@@ -61,6 +62,7 @@ class BinaryContentApiIntegrationTest {
   private MessageService messageService;
 
   @Test
+  @WithMockUser(roles = "CHANNEL_MANAGER")
   @DisplayName("바이너리 컨텐츠 조회 API 통합 테스트")
   void findBinaryContent_Success() throws Exception {
     // Given
@@ -81,7 +83,11 @@ class BinaryContentApiIntegrationTest {
     var channel = channelService.create(channelRequest);
 
     // 첨부파일이 있는 메시지 생성
-    MessageCreateRequest messageRequest = new MessageCreateRequest("테스트 메시지", channel.id());
+    MessageCreateRequest messageRequest = new MessageCreateRequest(
+        "첨부파일이 있는 메시지입니다.",
+        channel.id(),
+        user.id()
+    );
 
     byte[] fileContent = "테스트 파일 내용입니다.".getBytes();
     BinaryContentCreateRequest attachmentRequest = new BinaryContentCreateRequest(
@@ -90,7 +96,7 @@ class BinaryContentApiIntegrationTest {
         fileContent
     );
 
-    MessageDto message = messageService.create(user.id(), messageRequest, List.of(attachmentRequest));
+    MessageDto message = messageService.create(messageRequest, List.of(attachmentRequest));
     UUID binaryContentId = message.attachments().get(0).id();
 
     // When & Then
@@ -103,6 +109,7 @@ class BinaryContentApiIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "USER")
   @DisplayName("존재하지 않는 바이너리 컨텐츠 조회 API 통합 테스트")
   void findBinaryContent_Failure_NotFound() throws Exception {
     // Given
@@ -114,6 +121,7 @@ class BinaryContentApiIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "CHANNEL_MANAGER")
   @DisplayName("여러 바이너리 컨텐츠 조회 API 통합 테스트")
   void findAllBinaryContentsByIds_Success() throws Exception {
     // Given
@@ -131,7 +139,11 @@ class BinaryContentApiIntegrationTest {
     );
     var channel = channelService.create(channelRequest);
 
-    MessageCreateRequest messageRequest = new MessageCreateRequest("테스트 메시지", channel.id());
+    MessageCreateRequest messageRequest = new MessageCreateRequest(
+        "첨부파일이 있는 메시지입니다.",
+        channel.id(),
+        user.id()
+    );
 
     // 첫 번째 첨부파일
     BinaryContentCreateRequest attachmentRequest1 = new BinaryContentCreateRequest(
@@ -149,7 +161,6 @@ class BinaryContentApiIntegrationTest {
 
     // 첨부파일 두 개를 가진 메시지 생성
     MessageDto message = messageService.create(
-        user.id(),
         messageRequest,
         List.of(attachmentRequest1, attachmentRequest2)
     );
@@ -168,6 +179,7 @@ class BinaryContentApiIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "CHANNEL_MANAGER")
   @DisplayName("바이너리 컨텐츠 다운로드 API 통합 테스트")
   void downloadBinaryContent_Success() throws Exception {
     // Given
@@ -191,6 +203,7 @@ class BinaryContentApiIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "USER")
   @DisplayName("존재하지 않는 바이너리 컨텐츠 다운로드 API 통합 테스트")
   void downloadBinaryContent_Failure_NotFound() throws Exception {
     // Given
