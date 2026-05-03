@@ -9,7 +9,8 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentSaveFailedException;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.message.MessageNotFoundException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
@@ -20,13 +21,13 @@ import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.MessageService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -44,8 +45,8 @@ public class BasicMessageService implements MessageService {
   private final MessageRepository messageRepository;
   private final BinaryContentRepository binaryContentRepository;
   private final MessageMapper messageMapper;
-  private final BinaryContentStorage binaryContentStorage;
   private final PageResponseMapper pageResponseMapper;
+  private final ApplicationEventPublisher eventPublisher;
 
   public boolean isAuthor(UUID messageId, UUID userId) {
     return messageRepository.findById(messageId)
@@ -88,21 +89,34 @@ public class BasicMessageService implements MessageService {
           BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
               contentType);
 
-          binaryContentRepository.save(binaryContent);
+          BinaryContent savedBinaryContent = binaryContentRepository.save(binaryContent);
 
-          try {
-            binaryContentStorage.put(binaryContent.getId(), bytes);
-          } catch (Exception e) {
-            log.error("[MessageService] 파일 스토리지 저장 중 오류 발생 - 파일명: {}, 원인: {}",
-                attachmentRequest.fileName(), e.getMessage());
-            throw new BinaryContentSaveFailedException(binaryContent.getId(), fileName);
-          }
-          return binaryContent;
+          BinaryContentCreatedEvent event = BinaryContentCreatedEvent.now(
+              savedBinaryContent.getId(),
+              savedBinaryContent.getFileName(),
+              bytes
+          );
+
+          eventPublisher.publishEvent(event);
+
+          log.debug("[MessageService] 메시지 첨부파일 저장 이벤트 발행 완료 - ID: {}", savedBinaryContent.getId());
+          return savedBinaryContent;
         })
         .toList();
 
     Message message = new Message(content, channel, author, attachments);
-    messageRepository.save(message);
+    Message savedMessage = messageRepository.save(message);
+
+    MessageCreatedEvent event = MessageCreatedEvent.now(
+        savedMessage.getId(),
+        savedMessage.getContent(),
+        savedMessage.getChannel().getId(),
+        savedMessage.getChannel().getName(),
+        savedMessage.getAuthor().getId(),
+        savedMessage.getAuthor().getUsername()
+    );
+
+    eventPublisher.publishEvent(event);
 
     log.info("[MessageService] 메시지 생성 완료 - Id: {}", message.getId());
     return messageMapper.toDto(message);

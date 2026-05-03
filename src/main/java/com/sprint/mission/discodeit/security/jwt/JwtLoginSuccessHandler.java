@@ -12,12 +12,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
@@ -25,6 +30,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
   private final ObjectMapper objectMapper;
   private final JwtTokenProvider tokenProvider;
   private final JwtRegistry jwtRegistry;
+  private final CacheManager cacheManager;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -63,6 +69,8 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
                 refreshToken
             )
         );
+
+        evictCache(discodeitUserDetails.getUserDto().id());
       } catch (Exception e) {
         ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
 
@@ -94,6 +102,22 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
       );
 
       response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+    }
+  }
+
+  private void evictCache(UUID userId) {
+    Cache userCache = cacheManager.getCache("user");
+
+    if (userCache != null) {
+      userCache.evict(userId);
+      userCache.clear();
+      log.info("[JwtLoginSuccessHandler] 로그인 성공으로 인한 사용자 캐시 삭제: {}", userId);
+    }
+
+    Cache channelCache = cacheManager.getCache("channel");
+    if (channelCache != null) {
+      channelCache.clear();
+      log.info("[JwtLoginSuccessHandler] 로그인 성공으로 인한 채널 캐시 삭제: {}", userId);
     }
   }
 }

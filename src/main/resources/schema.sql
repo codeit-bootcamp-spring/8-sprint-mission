@@ -1,10 +1,10 @@
 -- 1. 가장 하위 자식 테이블 (관계 매핑 테이블)
 DROP TABLE IF EXISTS message_attachments;
-DROP TABLE IF EXISTS persistent_logins CASCADE;
 
 -- 2. 외래 키로 다른 테이블을 참조하고 있는 테이블들
 DROP TABLE IF EXISTS messages;
 DROP TABLE IF EXISTS read_statuses;
+DROP TABLE IF EXISTS notifications;
 
 -- 3. 더 이상 자식이 없는 부모 테이블들
 DROP TABLE IF EXISTS users;
@@ -25,9 +25,11 @@ CREATE TABLE binary_contents
 (
     id           uuid PRIMARY KEY,
     created_at   timestamp with time zone NOT NULL,
+    updated_at   timestamp with time zone,
     file_name    varchar(255)             NOT NULL,
     size         bigint                   NOT NULL,
-    content_type varchar(100)             NOT NULL
+    content_type varchar(100)             NOT NULL,
+    status       varchar(20)              NOT NULL
 );
 
 CREATE TABLE users
@@ -49,12 +51,13 @@ CREATE TABLE users
 
 CREATE TABLE read_statuses
 (
-    id           uuid PRIMARY KEY,
-    created_at   timestamp with time zone NOT NULL,
-    updated_at   timestamp with time zone,
-    user_id      uuid                     NOT NULL,
-    channel_id   uuid                     NOT NULL,
-    last_read_at timestamp with time zone NOT NULL,
+    id                   uuid PRIMARY KEY,
+    created_at           timestamp with time zone NOT NULL,
+    updated_at           timestamp with time zone,
+    user_id              uuid                     NOT NULL,
+    channel_id           uuid                     NOT NULL,
+    last_read_at         timestamp with time zone NOT NULL,
+    notification_enabled boolean                  NOT NULL,
 
     CONSTRAINT fk_read_statuses_users
         FOREIGN KEY (user_id)
@@ -105,6 +108,20 @@ CREATE TABLE message_attachments
     CONSTRAINT fk_message_attachments_binary_contents
         FOREIGN KEY (attachment_id)
             REFERENCES binary_contents (id)
+            ON DELETE CASCADE
+);
+
+CREATE TABLE notifications
+(
+    id          uuid                     NOT NULL,
+    created_at  timestamp with time zone NOT NULL,
+    receiver_id uuid                     NOT NULL,
+    title       text                     NOT NULL,
+    content     text                     NOT NULL,
+
+    CONSTRAINT fk_notification_users
+        FOREIGN KEY (receiver_id)
+            REFERENCES users (id)
             ON DELETE CASCADE
 );
 
