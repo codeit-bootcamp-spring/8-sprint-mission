@@ -2,8 +2,6 @@ package com.sprint.mission.discodeit.security.jwt;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.sprint.mission.discodeit.dto.UserDto;
-import com.sprint.mission.discodeit.event.DomainEvent;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
@@ -56,15 +54,6 @@ public class JwtLogoutHandler implements LogoutHandler {
             UUID userId = UUID.fromString(userIdString);
 
             userRepository.findById(userId).ifPresent(user -> {
-                  UserDto offlineUserDto = new UserDto(
-                      user.getId(),
-                      user.getUsername(),
-                      user.getEmail(),
-                      binaryContentMapper.toDto(user.getProfile()),
-                      false,
-                      user.getRole()
-                  );
-
                   Cache userCache = cacheManager.getCache("user");
                   if (userCache != null) {
                     userCache.clear();
@@ -74,7 +63,6 @@ public class JwtLogoutHandler implements LogoutHandler {
                   if (channelCache != null) {
                     channelCache.clear();
                   }
-                  eventPublisher.publishEvent(new DomainEvent<>("users.updated", offlineUserDto, null));
                 }
             );
 

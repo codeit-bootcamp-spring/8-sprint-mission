@@ -5,7 +5,7 @@ import com.sprint.mission.discodeit.dto.request.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.entity.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.event.DomainEvent;
+import com.sprint.mission.discodeit.event.SseBroadcastMessage;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
@@ -72,7 +72,7 @@ public class BasicAuthService implements AuthService {
 
     eventPublisher.publishEvent(event);
 
-    eventPublisher.publishEvent(new DomainEvent<>("users.updated", updatedUserDto, null));
+    eventPublisher.publishEvent(new SseBroadcastMessage("users.updated", updatedUserDto, null));
 
     return updatedUserDto;
   }

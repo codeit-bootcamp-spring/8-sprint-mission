@@ -6,7 +6,7 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Notification;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.event.DomainEvent;
+import com.sprint.mission.discodeit.event.SseBroadcastMessage;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
@@ -49,7 +49,7 @@ public class NotificationRequiredTopicListener {
   @Value("${admin.username}")
   private String adminUsername;
 
-  @KafkaListener(topics = "discodeit.MessageCreatedEvent")
+  @KafkaListener(topics = "discodeit.MessageCreatedEvent", groupId = "notification-storage-group")
   @Transactional
   public void onMessageCreatedEvent(String kafkaEvent) {
     try {
@@ -81,7 +81,8 @@ public class NotificationRequiredTopicListener {
         notificationRepository.save(notification);
 
         eventPublisher.publishEvent(
-            new DomainEvent<>("notifications.created", notificationMapper.toDto(notification),
+            new SseBroadcastMessage("notifications.created",
+                notificationMapper.toDto(notification),
                 List.of(receiver.getId())));
 
         evictNotificationCache(receiver.getId());
@@ -101,7 +102,7 @@ public class NotificationRequiredTopicListener {
     }
   }
 
-  @KafkaListener(topics = "discodeit.RoleUpdatedEvent")
+  @KafkaListener(topics = "discodeit.RoleUpdatedEvent", groupId = "notification-storage-group")
   @Transactional
   public void onRoleUpdatedEvent(String kafkaEvent) {
     try {
@@ -120,7 +121,7 @@ public class NotificationRequiredTopicListener {
       notificationRepository.save(notification);
 
       eventPublisher.publishEvent(
-          new DomainEvent<>("notifications.created", notificationMapper.toDto(notification),
+          new SseBroadcastMessage("notifications.created", notificationMapper.toDto(notification),
               List.of(receiver.getId())));
 
       evictNotificationCache(event.userId());
@@ -133,7 +134,7 @@ public class NotificationRequiredTopicListener {
     }
   }
 
-  @KafkaListener(topics = "discodeit.S3UploadFailedEvent")
+  @KafkaListener(topics = "discodeit.S3UploadFailedEvent", groupId = "notification-storage-group")
   @Transactional
   public void onS3UploadFailedEvent(String kafkaEvent) {
     try {
@@ -159,7 +160,7 @@ public class NotificationRequiredTopicListener {
       notificationRepository.save(notification);
 
       eventPublisher.publishEvent(
-          new DomainEvent<>("notifications.created", notificationMapper.toDto(notification),
+          new SseBroadcastMessage("notifications.created", notificationMapper.toDto(notification),
               List.of(admin.getId())));
 
       evictNotificationCache(admin.getId());

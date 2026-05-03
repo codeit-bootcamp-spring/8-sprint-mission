@@ -2,7 +2,6 @@ package com.sprint.mission.discodeit.security.jwt;
 
 import com.sprint.mission.discodeit.exception.user.InvalidTokenException;
 import com.sprint.mission.discodeit.service.basic.DiscodeitUserDetailsService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;

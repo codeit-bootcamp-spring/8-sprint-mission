@@ -58,6 +58,7 @@ public class SecurityConfig {
             .requestMatchers("/error").permitAll()
             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
             .requestMatchers("/actuator/**").permitAll()
+            .requestMatchers("/api/sse/**").permitAll()
             .requestMatchers("/ws/**").permitAll()
             .requestMatchers("/api/notifications/**").permitAll()
             .requestMatchers("/api/auth/csrf-token").permitAll()

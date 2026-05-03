@@ -33,10 +33,11 @@ services:
       - discodeit-network
 
   app:
-    container_name: discodeit-app
     build:
       context: .
       dockerfile: Dockerfile
+    deploy:
+      replicas: 3 # 인스턴스 3개로 설정
     # .env 파일에서 값을 읽어와 주입
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}

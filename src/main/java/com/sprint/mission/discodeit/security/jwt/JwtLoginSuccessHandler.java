@@ -6,7 +6,6 @@ import com.sprint.mission.discodeit.dto.JwtInformation;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.response.ErrorResponse;
 import com.sprint.mission.discodeit.entity.DiscodeitUserDetails;
-import com.sprint.mission.discodeit.event.DomainEvent;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -74,8 +73,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
         );
 
         evictCache(discodeitUserDetails.getUserDto().id());
-
-        eventPublisher.publishEvent(new DomainEvent<>("users.updated", onlineUserDto, null));
+        
       } catch (Exception e) {
         ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
 

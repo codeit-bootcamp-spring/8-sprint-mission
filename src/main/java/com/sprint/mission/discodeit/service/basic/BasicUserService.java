@@ -8,7 +8,7 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.event.BinaryContentType;
-import com.sprint.mission.discodeit.event.DomainEvent;
+import com.sprint.mission.discodeit.event.SseBroadcastMessage;
 import com.sprint.mission.discodeit.exception.user.UserEmailAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.exception.user.UsernameAlreadyExistsException;
@@ -97,7 +97,7 @@ public class BasicUserService implements UserService {
     User savedUser = userRepository.save(user);
     UserDto savedUserDto = userMapper.toDto(savedUser);
 
-    eventPublisher.publishEvent(new DomainEvent<>("users.updated", savedUserDto, null));
+    eventPublisher.publishEvent(new SseBroadcastMessage("users.updated", savedUserDto, null));
 
     log.info("[UserService] 사용자 생성 완료 - ID: {},  프로필 여부: {}", user.getId(), (profile != null));
     return savedUserDto;
@@ -184,7 +184,7 @@ public class BasicUserService implements UserService {
     user.update(newUsername, newEmail, encryptedPassword, newProfile);
     UserDto updatedUserDto = userMapper.toDto(user);
 
-    eventPublisher.publishEvent(new DomainEvent<>("users.updated", updatedUserDto, null));
+    eventPublisher.publishEvent(new SseBroadcastMessage("users.updated", updatedUserDto, null));
 
     log.info("[UserService] 사용자 수정 완료 - ID: {}", userId);
     return updatedUserDto;
@@ -207,7 +207,7 @@ public class BasicUserService implements UserService {
 
     userRepository.deleteById(userId);
 
-    eventPublisher.publishEvent(new DomainEvent<>("users.deleted", userDto, null));
+    eventPublisher.publishEvent(new SseBroadcastMessage("users.deleted", userDto, null));
 
     log.info("[UserService] 사용자 삭제 완료 - ID: {}", user.getId());
   }

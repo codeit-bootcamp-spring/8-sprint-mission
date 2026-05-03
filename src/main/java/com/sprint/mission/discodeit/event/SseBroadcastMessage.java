@@ -3,9 +3,9 @@ package com.sprint.mission.discodeit.event;
 import java.util.List;
 import java.util.UUID;
 
-public record DomainEvent<T>(
+public record SseBroadcastMessage(
     String eventName,
-    T data,
+    Object data,
     List<UUID> targetUserIds
 ) {
 

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
+import com.sprint.mission.discodeit.event.SseBroadcastMessage;
+import com.sprint.mission.discodeit.event.UserLogInOutEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -57,6 +59,34 @@ public class KafkaProduceRequiredEventListener {
           event.binaryContentId());
       String payload = objectMapper.writeValueAsString(event);
       kafkaTemplate.send("discodeit.S3UploadFailedEvent", payload);
+    } catch (JsonProcessingException e) {
+      log.error("[KafkaProduceRequiredEventListener] 직렬화 실패 - Event: {}", event, e);
+    } catch (Exception e) {
+      log.error("[KafkaProduceRequiredEventListener] Kafka 전송 중 예외 발생 - Event: {}", event, e);
+    }
+  }
+
+  @Async("taskExecutor")
+  @EventListener
+  public void on(UserLogInOutEvent event) {
+    try {
+      log.info("[KafkaProduceRequiredEventListener] 유저 로그아웃/로그인 이벤트 발행 시도: {}", event.userId());
+      String payload = objectMapper.writeValueAsString(event);
+      kafkaTemplate.send("discodeit.UserLogInOutEvent", payload);
+    } catch (JsonProcessingException e) {
+      log.error("[KafkaProduceRequiredEventListener] 직렬화 실패 - Event: {}", event, e);
+    } catch (Exception e) {
+      log.error("[KafkaProduceRequiredEventListener] Kafka 전송 중 예외 발생 - Event: {}", event, e);
+    }
+  }
+
+  @Async("taskExecutor")
+  @EventListener
+  public void on(SseBroadcastMessage event) {
+    try {
+      log.info("[Kafka] SSE 브로드캐스트 전송: {}", event.eventName());
+      String payload = objectMapper.writeValueAsString(event);
+      kafkaTemplate.send("discodeit.SseBroadcast", payload);
     } catch (JsonProcessingException e) {
       log.error("[KafkaProduceRequiredEventListener] 직렬화 실패 - Event: {}", event, e);
     } catch (Exception e) {

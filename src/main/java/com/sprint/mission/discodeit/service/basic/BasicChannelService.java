@@ -7,7 +7,7 @@ import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
-import com.sprint.mission.discodeit.event.DomainEvent;
+import com.sprint.mission.discodeit.event.SseBroadcastMessage;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.channel.PrivateChannelUpdateException;
 import com.sprint.mission.discodeit.mapper.ChannelMapper;
@@ -58,7 +58,8 @@ public class BasicChannelService implements ChannelService {
     Channel savedChannel = channelRepository.save(channel);
     ChannelDto savedChannelDto = channelMapper.toDto(savedChannel);
 
-    eventPublisher.publishEvent(new DomainEvent<>("channels.created", savedChannelDto, null));
+    eventPublisher.publishEvent(
+        new SseBroadcastMessage("channels.created", savedChannelDto, null));
 
     log.info("[ChannelService] 공개 채널 생성 완료 - Id: {}", channel.getId());
     return savedChannelDto;
@@ -88,7 +89,7 @@ public class BasicChannelService implements ChannelService {
 
     ChannelDto savedChannelDto = channelMapper.toDto(savedChannel);
 
-    eventPublisher.publishEvent(new DomainEvent<>("channels.created", savedChannelDto,
+    eventPublisher.publishEvent(new SseBroadcastMessage("channels.created", savedChannelDto,
         channelCreateRequest.participantIds()));
 
     log.info("[ChannelService] 비공개 채널 생성 완료 - Id: {}, 생성된 읽음 상태 개수: {}", channel.getId(),
@@ -132,7 +133,8 @@ public class BasicChannelService implements ChannelService {
     channel.update(newName, newDescription);
     ChannelDto updatedChannelDto = channelMapper.toDto(channel);
 
-    eventPublisher.publishEvent(new DomainEvent<>("channels.updated", updatedChannelDto, null));
+    eventPublisher.publishEvent(
+        new SseBroadcastMessage("channels.updated", updatedChannelDto, null));
 
     log.info("[ChannelService] 채널 수정 완료 - Id: {}", channelId);
     return updatedChannelDto;
@@ -165,10 +167,10 @@ public class BasicChannelService implements ChannelService {
     channelRepository.deleteById(channelId);
 
     if (channel.getType() == ChannelType.PUBLIC) {
-      eventPublisher.publishEvent(new DomainEvent<>("channels.deleted", channelDto, null));
+      eventPublisher.publishEvent(new SseBroadcastMessage("channels.deleted", channelDto, null));
     } else {
       eventPublisher.publishEvent(
-          new DomainEvent<>("channels.deleted", channelDto, participantIds));
+          new SseBroadcastMessage("channels.deleted", channelDto, participantIds));
     }
 
     log.info("[ChannelService] 채널 삭제 및 연관 정보(메시지, 읽음상태) 삭제 완료 - Id: {}", channelId);
