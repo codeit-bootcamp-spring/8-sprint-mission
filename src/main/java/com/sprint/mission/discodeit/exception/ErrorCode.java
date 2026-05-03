@@ -38,7 +38,11 @@ public enum ErrorCode {
   AUTHENTICATION_FAILED("로그인 실패했습니다"),
 
   //jwt
-  TOKEN_GENERATION_FAILED("jwt 토큰 생성 실패했습니다.");
+  TOKEN_GENERATION_FAILED("jwt 토큰 생성 실패했습니다."),
+
+  // Notification 에러 코드
+  NOTIFICATION_NOT_FOUND("알림을 찾을 수 없습니다."),
+  NOTIFICATION_ACCESS_DENIED("본인 알림이 아닙니다.");
 
   private final String message;
 

@@ -74,6 +74,14 @@ CREATE TABLE read_statuses
     UNIQUE (user_id, channel_id)
 );
 
+CREATE TABLE notifications
+(
+    id          uuid PRIMARY KEY,
+    created_at  timestamp with time zone NOT NULL,
+    receiver_id uuid                     NOT NULL,
+    title       text                     NOT NULL,
+    content     text                     NOT NULL
+);
 
 -- 제약 조건
 -- User (1) -> BinaryContent (1)
@@ -127,3 +135,18 @@ ALTER TABLE read_statuses
 
 ALTER TABLE users
     ADD role varchar(20) NOT NULL;
+
+ALTER TABLE binary_contents
+    ADD COLUMN updated_at timestamp with time zone;
+
+ALTER TABLE binary_contents
+    ADD COLUMN status varchar(20) NOT NULL DEFAULT 'PROCESSING';
+
+ALTER TABLE read_statuses
+    ADD COLUMN notification_enabled boolean NOT NULL DEFAULT false;
+
+ALTER TABLE notifications
+    ADD CONSTRAINT fk_notification_user
+        FOREIGN KEY (receiver_id)
+            REFERENCES users (id)
+            ON DELETE CASCADE;

@@ -9,6 +9,8 @@ import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.jwt.JwtRegistry;
@@ -16,12 +18,14 @@ import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,10 +39,11 @@ public class BasicUserService implements UserService {
   private final UserRepository userRepository;
   private final UserMapper userMapper;
   private final BinaryContentRepository binaryContentRepository;
-  private final BinaryContentStorage binaryContentStorage;
+  private final ApplicationEventPublisher applicationEventPublisher;
   private final PasswordEncoder passwordEncoder;
   private final JwtRegistry jwtRegistry;
 
+  @CacheEvict(value = "users", allEntries = true)
   @Transactional
   @Override
   public UserDto create(UserCreateRequest userCreateRequest,
@@ -63,7 +68,8 @@ public class BasicUserService implements UserService {
           BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
               contentType);
           binaryContentRepository.save(binaryContent);
-          binaryContentStorage.put(binaryContent.getId(), bytes);
+          applicationEventPublisher.publishEvent(
+              new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
           return binaryContent;
         })
         .orElse(null);
@@ -88,6 +94,7 @@ public class BasicUserService implements UserService {
     return userDto;
   }
 
+  @Cacheable(value = "users")
   @Transactional(readOnly = true)
   @Override
   public List<UserDto> findAll() {
@@ -100,6 +107,7 @@ public class BasicUserService implements UserService {
     return userDtos;
   }
 
+  @CacheEvict(value = "users", allEntries = true)
   @PreAuthorize("#userId == authentication.principal.user.id")
   @Transactional
   @Override
@@ -133,7 +141,8 @@ public class BasicUserService implements UserService {
           BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
               contentType);
           binaryContentRepository.save(binaryContent);
-          binaryContentStorage.put(binaryContent.getId(), bytes);
+          applicationEventPublisher.publishEvent(
+              new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
           return binaryContent;
         })
         .orElse(null);
@@ -148,6 +157,7 @@ public class BasicUserService implements UserService {
     return updatedUserDto;
   }
 
+  @CacheEvict(value = "users", allEntries = true)
   @PreAuthorize("#userId == authentication.principal.user.id")
   @Transactional
   @Override
@@ -162,6 +172,7 @@ public class BasicUserService implements UserService {
     log.info("사용자 삭제 완료: id={}", userId);
   }
 
+  @CacheEvict(value = "users", allEntries = true)
   @PreAuthorize("hasRole('ADMIN')")
   @Transactional
   @Override
@@ -169,7 +180,10 @@ public class BasicUserService implements UserService {
     User user = userRepository.findById(userRoleUpdateRequest.userId())
         .orElseThrow(() -> UserNotFoundException.withId(userRoleUpdateRequest.userId()));
 
+    Role oldRole = user.getRole();
     user.setRole(userRoleUpdateRequest.role());
+    applicationEventPublisher.publishEvent(
+        new RoleUpdatedEvent(user.getId(), oldRole, userRoleUpdateRequest.role()));
     UserDto updatedUserDto = userMapper.toDto(user, isOnline(user.getId()));
     return updatedUserDto;
   }
