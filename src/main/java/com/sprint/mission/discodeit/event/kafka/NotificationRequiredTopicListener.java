@@ -7,8 +7,10 @@ import com.sprint.mission.discodeit.entity.Notification;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
+import com.sprint.mission.discodeit.event.NotificationCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
+import com.sprint.mission.discodeit.mapper.NotificationMapper;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
@@ -18,6 +20,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +36,8 @@ public class NotificationRequiredTopicListener {
   private final UserRepository userRepository;
   private final MessageRepository messageRepository;
   private final CacheManager cacheManager;
+  private final NotificationMapper notificationMapper;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   @KafkaListener(topics = "discodeit.MessageCreatedEvent")
@@ -59,6 +64,13 @@ public class NotificationRequiredTopicListener {
           cacheManager.getCache("notificationsByUserId").evict(target.getUser().getId())
       );
 
+      notifications.forEach(notification ->
+          eventPublisher.publishEvent(new NotificationCreatedEvent(
+              notification.getReceiver().getId(),
+              notificationMapper.toDto(notification)
+          ))
+      );
+
       log.info("[KAFKA_CONSUMER] MessageCreatedEvent 처리 완료 channelId={}, 알림 수={}", event.channelId(), notifications.size());
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
@@ -80,6 +92,11 @@ public class NotificationRequiredTopicListener {
       notificationRepository.save(notification);
 
       cacheManager.getCache("notificationsByUserId").evict(event.userId());
+
+      eventPublisher.publishEvent(new NotificationCreatedEvent(
+          user.getId(),
+          notificationMapper.toDto(notification)
+      ));
 
       log.info("[KAFKA_CONSUMER] RoleUpdatedEvent 처리 완료 userId={}", event.userId());
     } catch (JsonProcessingException e) {

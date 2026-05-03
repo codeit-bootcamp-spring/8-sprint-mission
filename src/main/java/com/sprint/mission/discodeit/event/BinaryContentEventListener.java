@@ -39,6 +39,9 @@ public class BinaryContentEventListener {
       binaryContentService.updateStatus(event.binaryContentId(), BinaryContentStatus.SUCCESS);
 
       log.info("[이벤트 리스너] 스토리지 저장 성공 binaryContentId={}", event.binaryContentId());
+      eventPublisher.publishEvent(
+          new BinaryContentStatusUpdatedEvent(binaryContentService.findById(event.binaryContentId()))
+      );
 
     } catch (Exception e) {
       log.error("[EVENT_LISTENER] 스토리지 저장 실패 binaryContentId={}", event.binaryContentId(), e);
@@ -48,6 +51,9 @@ public class BinaryContentEventListener {
 
       // S3 업로드 실패 이벤트 발행 (알림 서비스로 전달)
       eventPublisher.publishEvent(new S3UploadFailedEvent(event.binaryContentId(), null));
+      eventPublisher.publishEvent(
+          new BinaryContentStatusUpdatedEvent(binaryContentService.findById(event.binaryContentId()))
+      );
     }
   }
 }

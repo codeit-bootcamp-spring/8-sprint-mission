@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 @Configuration
 @EnableAsync
+@org.springframework.scheduling.annotation.EnableScheduling
 public class AsyncConfig {
 
   // 메서드 이름 변경 가능성 염두해서 빈 이름 명시

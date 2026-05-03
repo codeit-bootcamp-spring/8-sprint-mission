@@ -8,6 +8,9 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.ChannelCreatedEvent;
+import com.sprint.mission.discodeit.event.ChannelDeletedEvent;
+import com.sprint.mission.discodeit.event.ChannelUpdatedEvent;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.channel.PrivateChannelUpdateException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
@@ -24,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +43,7 @@ public class BasicChannelService implements ChannelService {
   private final ReadStatusRepository readStatusRepository;
   private final UserRepository userRepository;
   private final ChannelMapper channelMapper;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Override
   @Transactional
@@ -52,7 +57,9 @@ public class BasicChannelService implements ChannelService {
     Channel savedChannel = channelRepository.save(channel);
 
     log.info("[Channel] create public channel success channelId={}", savedChannel.getId());
-    return channelMapper.toDto(savedChannel);
+    ChannelDto dto = channelMapper.toDto(savedChannel);
+    eventPublisher.publishEvent(new ChannelCreatedEvent(dto));
+    return dto;
   }
 
   @Override
@@ -77,7 +84,9 @@ public class BasicChannelService implements ChannelService {
     }
 
     log.info("[Channel] create private channel success channelId={}", savedChannel.getId());
-    return channelMapper.toDto(savedChannel);
+    ChannelDto dto = channelMapper.toDto(savedChannel);
+    eventPublisher.publishEvent(new ChannelCreatedEvent(dto));
+    return dto;
   }
 
   @Override
@@ -115,8 +124,9 @@ public class BasicChannelService implements ChannelService {
     channel.update(request.newName(), request.newDescription());
 
     log.info("[Channel] update channel success channelId={}", channel.getId());
-
-    return channelMapper.toDto(channel);
+    ChannelDto dto = channelMapper.toDto(channel);
+    eventPublisher.publishEvent(new ChannelUpdatedEvent(dto));
+    return dto;
   }
 
   @Override
@@ -127,9 +137,11 @@ public class BasicChannelService implements ChannelService {
 
     log.info("[Channel] delete channel start channelId={}", id);
 
-    if (!channelRepository.existsById(id)) {
-      throw new ChannelNotFoundException(id);
-    }
+    Channel channel = channelRepository.findById(id)
+        .orElseThrow(() -> new ChannelNotFoundException(id));
+
+    // SSE 이벤트용 DTO는 삭제 전에 캡처
+    ChannelDto dto = channelMapper.toDto(channel);
 
     // 채널의 메시지와 첨부파일 삭제
     messageRepository.findAllByChannel_Id(id).forEach(messageRepository::delete);
@@ -141,5 +153,6 @@ public class BasicChannelService implements ChannelService {
     channelRepository.deleteById(id);
 
     log.info("[Channel] delete channel success channelId={}", id);
+    eventPublisher.publishEvent(new ChannelDeletedEvent(dto));
   }
 }

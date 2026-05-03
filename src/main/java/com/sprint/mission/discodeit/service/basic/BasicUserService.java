@@ -9,6 +9,9 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserRole;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
+import com.sprint.mission.discodeit.event.UserCreatedEvent;
+import com.sprint.mission.discodeit.event.UserDeletedEvent;
+import com.sprint.mission.discodeit.event.UserUpdatedEvent;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
@@ -67,7 +70,9 @@ public class BasicUserService implements UserService {
     User savedUser = userRepository.save(user);
 
     log.info("[User] create success userId={}", savedUser.getId());
-    return userMapper.toDto(user, isUserOnline(savedUser.getId()));
+    UserDto dto = userMapper.toDto(user, isUserOnline(savedUser.getId()));
+    eventPublisher.publishEvent(new UserCreatedEvent(dto));
+    return dto;
   }
 
   @Override
@@ -116,22 +121,28 @@ public class BasicUserService implements UserService {
     user.update(request.newUsername(), request.newEmail(), passwordToUpdate, newProfile);
 
     log.info("[User] update success userId={}", user.getId());
-    return userMapper.toDto(user, isUserOnline(user.getId()));
+    UserDto dto = userMapper.toDto(user, isUserOnline(user.getId()));
+    eventPublisher.publishEvent(new UserUpdatedEvent(dto));
+    return dto;
   }
 
   @Override
   @Transactional
   @PreAuthorize("#id == authentication.principal.userDto.id")
-  @CacheEvict(value = "userList", allEntries = true) // 삭제 시 무효화
+  @CacheEvict(value = "userList", allEntries = true)
   public void delete(UUID id) {
     log.info("[USER] delete start userId={}", id);
 
-    if (!userRepository.existsById(id)) {
-      throw new UserNotFoundException(id);
-    }
+    User user = userRepository.findById(id)
+        .orElseThrow(() -> new UserNotFoundException(id));
+
+    // SSE 이벤트용 DTO는 삭제 전에 캡처
+    UserDto dto = userMapper.toDto(user, isUserOnline(id));
+
+    userRepository.deleteById(id);
 
     log.info("[User] delete success userId={}", id);
-    userRepository.deleteById(id);
+    eventPublisher.publishEvent(new UserDeletedEvent(dto));
   }
 
   @Override
@@ -158,7 +169,9 @@ public class BasicUserService implements UserService {
     eventPublisher.publishEvent(new RoleUpdatedEvent(userId, oldRole, newRole));
 
     jwtRegistry.invalidateJwtInformationByUserId(userId);
-    return userMapper.toDto(user, isUserOnline(userId));
+    UserDto dto = userMapper.toDto(user, isUserOnline(userId));
+    eventPublisher.publishEvent(new UserUpdatedEvent(dto));
+    return dto;
   }
 
   // 비즈니스 로직 헬퍼 메서드
