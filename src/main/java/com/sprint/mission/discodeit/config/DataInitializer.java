@@ -178,19 +178,19 @@ public class DataInitializer {
   };
 
   /**
-   * 프로필 시드 이미지: {@code static/{username}.png} 우선, 없으면 {@code seed-profiles/} 동일 이름(png/svg).
+   * 프로필 시드 이미지: {@code static/images/{username}.png} → 같은 경로 .svg → {@code seed-profiles/} 동일 이름.
    */
   private Optional<BinaryContentCreateRequest> loadSeedProfileImage(String username) {
     try {
-      ClassPathResource staticPng = new ClassPathResource("static/" + username + ".png");
+      ClassPathResource imagesPng = new ClassPathResource("static/images/" + username + ".png");
+      ClassPathResource imagesSvg = new ClassPathResource("static/images/" + username + ".svg");
       ClassPathResource seedPng = new ClassPathResource("seed-profiles/" + username + ".png");
-      ClassPathResource staticSvg = new ClassPathResource("static/" + username + ".svg");
       ClassPathResource seedSvg = new ClassPathResource("seed-profiles/" + username + ".svg");
       byte[] bytes;
       String contentType;
       String fileName;
-      if (staticPng.exists()) {
-        try (InputStream is = staticPng.getInputStream()) {
+      if (imagesPng.exists()) {
+        try (InputStream is = imagesPng.getInputStream()) {
           bytes = is.readAllBytes();
         }
         if (bytes.length == 0) {
@@ -207,8 +207,8 @@ public class DataInitializer {
         }
         contentType = "image/png";
         fileName = username + ".png";
-      } else if (staticSvg.exists()) {
-        try (InputStream is = staticSvg.getInputStream()) {
+      } else if (imagesSvg.exists()) {
+        try (InputStream is = imagesSvg.getInputStream()) {
           bytes = is.readAllBytes();
         }
         if (bytes.length == 0) {
