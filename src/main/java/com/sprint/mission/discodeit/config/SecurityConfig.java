@@ -72,7 +72,10 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST, "/api/users", "/api/auth/login", "/api/auth/refresh",
                 "/api/auth/logout").permitAll()
 
-            .requestMatchers("/api/binaryContents/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/binaryContents/download/**", "/api/binaryContents/view/**").permitAll()
+
+            .requestMatchers("/actuator/**").permitAll()
+            .requestMatchers("/error").permitAll()
 
             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**")
             .permitAll()
