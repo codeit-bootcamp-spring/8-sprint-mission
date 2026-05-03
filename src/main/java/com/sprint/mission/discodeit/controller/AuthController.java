@@ -13,7 +13,9 @@ import com.sprint.mission.discodeit.response.ErrorResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.csrf.CsrfToken;
@@ -49,7 +51,7 @@ public class AuthController {
 
     @PostMapping(path = "refresh")
     public ResponseEntity<?> refresh(
-            @CookieValue(value = "REFRESH_TOKEN", required = false) String refreshToken,
+            @CookieValue(value = JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
             HttpServletResponse response
     ) {
         if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken) || !jwtRegistry.hasActiveJwtInformationByRefreshToken(refreshToken)) {
@@ -64,15 +66,21 @@ public class AuthController {
         String newAccessToken = jwtTokenProvider.createAccessToken(username);
         String newRefreshToken = jwtTokenProvider.createRefreshToken(username);
 
+        java.time.Instant newAccessExpiry = jwtTokenProvider.getExpirationTimeFromToken(newAccessToken);
+        java.time.Instant newRefreshExpiry = jwtTokenProvider.getExpirationTimeFromToken(newRefreshToken);
+
         // 기존 토큰 밀어내기 Rotation
-        JwtInformation newInfo = new JwtInformation(userDetails.getUserDto(), newAccessToken, newRefreshToken);
+        JwtInformation newInfo = new JwtInformation(userDetails.getUserDto(), newAccessToken, newRefreshToken, newAccessExpiry, newRefreshExpiry);
         jwtRegistry.rotateJwtInformation(refreshToken, newInfo);
 
-        Cookie refreshTokenCookie = new Cookie("REFRESH_TOKEN", newRefreshToken);
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60);
-        response.addCookie(refreshTokenCookie);
+        ResponseCookie refreshTokenCookie = ResponseCookie.from(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME, newRefreshToken)
+                .httpOnly(true)
+                .secure(true) // HTTPS 환경에서만 전송
+                .sameSite("Strict") // CSRF 공격 방지
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60)
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
         return ResponseEntity.ok(new JwtDto(userDetails.getUserDto(), newAccessToken));
     }

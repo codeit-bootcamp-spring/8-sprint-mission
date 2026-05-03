@@ -11,12 +11,14 @@ import com.sprint.mission.discodeit.mapper.ReadStatusMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.cache.CacheNames;
 import com.sprint.mission.discodeit.service.ReadStatusService;
-import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,9 +30,11 @@ public class BasicReadStatusService implements ReadStatusService {
 		private final UserRepository userRepository;
 		private final ChannelRepository channelRepository;
 		private final ReadStatusMapper readStatusMapper;
+		private final CacheManager cacheManager;
 
 		@Transactional
 		@Override
+		@CacheEvict(cacheNames = CacheNames.CHANNELS_BY_USER, key = "#request.userId()")
 		public ReadStatusDto create(ReadStatusCreateRequest request) {
 				UUID userId = request.userId();
 				UUID channelId = request.channelId();
@@ -74,21 +78,26 @@ public class BasicReadStatusService implements ReadStatusService {
 		@Transactional
 		@Override
 		public ReadStatusDto update(UUID readStatusId, ReadStatusUpdateRequest request) {
-				Instant newLastReadAt = request.newLastReadAt();
 				ReadStatus readStatus = readStatusRepository.findById(readStatusId)
 						.orElseThrow(
 								() -> new NoSuchElementException(
 										"ReadStatus with id " + readStatusId + " not found"));
-				readStatus.update(newLastReadAt);
+				readStatus.update(request.newLastReadAt(), request.newNotificationEnabled());
 				return readStatusMapper.toDto(readStatus);
 		}
 
 		@Transactional
 		@Override
 		public void delete(UUID readStatusId) {
-				if (!readStatusRepository.existsById(readStatusId)) {
-						throw new NoSuchElementException("ReadStatus with id " + readStatusId + " not found");
+				ReadStatus readStatus = readStatusRepository.findById(readStatusId)
+						.orElseThrow(
+								() -> new NoSuchElementException(
+										"ReadStatus with id " + readStatusId + " not found"));
+				UUID userId = readStatus.getUser().getId();
+				readStatusRepository.delete(readStatus);
+				var cache = cacheManager.getCache(CacheNames.CHANNELS_BY_USER);
+				if (cache != null) {
+						cache.evict(userId);
 				}
-				readStatusRepository.deleteById(readStatusId);
 		}
 }

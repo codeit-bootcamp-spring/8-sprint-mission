@@ -9,6 +9,8 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
@@ -16,7 +18,6 @@ import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.MessageService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -24,6 +25,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,17 +43,19 @@ public class BasicMessageService implements MessageService {
 		private final ChannelRepository channelRepository;
 		private final UserRepository userRepository;
 		private final MessageMapper messageMapper;
-		private final BinaryContentStorage binaryContentStorage;
+		// private final BinaryContentStorage binaryContentStorage;
 		private final BinaryContentRepository binaryContentRepository;
 		private final PageResponseMapper pageResponseMapper;
+		private final ApplicationEventPublisher applicationEventPublisher;
 
 		/**
-		 * 메시지 생성 (채널/작성자 없으면 예외).
+		 * 메시지 ?성 (채널/?성???으??외).
 		 */
 		@Transactional
 		@Override
 		public MessageDto create(MessageCreateRequest messageCreateRequest,
 				List<BinaryContentCreateRequest> binaryContentCreateRequests) {
+				long wallStartNs = System.nanoTime();
 				UUID channelId = messageCreateRequest.channelId();
 				UUID authorId = messageCreateRequest.authorId();
 				log.debug("메시지 생성, channelId={}, authorId={}, attachments={}",
@@ -78,7 +82,7 @@ public class BasicMessageService implements MessageService {
 								BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
 										contentType);
 								binaryContentRepository.save(binaryContent);
-								binaryContentStorage.put(binaryContent.getId(), bytes);
+								applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
 								return binaryContent;
 						})
 						.toList();
@@ -92,8 +96,19 @@ public class BasicMessageService implements MessageService {
 				);
 
 				messageRepository.save(message);
-				log.info("메시지 생성 완료, messageId={}, channelId={}, authorId={}",
-						message.getId(), channelId, authorId);
+				applicationEventPublisher.publishEvent(
+						new MessageCreatedEvent(
+								message.getId(),
+								channel.getId(),
+								author.getId(),
+								author.getUsername(),
+								channelDisplayName(channel),
+								content != null ? content : ""));
+				long wallMs = (System.nanoTime() - wallStartNs) / 1_000_000L;
+				log.info(
+						"메시지 생성 완료, messageId={}, channelId={}, authorId={}, wallTimeMs={} (첨부 {}건의 바이너리 저장은 AFTER_COMMIT 비동기 리스너에서 수행되며, "
+								+ "동기로 리스너까지 기다리면 첨부당 약 3초 지연이 그대로 API 응답 시간에 합산됩니다.)",
+						message.getId(), channelId, authorId, wallMs, binaryContentCreateRequests.size());
 				return messageMapper.toDto(message);
 		}
 
@@ -187,5 +202,10 @@ public class BasicMessageService implements MessageService {
 				}
 				messageRepository.deleteById(messageId);
 				log.info("메시지 삭제 완료, messageId={}", messageId);
+		}
+
+		private static String channelDisplayName(Channel channel) {
+				String name = channel.getName();
+				return (name != null && !name.isBlank()) ? name : "채널";
 		}
 }

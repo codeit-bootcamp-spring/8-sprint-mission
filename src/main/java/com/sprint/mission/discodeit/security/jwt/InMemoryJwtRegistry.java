@@ -16,16 +16,16 @@ public class InMemoryJwtRegistry implements JwtRegistry {
 
     // <userId, Queue<JwtInformation>>
     private final Map<UUID, Queue<JwtInformation>> origin = new ConcurrentHashMap<>();
-    private final int maxActiveJwtCount = 1;
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final JwtProperties jwtProperties;
 
     @Override
     public void registerJwtInformation(JwtInformation jwtInformation) {
         UUID userId = jwtInformation.getUserDto().id();
         Queue<JwtInformation> queue = origin.computeIfAbsent(userId, k -> new ConcurrentLinkedQueue<>());
         queue.add(jwtInformation);
-        while (queue.size() > maxActiveJwtCount) {
+        while (queue.size() > jwtProperties.maxActiveJwtCount()) {
             queue.poll(); // 가장 오래된 토큰 제거 (동시 로그인 제한)
         }
     }
@@ -38,7 +38,7 @@ public class InMemoryJwtRegistry implements JwtRegistry {
     @Override
     public boolean hasActiveJwtInformationByUserId(UUID userId) {
         Queue<JwtInformation> queue = origin.get(userId);
-        return queue != null && !queue.isEmpty();
+        return queue != null && queue.stream().anyMatch(JwtInformation::isActive);
     }
 
     @Override
@@ -57,22 +57,25 @@ public class InMemoryJwtRegistry implements JwtRegistry {
 
     @Override
     public void rotateJwtInformation(String refreshToken, JwtInformation newJwtInformation) {
-        origin.values().forEach(queue -> {
+        UUID userId = newJwtInformation.getUserDto().id();
+        Queue<JwtInformation> queue = origin.get(userId);
+
+        if (queue != null) {
             boolean removed = queue.removeIf(info -> info.getRefreshToken().equals(refreshToken));
             if (removed) {
                 queue.add(newJwtInformation);
-                while (queue.size() > maxActiveJwtCount) {
+                while (queue.size() > jwtProperties.maxActiveJwtCount()) {
                     queue.poll();
                 }
             }
-        });
+        }
     }
 
     @Scheduled(fixedDelay = 1000 * 60 * 5)
     @Override
     public void clearExpiredJwtInformation() {
         origin.values().forEach(queue -> {
-            queue.removeIf(info -> !jwtTokenProvider.validateToken(info.getRefreshToken()));
+            queue.removeIf(JwtInformation::isRefreshTokenExpired);
         });
 
         // 빈 사용자 큐 제거

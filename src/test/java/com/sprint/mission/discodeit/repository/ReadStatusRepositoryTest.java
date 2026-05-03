@@ -68,6 +68,24 @@ class ReadStatusRepositoryTest {
   }
 
   @Test
+  @DisplayName("채널 유형에 따라 알림 여부가 초기화된다")
+  void notificationEnabled_defaultsByChannelType() {
+    User user = createTestUser("notifUser", "notif@example.com");
+    Channel publicChannel = createTestChannel(ChannelType.PUBLIC, "공개");
+    Channel privateChannel = createTestChannel(ChannelType.PRIVATE, "비공개");
+    Instant now = Instant.now();
+
+    ReadStatus publicRs = createTestReadStatus(user, publicChannel, now);
+    ReadStatus privateRs = createTestReadStatus(user, privateChannel, now);
+
+    entityManager.flush();
+    entityManager.clear();
+
+    assertThat(readStatusRepository.findById(publicRs.getId()).orElseThrow().isNotificationEnabled()).isFalse();
+    assertThat(readStatusRepository.findById(privateRs.getId()).orElseThrow().isNotificationEnabled()).isTrue();
+  }
+
+  @Test
   @DisplayName("사용자 ID로 모든 읽음 상태를 조회할 수 있다")
   void findAllByUserId_ReturnsReadStatuses() {
     // given

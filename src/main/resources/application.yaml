@@ -31,6 +31,36 @@ spring:
         format_sql: true
         use_sql_comments: true
 
+  # Caffeine: recordStats → /actuator/metrics/cache.* , /actuator/caches
+  cache:
+    type: redis
+    cache-names:
+      - channels
+      - notifications
+      - users
+    caffeine:
+      spec: >
+        maximumSize=100,
+        expireAfterAccess=600s,
+        recordStats
+    redis:
+      enable-statistics: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: discodeit-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
 # 3. BinaryContent 저장소 설정
 # JWT 설정 추가
 discodeit:
@@ -38,13 +68,14 @@ discodeit:
     secret: ${JWT_SECRET:default-secret-key-that-is-at-least-32-bytes-long!123}
     access-expiration-ms: 3600000
     refresh-expiration-ms: 604800000
+    max-active-jwt-count: 1
   storage:
     type: local
     local:
       root-path: ./storage/binary-contents
-  jwt:
-    secret-key: your-very-long-and-secure-random-secret-key-placeholder
-    access-token-expiration: 3600000 # 1시간 (ms)
+  notification:
+    local-event:
+      enabled: false
 
 
 # 4. Actuator 엔드포인트 설정 (Admin 서버가 데이터를 가져가는 통로)
@@ -54,10 +85,23 @@ management:
       exposure:
         include: "*" # 모든 정보를 노출해서 Admin 서버가 잘 보이게 합니다
   endpoint:
+    caches:
+      enabled: true
     health:
       show-details: always
     info:
       enabled: true
+  metrics:
+    enable:
+      cache: true
+  observations:
+    annotations:
+      enabled: true
+
+# 캐시 적용 전후 SQL 비교용 (동일 API 2회 호출 시 2회째 Hibernate SQL 감소 여부 확인)
+logging:
+  level:
+    org.hibernate.SQL: debug
 
 # 5. Actuator /info 노출 정보
 info:
@@ -66,4 +110,3 @@ info:
     version: 1.7.0
     java-version: "17"
     spring-boot-version: 3.5.9 # 실제 실행 중인 버전으로 수정
-

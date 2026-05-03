@@ -92,7 +92,8 @@ class ReadStatusApiIntegrationTest {
 						.andExpect(jsonPath("$.id", notNullValue()))
 						.andExpect(jsonPath("$.userId", is(user.id().toString())))
 						.andExpect(jsonPath("$.channelId", is(channel.id().toString())))
-						.andExpect(jsonPath("$.lastReadAt", is(lastReadAt.toString())));
+						.andExpect(jsonPath("$.lastReadAt", is(lastReadAt.toString())))
+						.andExpect(jsonPath("$.notificationEnabled", is(false)));
 		}
 
 		@Test
@@ -177,7 +178,8 @@ class ReadStatusApiIntegrationTest {
 				// 읽음 상태 업데이트 요청
 				Instant newLastReadAt = Instant.now();
 				ReadStatusUpdateRequest updateRequest = new ReadStatusUpdateRequest(
-						newLastReadAt
+						newLastReadAt,
+						true
 				);
 
 				String requestBody = objectMapper.writeValueAsString(updateRequest);
@@ -190,7 +192,8 @@ class ReadStatusApiIntegrationTest {
 						.andExpect(jsonPath("$.id", is(readStatusId.toString())))
 						.andExpect(jsonPath("$.userId", is(user.id().toString())))
 						.andExpect(jsonPath("$.channelId", is(channel.id().toString())))
-						.andExpect(jsonPath("$.lastReadAt", is(newLastReadAt.toString())));
+						.andExpect(jsonPath("$.lastReadAt", is(newLastReadAt.toString())))
+						.andExpect(jsonPath("$.notificationEnabled", is(true)));
 		}
 
 		@Test
@@ -200,7 +203,8 @@ class ReadStatusApiIntegrationTest {
 				UUID nonExistentReadStatusId = UUID.randomUUID();
 
 				ReadStatusUpdateRequest updateRequest = new ReadStatusUpdateRequest(
-						Instant.now()
+						Instant.now(),
+						null
 				);
 
 				String requestBody = objectMapper.writeValueAsString(updateRequest);

@@ -1,9 +1,12 @@
 package com.sprint.mission.discodeit.security.jwt;
 
-import jakarta.servlet.http.Cookie;
+import com.sprint.mission.discodeit.cache.CacheNames;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
@@ -15,25 +18,33 @@ import java.util.Arrays;
 public class JwtLogoutHandler implements LogoutHandler {
 
     private final JwtRegistry jwtRegistry;
+    private final CacheManager cacheManager;
 
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         if (request.getCookies() != null) {
             Arrays.stream(request.getCookies())
-                    .filter(cookie -> cookie.getName().equals("REFRESH_TOKEN"))
+                    .filter(cookie -> cookie.getName().equals(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME))
                     .findFirst()
                     .ifPresent(cookie -> {
                         String refreshToken = cookie.getValue();
-                        if (jwtRegistry instanceof InMemoryJwtRegistry inMemoryJwtRegistry) {
-                            inMemoryJwtRegistry.invalidateJwtInformationByRefreshToken(refreshToken);
-                        }
+                        jwtRegistry.invalidateJwtInformationByRefreshToken(refreshToken);
+
+                        // 쿠키 삭제 및 Secure/SameSite 속성 동일하게 지정
+                        ResponseCookie deleteCookie = ResponseCookie.from(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME, "")
+                                .httpOnly(true)
+                                .secure(true) // 삭제 시에도 속성을 맞춰주는게 좋습니다.
+                                .sameSite("Strict")
+                                .path("/")
+                                .maxAge(0)
+                                .build();
+
+                        response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
                     });
         }
-
-        Cookie cookie = new Cookie("REFRESH_TOKEN", null);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        cookie.setMaxAge(0); // Expire immediately
-        response.addCookie(cookie);
+        var usersCache = cacheManager.getCache(CacheNames.USERS_ALL);
+        if (usersCache != null) {
+            usersCache.clear();
+        }
     }
 }

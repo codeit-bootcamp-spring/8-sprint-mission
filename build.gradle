@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.sprint.mission'
-version = '2.1-M10'
+version = '2.2-M11'
 
 // 2. Repositories 블록은 최상위 레벨에 위치해야 합니다.
 repositories {
@@ -24,6 +24,21 @@ java {
 dependencies {
     // Spring Boot Dependency
     implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Spring Retry (@Retryable) — AOP 프록시 필요
+    implementation 'org.springframework.retry:spring-retry'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+    // Spring Cache + Caffeine
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+
+    // Spring Kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    // Redis Cache
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // Spring Validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
