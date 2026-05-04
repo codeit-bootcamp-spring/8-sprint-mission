@@ -29,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -60,7 +59,7 @@ public class BasicChannelService implements ChannelService {
 
         ChannelDto channelDto = this.toDto(savedChannel);
 
-        eventPublisher.publishEvent(new ChannelCreatedEvent(Set.of(), channelDto));
+        eventPublisher.publishEvent(new ChannelCreatedEvent(channelDto, savedChannel.getCreatedAt()));
 
         log.info("Service: Public 채널 생성 완료 - ID: {}", savedChannel.getId());
 
@@ -92,7 +91,7 @@ public class BasicChannelService implements ChannelService {
 
         ChannelDto channelDto = this.toDto(savedChannel);
 
-        eventPublisher.publishEvent(new ChannelCreatedEvent(request.participantIds(), channelDto));
+        eventPublisher.publishEvent(new ChannelCreatedEvent(channelDto, savedChannel.getCreatedAt()));
 
         log.info("Service - Private 채널 생성 완료 - ID: {}", savedChannel.getId());
         return channelDto;
@@ -138,14 +137,20 @@ public class BasicChannelService implements ChannelService {
             throw new PrivateChannelModificationNotAllowedException(channelId);
         }
 
+        ChannelDto prevChannel = this.toDto(channel);
+
         channel.update(request.newName(), request.newDescription());
 
-        ChannelDto channelDto = this.toDto(channel);
+        ChannelDto updatedChannelDto = this.toDto(channel);
 
-        eventPublisher.publishEvent(new ChannelUpdatedEvent(channelDto));
+        eventPublisher.publishEvent(new ChannelUpdatedEvent(
+                prevChannel,
+                updatedChannelDto,
+                channel.getUpdatedAt())
+        );
 
         log.info("Service: Public 채널 수정 완료 - ID: {}", channelId);
-        return channelDto;
+        return updatedChannelDto;
     }
 
     @Override
@@ -167,7 +172,7 @@ public class BasicChannelService implements ChannelService {
 
         channelRepository.delete(channel);
 
-        eventPublisher.publishEvent(new ChannelDeletedEvent(channelDto));
+        eventPublisher.publishEvent(new ChannelDeletedEvent(channelDto, Instant.now()));
 
         log.info("Service: 채널 삭제 성공 - ID: {}", channelId);
     }

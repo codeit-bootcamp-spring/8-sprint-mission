@@ -3,12 +3,11 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.dto.NotificationDto;
 import com.sprint.mission.discodeit.entity.Notification;
 import com.sprint.mission.discodeit.event.Sse.NotificationCreatedEvent;
-import com.sprint.mission.discodeit.exception.NotificationException.NotificationNotFoundException;
 import com.sprint.mission.discodeit.exception.NotificationException.NotificationAccessDeniedException;
+import com.sprint.mission.discodeit.exception.NotificationException.NotificationNotFoundException;
 import com.sprint.mission.discodeit.mapper.NotificationMapper;
 import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.service.NotificationService;
-import com.sprint.mission.discodeit.service.Sse.SseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
@@ -21,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -87,10 +87,11 @@ public class BasicNotificationService implements NotificationService {
         List<Notification> savedNotifications = notificationRepository.saveAll(notifications);
         evictNotificationCache(receiverIds);
 
-        for (Notification notification : savedNotifications) {
-            NotificationDto notificationDto = notificationMapper.toDto(notification);
-            eventPublisher.publishEvent(new NotificationCreatedEvent(notificationDto));
-        }
+        List<NotificationDto> notificationDtos = savedNotifications.stream()
+                .map(notificationMapper::toDto)
+                .toList();
+
+        eventPublisher.publishEvent(new NotificationCreatedEvent(notificationDtos, Instant.now()));
 
         log.info("새 알림 생성 완료했습니다. receiverIds: {}", receiverIds);
     }

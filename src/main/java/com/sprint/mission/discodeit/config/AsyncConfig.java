@@ -39,7 +39,7 @@ public class AsyncConfig implements AsyncConfigurer {
     }
 
     @Bean(name = "asyncTaskExecutor")
-    public ThreadPoolTaskExecutor messageTaskExecutor(
+    public ThreadPoolTaskExecutor asyncTaskExecutor(
             @Value("4") int core,
             @Value("8") int max,
             @Value("500") int queue,

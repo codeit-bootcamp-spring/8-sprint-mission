@@ -8,7 +8,6 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.Sse.BinaryContent.BinaryContentCreatedEvent;
-import com.sprint.mission.discodeit.event.Sse.BinaryContent.BinaryContentDeletedEvent;
 import com.sprint.mission.discodeit.event.Sse.User.UserCreatedEvent;
 import com.sprint.mission.discodeit.event.Sse.User.UserDeletedEvent;
 import com.sprint.mission.discodeit.event.Sse.User.UserUpdatedEvent;
@@ -32,6 +31,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -85,7 +85,7 @@ public class BasicUserService implements UserService {
 
         UserDto userDto = userMapper.toDto(savedUser);
 
-        eventPublisher.publishEvent(new UserCreatedEvent(userDto));
+        eventPublisher.publishEvent(new UserCreatedEvent(userDto, savedUser.getCreatedAt()));
 
         log.info("Service: 유저 생성 완료 및 DB 저장 완료 - ID: {}", savedUser.getId());
 
@@ -146,9 +146,7 @@ public class BasicUserService implements UserService {
         BinaryContent newProfile = user.getProfile();
         if (optionalProfileCreateRequest.isPresent()) {
             if (user.getProfile() != null) {
-                UUID userProfileId = user.getProfile().getId();
                 //byte를 저장해놓은 기존 파일 삭제
-                deletedEvent(newProfile.getId());
                 binaryContentRepository.delete(user.getProfile());
             }
             newProfile = saveBinaryContent(optionalProfileCreateRequest.get());
@@ -167,7 +165,7 @@ public class BasicUserService implements UserService {
 
         UserDto userDto = userMapper.toDto(user);
 
-        eventPublisher.publishEvent(new UserUpdatedEvent(userDto));
+        eventPublisher.publishEvent(new UserUpdatedEvent(userDto, user.getUpdatedAt()));
 
         if (requiredRelogin) {
             jwtRegistry.invalidateJwtInformationByUserId(userId);
@@ -204,7 +202,7 @@ public class BasicUserService implements UserService {
         messageRepository.deleteAllByAuthorId(userId);
         userRepository.delete(user);
 
-        eventPublisher.publishEvent(new UserDeletedEvent(userDto));
+        eventPublisher.publishEvent(new UserDeletedEvent(userDto, Instant.now()));
 
         log.info("Service: 사용자 DB 삭제 완료 - ID: {}", userId);
     }
@@ -228,14 +226,6 @@ public class BasicUserService implements UserService {
         BinaryContentCreatedEvent event = new BinaryContentCreatedEvent(
                 id,
                 bytes
-        );
-        eventPublisher.publishEvent(event);
-    }
-
-    // 삭제 이벤트 발생
-    private void deletedEvent(UUID id) {
-        BinaryContentDeletedEvent event = new BinaryContentDeletedEvent(
-                id
         );
         eventPublisher.publishEvent(event);
     }

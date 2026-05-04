@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.event.listener.sse;
 
+import com.sprint.mission.discodeit.dto.dto.NotificationDto;
 import com.sprint.mission.discodeit.event.Sse.NotificationCreatedEvent;
 import com.sprint.mission.discodeit.service.Sse.SseService;
 import lombok.RequiredArgsConstructor;
@@ -9,11 +10,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
-@Component
+//@Component
 @RequiredArgsConstructor
 public class NotificationSseDeliveryListener {
 
@@ -22,13 +24,10 @@ public class NotificationSseDeliveryListener {
     @Async("asyncTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(NotificationCreatedEvent event) {
-        UUID receiverId = event.notificationDto().receiverId();
-        // SSE 기본 전송(구독자)
-        try {
-            sseService.send(Set.of(receiverId), "notifications.created", event.notificationDto());
-            log.debug("SSE 알림 생성 이벤트 전송 성공: notificationId: {}", receiverId);
-        } catch (Exception e) {
-            log.error("SSE 알림 생성 이벤트 전송 실패 : notificationId: {}", receiverId);
-        }
+        List<NotificationDto> notifications = event.getData();
+        notifications.forEach(notification -> {
+            UUID receiverId = notification.receiverId();
+            sseService.send(Set.of(receiverId), "notification.created", notification);
+        });
     }
 }

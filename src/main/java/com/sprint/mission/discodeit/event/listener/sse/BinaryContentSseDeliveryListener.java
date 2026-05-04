@@ -12,7 +12,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import java.util.UUID;
 
 @Slf4j
-@Component
+//@Component
 @RequiredArgsConstructor
 public class BinaryContentSseDeliveryListener {
 

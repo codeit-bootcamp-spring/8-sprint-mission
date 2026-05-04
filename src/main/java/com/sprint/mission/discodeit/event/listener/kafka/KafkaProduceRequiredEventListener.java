@@ -5,6 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
+import com.sprint.mission.discodeit.event.Sse.Channel.ChannelCreatedEvent;
+import com.sprint.mission.discodeit.event.Sse.Channel.ChannelDeletedEvent;
+import com.sprint.mission.discodeit.event.Sse.Channel.ChannelUpdatedEvent;
+import com.sprint.mission.discodeit.event.Sse.NotificationCreatedEvent;
+import com.sprint.mission.discodeit.event.Sse.User.UserCreatedEvent;
+import com.sprint.mission.discodeit.event.Sse.User.UserDeletedEvent;
+import com.sprint.mission.discodeit.event.Sse.User.UserUpdatedEvent;
 import com.sprint.mission.discodeit.event.UserLoginOutEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +42,50 @@ public class KafkaProduceRequiredEventListener {
     }
 
     @Async("asyncTaskExecutor")
-    @EventListener
+    @TransactionalEventListener
     public void on(S3UploadFailedEvent event) {
+        sendKafka(event);
+    }
+
+    @Async("asyncTaskExecutor")
+    @TransactionalEventListener
+    public void on(NotificationCreatedEvent event) {
+        sendKafka(event);
+    }
+
+    @Async("asyncTaskExecutor")
+    @TransactionalEventListener
+    public void on(ChannelCreatedEvent event) {
+        sendKafka(event);
+    }
+
+    @Async("asyncTaskExecutor")
+    @TransactionalEventListener
+    public void on(ChannelUpdatedEvent event) {
+        sendKafka(event);
+    }
+
+    @Async("asyncTaskExecutor")
+    @TransactionalEventListener
+    public void on(ChannelDeletedEvent event) {
+        sendKafka(event);
+    }
+
+    @Async("asyncTaskExecutor")
+    @TransactionalEventListener
+    public void on(UserCreatedEvent event) {
+        sendKafka(event);
+    }
+
+    @Async("asyncTaskExecutor")
+    @TransactionalEventListener
+    public void on(UserUpdatedEvent event) {
+        sendKafka(event);
+    }
+
+    @Async("asyncTaskExecutor")
+    @TransactionalEventListener
+    public void on(UserDeletedEvent event) {
         sendKafka(event);
     }
 

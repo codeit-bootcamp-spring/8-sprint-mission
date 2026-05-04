@@ -14,7 +14,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import java.util.UUID;
 
 @Slf4j
-@Component
+// @Component
 @RequiredArgsConstructor
 public class UserSseDeliveryListener {
 
@@ -23,9 +23,9 @@ public class UserSseDeliveryListener {
     @Async("asyncTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(UserCreatedEvent event) {
-        UUID userId = event.userDto().id();
+        UUID userId = event.getData().id();
         try {
-            sseService.broadcast("users.created", event.userDto());
+            sseService.broadcast("users.created", event.getData());
             log.debug("SSE 유저 생성 이벤트 전송 성공 : userId: {}", userId);
         } catch (Exception e) {
             log.error("SSE 유저 생성 이벤트 전송 실패: userId: {}, error: {}", userId, e.getMessage());
@@ -35,9 +35,9 @@ public class UserSseDeliveryListener {
     @Async("asyncTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(UserUpdatedEvent event) {
-        UUID userId = event.userDto().id();
+        UUID userId = event.getData().id();
         try {
-            sseService.broadcast("users.updated", event.userDto());
+            sseService.broadcast("users.updated", event.getData());
             log.debug("SSE 유저 수정 이벤트 전송 성공 : userId: {}", userId);
         } catch (Exception e) {
             log.error("SSE 유저 수정 이벤트 전송 실패: userId: {}, error: {}", userId, e.getMessage());
@@ -47,9 +47,9 @@ public class UserSseDeliveryListener {
     @Async("asyncTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(UserDeletedEvent event) {
-        UUID userId = event.userDto().id();
+        UUID userId = event.getData().id();
         try {
-            sseService.broadcast("users.updated", event.userDto());
+            sseService.broadcast("users.updated", event.getData());
             log.debug("SSE 유저 삭제 이벤트 전송 성공 : userId: {}", userId);
         } catch (Exception e) {
             log.error("SSE 유저 삭제 이벤트 전송 실패: userId: {}, error: {}", userId, e.getMessage());

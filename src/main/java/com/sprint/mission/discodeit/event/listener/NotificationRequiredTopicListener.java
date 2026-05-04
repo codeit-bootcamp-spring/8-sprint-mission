@@ -39,10 +39,7 @@ public class NotificationRequiredTopicListener {
 
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(
-            topics = "discodeit.MessageCreatedEvent",
-            groupId = "${spring.kafka.consumer.group-id}"
-    )
+    @KafkaListener(topics = "discodeit.MessageCreatedEvent")
     public void onMessageCreatedEvent(String kafkaEvent) {
         try {
             MessageCreatedEvent event = objectMapper.readValue(kafkaEvent, MessageCreatedEvent.class);
@@ -72,10 +69,7 @@ public class NotificationRequiredTopicListener {
         }
     }
 
-    @KafkaListener(
-            topics = "discodeit.RoleUpdatedEvent",
-            groupId = "${spring.kafka.consumer.group-id}"
-    )
+    @KafkaListener(topics = "discodeit.RoleUpdatedEvent")
     public void onRoleUpdatedEvent(String kafkaEvent) {
         try {
             RoleUpdatedEvent event = objectMapper.readValue(kafkaEvent, RoleUpdatedEvent.class);
@@ -92,10 +86,7 @@ public class NotificationRequiredTopicListener {
         }
     }
 
-    @KafkaListener(
-            topics = "discodeit.S3UploadFailedEvent",
-            groupId = "${spring.kafka.consumer.group-id}"
-    )
+    @KafkaListener(topics = "discodeit.S3UploadFailedEvent")
     public void onS3UploadFailedEvent(String kafkaEvent) {
         try {
             S3UploadFailedEvent event = objectMapper.readValue(kafkaEvent, S3UploadFailedEvent.class);
@@ -123,22 +114,22 @@ public class NotificationRequiredTopicListener {
         }
     }
 
-    @KafkaListener(
-            topics = "discodeit.UserLoginOutEvent",
-            groupId = "${spring.kafka.consumer.group-id}"
-    )
-    public void onUserLoginOutEvent(String kafkaEvent) {
-        try {
-            UserLoginOutEvent event = objectMapper.readValue(kafkaEvent, UserLoginOutEvent.class);
-            UUID userId = event.userId();
-            boolean isLogin = event.isLogin();
-
-            String title = "온라인 상태 변경";
-            String content = isLogin ? "온라인" : "오프라인";
-
-            notificationService.create(Set.of(userId), title, content);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    @KafkaListener(
+//            topics = "discodeit.UserLoginOutEvent",
+//            groupId = "${spring.kafka.consumer.group-id}"
+//    )
+//    public void onUserLoginOutEvent(String kafkaEvent) {
+//        try {
+//            UserLoginOutEvent event = objectMapper.readValue(kafkaEvent, UserLoginOutEvent.class);
+//            UUID userId = event.userId();
+//            boolean isLogin = event.isLogin();
+//
+//            String title = "온라인 상태 변경";
+//            String content = isLogin ? "온라인" : "오프라인";
+//
+//            notificationService.create(Set.of(userId), title, content);
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 }

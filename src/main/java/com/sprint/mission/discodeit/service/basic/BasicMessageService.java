@@ -6,8 +6,8 @@ import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.*;
-import com.sprint.mission.discodeit.event.Sse.BinaryContent.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
+import com.sprint.mission.discodeit.event.Sse.BinaryContent.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.exception.ChannelExcption.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.MessageException.MessageNotFoundException;
 import com.sprint.mission.discodeit.exception.UserException.UserNotFoundException;
@@ -103,7 +103,8 @@ public class BasicMessageService implements MessageService {
         MessageDto dto = messageMapper.toDto(savedMessage);
         applicationEventPublisher.publishEvent(
                 new MessageCreatedEvent(
-                        dto, dto.createdAt()
+                        dto,
+                        dto.createdAt()
                 )
         );
         return dto;
@@ -176,7 +177,6 @@ public class BasicMessageService implements MessageService {
         log.info("Service: 메시지 삭제 완료 - ID: {}", messageId);
     }
 
-    // 생성 이벤트 발행 중복 코드
     private void createdEvent(UUID id, byte[] bytes) {
         BinaryContentCreatedEvent event = new BinaryContentCreatedEvent(
                 id,
