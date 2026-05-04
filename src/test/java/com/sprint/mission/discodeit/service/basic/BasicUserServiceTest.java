@@ -39,9 +39,6 @@ class BasicUserServiceTest {
   @Mock
   private PasswordEncoder passwordEncoder;
 
-  @Mock
-  private PasswordEncoder passwordEncoder;
-
   @InjectMocks
   private BasicUserService userService;
 
@@ -59,7 +56,7 @@ class BasicUserServiceTest {
     email = "test@example.com";
     password = "password123";
 
-    user = new User(username, email, password, null, Role.USER);
+    user = new User(username, email, password, null);
     ReflectionTestUtils.setField(user, "id", userId);
     userDto = new UserDto(userId, username, email, null, true, Role.USER);
   }

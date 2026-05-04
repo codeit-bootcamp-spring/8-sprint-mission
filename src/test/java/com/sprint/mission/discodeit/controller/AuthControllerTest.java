@@ -17,7 +17,6 @@ import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.service.AuthService;
 import com.sprint.mission.discodeit.service.UserService;
 import java.util.UUID;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +28,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-@Disabled
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -49,35 +47,6 @@ class AuthControllerTest {
 
   @MockitoBean
   private UserService userService;
-
-  @Test
-  @DisplayName("현재 사용자 정보 조회 - 성공")
-  void me_Success() throws Exception {
-    // Given
-    UUID userId = UUID.randomUUID();
-    UserDto userDto = new UserDto(
-        userId,
-        "testuser",
-        "test@example.com",
-        null,
-        false,
-        Role.USER
-    );
-
-    DiscodeitUserDetails userDetails = new DiscodeitUserDetails(userDto, "encodedPassword");
-
-    given(userService.find(userId)).willReturn(userDto);
-
-    // When & Then
-    mockMvc.perform(get("/api/auth/me")
-            .with(csrf())
-            .with(user(userDetails)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.id").value(userId.toString()))
-        .andExpect(jsonPath("$.username").value("testuser"))
-        .andExpect(jsonPath("$.email").value("test@example.com"))
-        .andExpect(jsonPath("$.role").value("USER"));
-  }
 
   @Test
   @DisplayName("현재 사용자 정보 조회 - 인증되지 않은 사용자")

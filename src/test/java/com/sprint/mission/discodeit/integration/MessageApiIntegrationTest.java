@@ -87,8 +87,7 @@ class MessageApiIntegrationTest {
     // 메시지 생성 요청
     MessageCreateRequest createRequest = new MessageCreateRequest(
         "테스트 메시지 내용입니다.",
-        channel.id(),
-        user.id()
+        channel.id()
     );
 
     MockMultipartFile messageCreateRequestPart = new MockMultipartFile(
@@ -126,7 +125,6 @@ class MessageApiIntegrationTest {
     // Given
     MessageCreateRequest invalidRequest = new MessageCreateRequest(
         "", // 내용이 비어있음
-        UUID.randomUUID(),
         UUID.randomUUID()
     );
 
@@ -169,18 +167,16 @@ class MessageApiIntegrationTest {
     // 메시지 생성
     MessageCreateRequest messageRequest1 = new MessageCreateRequest(
         "첫 번째 메시지 내용입니다.",
-        channel.id(),
-        user.id()
+        channel.id()
     );
 
     MessageCreateRequest messageRequest2 = new MessageCreateRequest(
         "두 번째 메시지 내용입니다.",
-        channel.id(),
-        user.id()
+        channel.id()
     );
 
-    messageService.create(messageRequest1, new ArrayList<>());
-    messageService.create(messageRequest2, new ArrayList<>());
+    messageService.create(messageRequest1, user.id(), new ArrayList<>());
+    messageService.create(messageRequest2, user.id(), new ArrayList<>());
 
     // When & Then
     mockMvc.perform(get("/api/messages")
@@ -221,11 +217,10 @@ class MessageApiIntegrationTest {
     // 메시지 생성
     MessageCreateRequest createRequest = new MessageCreateRequest(
         "원본 메시지 내용입니다.",
-        channel.id(),
-        user.id()
+        channel.id()
     );
 
-    MessageDto createdMessage = messageService.create(createRequest, new ArrayList<>());
+    MessageDto createdMessage = messageService.create(createRequest, user.id(), new ArrayList<>());
     UUID messageId = createdMessage.id();
 
     // 메시지 업데이트 요청
@@ -304,11 +299,10 @@ class MessageApiIntegrationTest {
     // 메시지 생성
     MessageCreateRequest createRequest = new MessageCreateRequest(
         "삭제할 메시지 내용입니다.",
-        channel.id(),
-        user.id()
+        channel.id()
     );
 
-    MessageDto createdMessage = messageService.create(createRequest, new ArrayList<>());
+    MessageDto createdMessage = messageService.create(createRequest, user.id(), new ArrayList<>());
     UUID messageId = createdMessage.id();
 
     // When & Then

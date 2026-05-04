@@ -24,11 +24,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(ReadStatusController.class)
+@WebMvcTest(value = ReadStatusController.class,
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.REGEX,
+        pattern = ".*\\.security\\.jwt\\..*"))
 @AutoConfigureMockMvc(addFilters = false)
 class ReadStatusControllerTest {
 
@@ -105,7 +110,7 @@ class ReadStatusControllerTest {
     UUID channelId = UUID.randomUUID();
     Instant newLastReadAt = Instant.now();
 
-    ReadStatusUpdateRequest updateRequest = new ReadStatusUpdateRequest(newLastReadAt);
+    ReadStatusUpdateRequest updateRequest = new ReadStatusUpdateRequest(newLastReadAt, null);
 
     ReadStatusDto updatedReadStatus = new ReadStatusDto(
         readStatusId,
@@ -136,7 +141,7 @@ class ReadStatusControllerTest {
     UUID nonExistentId = UUID.randomUUID();
     Instant newLastReadAt = Instant.now();
 
-    ReadStatusUpdateRequest updateRequest = new ReadStatusUpdateRequest(newLastReadAt);
+    ReadStatusUpdateRequest updateRequest = new ReadStatusUpdateRequest(newLastReadAt, null);
 
     given(readStatusService.update(eq(nonExistentId), any(ReadStatusUpdateRequest.class)))
         .willThrow(ReadStatusNotFoundException.withId(nonExistentId));

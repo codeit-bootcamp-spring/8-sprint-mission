@@ -94,7 +94,7 @@ class BasicMessageServiceTest {
     channel = new Channel(ChannelType.PUBLIC, "testChannel", "testDescription");
     ReflectionTestUtils.setField(channel, "id", channelId);
 
-    author = new User("testUser", "test@example.com", "password", null, Role.USER);
+    author = new User("testUser", "test@example.com", "password", null);
     ReflectionTestUtils.setField(author, "id", authorId);
 
     attachment = new BinaryContent("test.txt", 100L, "text/plain");
@@ -119,7 +119,7 @@ class BasicMessageServiceTest {
   @DisplayName("메시지 생성 성공")
   void createMessage_Success() {
     // given
-    MessageCreateRequest request = new MessageCreateRequest(content, channelId, authorId);
+    MessageCreateRequest request = new MessageCreateRequest(content, channelId);
     BinaryContentCreateRequest attachmentRequest = new BinaryContentCreateRequest("test.txt",
         "text/plain", new byte[100]);
     List<BinaryContentCreateRequest> attachmentRequests = List.of(attachmentRequest);
@@ -135,7 +135,7 @@ class BasicMessageServiceTest {
     given(messageMapper.toDto(any(Message.class))).willReturn(messageDto);
 
     // when
-    MessageDto result = messageService.create(request, attachmentRequests);
+    MessageDto result = messageService.create(request, authorId, attachmentRequests);
 
     // then
     assertThat(result).isEqualTo(messageDto);
@@ -147,11 +147,11 @@ class BasicMessageServiceTest {
   @DisplayName("존재하지 않는 채널에 메시지 생성 시도 시 실패")
   void createMessage_WithNonExistentChannel_ThrowsException() {
     // given
-    MessageCreateRequest request = new MessageCreateRequest(content, channelId, authorId);
+    MessageCreateRequest request = new MessageCreateRequest(content, channelId);
     given(channelRepository.findById(eq(channelId))).willReturn(Optional.empty());
 
     // when & then
-    assertThatThrownBy(() -> messageService.create(request, List.of()))
+    assertThatThrownBy(() -> messageService.create(request, authorId, List.of()))
         .isInstanceOf(ChannelNotFoundException.class);
   }
 
@@ -159,12 +159,12 @@ class BasicMessageServiceTest {
   @DisplayName("존재하지 않는 작성자로 메시지 생성 시도 시 실패")
   void createMessage_WithNonExistentAuthor_ThrowsException() {
     // given
-    MessageCreateRequest request = new MessageCreateRequest(content, channelId, authorId);
+    MessageCreateRequest request = new MessageCreateRequest(content, channelId);
     given(channelRepository.findById(eq(channelId))).willReturn(Optional.of(channel));
     given(userRepository.findById(eq(authorId))).willReturn(Optional.empty());
 
     // when & then
-    assertThatThrownBy(() -> messageService.create(request, List.of()))
+    assertThatThrownBy(() -> messageService.create(request, authorId, List.of()))
         .isInstanceOf(UserNotFoundException.class);
   }
 

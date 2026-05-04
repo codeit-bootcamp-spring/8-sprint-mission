@@ -26,6 +26,7 @@ management:
     env:
       enabled: true
 
-jwt:
-  cookie:
-    secure: false
+discodeit:
+  jwt:
+    cookie:
+      secure: false

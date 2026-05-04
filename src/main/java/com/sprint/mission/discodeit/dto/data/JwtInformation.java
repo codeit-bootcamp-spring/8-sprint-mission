@@ -1,18 +1,18 @@
 package com.sprint.mission.discodeit.dto.data;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
+@Data
 @AllArgsConstructor
 public class JwtInformation {
 
-  private final UserDto userDto;
+  private UserDto userDto;
   private String accessToken;
   private String refreshToken;
 
-  public void rotate(String accessToken, String refreshToken) {
-    this.accessToken = accessToken;
-    this.refreshToken = refreshToken;
+  public void rotate(String newAccessToken, String newRefreshToken) {
+    this.accessToken = newAccessToken;
+    this.refreshToken = newRefreshToken;
   }
 }

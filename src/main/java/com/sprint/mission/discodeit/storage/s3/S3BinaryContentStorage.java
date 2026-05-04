@@ -1,6 +1,11 @@
 package com.sprint.mission.discodeit.storage.s3;
 
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
+import com.sprint.mission.discodeit.entity.Notification;
+import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.repository.NotificationRepository;
+import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.service.NotificationService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -8,11 +13,15 @@ import java.time.Duration;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -36,6 +45,9 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
   private final String region;
   private final String bucket;
 
+  private final UserRepository userRepository;
+  private final NotificationService notificationService;
+
   @Value("${discodeit.storage.s3.presigned-url-expiration:600}") // 기본값 10분
   private long presignedUrlExpirationSeconds;
 
@@ -43,16 +55,27 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
       @Value("${discodeit.storage.s3.access-key}") String accessKey,
       @Value("${discodeit.storage.s3.secret-key}") String secretKey,
       @Value("${discodeit.storage.s3.region}") String region,
-      @Value("${discodeit.storage.s3.bucket}") String bucket
+      @Value("${discodeit.storage.s3.bucket}") String bucket,
+      NotificationService notificationService,
+      UserRepository userRepository
   ) {
     this.accessKey = accessKey;
     this.secretKey = secretKey;
     this.region = region;
     this.bucket = bucket;
+    this.notificationService = notificationService;
+    this.userRepository = userRepository;
   }
+
+  @Retryable(
+      retryFor = {S3Exception.class, RuntimeException.class}, // S3 관련 예외 발생 시
+      maxAttempts = 3,                                          // 총 3번 시도
+      backoff = @Backoff(delay = 2000)                          // 2초 대기 후 재시도
+  )
 
   @Override
   public UUID put(UUID binaryContentId, byte[] bytes) {
+
     String key = binaryContentId.toString();
     try {
       S3Client s3Client = getS3Client();
@@ -148,4 +171,33 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
         )
         .build();
   }
-} 
+
+  @Recover
+  public UUID recover(Exception e, UUID binaryContentId, byte[] bytes) {
+    String requestId = MDC.get("requestId");
+
+    log.error("S3 업로드 최종 실패! 관리자 알림을 생성합니다. RequestId: {}, ContentId: {}", requestId,
+        binaryContentId);
+
+    User admin = userRepository.findByUsername("admin").orElse(null);
+
+    String title = "S3 파일 업로드 실패";
+    String content = String.format(
+        "RequestId: %s\n" +
+            "BinaryContentId: %s\n" +
+            "Error: %s",
+        requestId != null ? requestId : "N/A",
+        binaryContentId,
+        e.getMessage()
+    );
+
+    if (admin != null) {
+      notificationService.create(admin, title, content);
+      log.info("서비스 메서드를 통해 관리자 알림 생성 완료 (캐시 무효화 포함)");
+    } else {
+      log.warn("관리자 계정을 찾을 수 없어 알림을 저장하지 못했습니다.");
+    }
+
+    return null;
+  }
+}
