@@ -47,7 +47,8 @@ public class MessageController implements MessageApi {
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<MessageDto> create(
       @RequestPart("messageCreateRequest") @Valid MessageCreateRequest messageCreateRequest,
-      @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments
+      @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments,
+      @org.springframework.security.core.annotation.AuthenticationPrincipal com.sprint.mission.discodeit.security.DiscodeitUserDetails userDetails
   ) {
     log.info("메시지 생성 요청: request={}, attachmentCount={}",
         messageCreateRequest, attachments != null ? attachments.size() : 0);
@@ -67,7 +68,7 @@ public class MessageController implements MessageApi {
             })
             .toList())
         .orElse(new ArrayList<>());
-    MessageDto createdMessage = messageService.create(messageCreateRequest, attachmentRequests);
+    MessageDto createdMessage = messageService.create(messageCreateRequest, userDetails.getUserDto().id(), attachmentRequests);
     log.debug("메시지 생성 응답: {}", createdMessage);
     return ResponseEntity
         .status(HttpStatus.CREATED)
