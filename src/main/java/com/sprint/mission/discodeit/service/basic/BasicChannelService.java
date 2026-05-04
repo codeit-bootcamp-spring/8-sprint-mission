@@ -105,7 +105,7 @@ public class BasicChannelService implements ChannelService {
     }
 
     @Override
-    @Cacheable(value = "channels", key = "#userId")
+    @Cacheable(value = "channels", key = "#userId", unless = "#result.isEmpty()")
     public List<ChannelDto> findAll(UUID userId) {
         List<UUID> mySubscribedChannelIds = readStatusRepository.findAllByUserIdWithChannel(userId)
                 .stream()

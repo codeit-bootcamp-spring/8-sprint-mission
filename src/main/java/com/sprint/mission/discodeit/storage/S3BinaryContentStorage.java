@@ -104,13 +104,11 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
 
     // Retry의 재시도 횟수가 끝나면 호출된다.
     @Recover
-    public void recover(S3Exception e, UUID binaryContentId, byte[] bytes) {
+    public UUID recover(S3Exception e, UUID binaryContentId, byte[] bytes) {
         log.error("S3 업로드 재시도 실패: {}, id: {}", e.getMessage(), binaryContentId);
         applicationEventPublisher.publishEvent(
                 new S3UploadFailedEvent(binaryContentId, e)
         );
-
         throw new RuntimeException(e);
     }
-
 }

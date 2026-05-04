@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.config;
 
 import org.slf4j.MDC;
 import org.springframework.core.task.TaskDecorator;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -15,6 +16,7 @@ public class CompositeTaskDecorator implements TaskDecorator {
         // 메인 스레드: 현재 스레드의 데이터를 복사해둔다.
         Map<String, String> mdcContext = MDC.getCopyOfContextMap();
         SecurityContext securityContext = SecurityContextHolder.getContext();
+        Authentication auth = securityContext.getAuthentication();
 
         return () -> {
             try {
@@ -22,9 +24,10 @@ public class CompositeTaskDecorator implements TaskDecorator {
                 if (mdcContext != null) {
                     MDC.setContextMap(mdcContext);
                 }
-
+                SecurityContext newContext = SecurityContextHolder.createEmptyContext();
+                newContext.setAuthentication(auth);
                 // 비동기 스레드: 복사한 SecurityContext를 주입한다.
-                SecurityContextHolder.setContext(securityContext);
+                SecurityContextHolder.setContext(newContext);
 
                 // 실제 비동기 로직 수행
                 runnable.run();

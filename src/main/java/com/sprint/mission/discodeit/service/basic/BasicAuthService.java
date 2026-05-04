@@ -44,12 +44,6 @@ public class BasicAuthService implements AuthService {
     @Transactional
     @Override
     public UserDto updateRole(RoleUpdateRequest request) {
-        return updateRoleInternal(request);
-    }
-
-    @Transactional
-    @Override
-    public UserDto updateRoleInternal(RoleUpdateRequest request) {
         UUID userId = request.userId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));

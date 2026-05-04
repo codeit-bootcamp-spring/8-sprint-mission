@@ -8,7 +8,5 @@ import jakarta.servlet.http.HttpServletResponse;
 public interface AuthService {
     UserDto updateRole(RoleUpdateRequest request);
 
-    UserDto updateRoleInternal(RoleUpdateRequest request);
-
     JwtInformation refreshToken(String refreshToken, HttpServletResponse response);
 }

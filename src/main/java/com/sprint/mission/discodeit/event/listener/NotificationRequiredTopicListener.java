@@ -92,7 +92,7 @@ public class NotificationRequiredTopicListener {
             S3UploadFailedEvent event = objectMapper.readValue(kafkaEvent, S3UploadFailedEvent.class);
             String requestId = event.getRequestId();
             UUID binaryContentId = event.getBinaryContentId();
-            Throwable e = event.getE();
+            String e = event.getErrorMessage();
 
             String title = "S3 파일 업로드 실패";
 
