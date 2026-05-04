@@ -18,9 +18,11 @@ services:
   # 2. Backend (Spring Boot) - 외부 8080 (직접 확인용)
   backend:
     build: .
-    container_name: discodeit-backend
-    #    ports: #테스트 끝나면 주석처리
-    #      - "8080:8080"
+    #    container_name: discodeit-backend
+    #    #    ports: #테스트 끝나면 주석처리
+    #    #      - "8080:8080"
+    deploy:
+      replicas: 3
     env_file:
       - .env
     environment:
