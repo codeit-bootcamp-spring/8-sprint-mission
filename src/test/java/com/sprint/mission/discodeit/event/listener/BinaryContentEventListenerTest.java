@@ -8,7 +8,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.BinaryContentStatus;
-import com.sprint.mission.discodeit.event.message.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
@@ -49,7 +49,7 @@ class BinaryContentEventListenerTest {
     testBytes = "test content".getBytes();
     binaryContent = new BinaryContent("test.txt", (long) testBytes.length, "text/plain");
     ReflectionTestUtils.setField(binaryContent, "id", binaryContentId);
-    
+
     event = new BinaryContentCreatedEvent(binaryContent, Instant.now(), testBytes);
   }
 

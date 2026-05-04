@@ -2,7 +2,7 @@ package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.controller.api.SseApi;
 import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
-import com.sprint.mission.discodeit.service.SseService;
+import com.sprint.mission.discodeit.sse.SseServiceInterface;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -22,7 +22,7 @@ import java.util.UUID;
 @RequestMapping("/api/sse")
 public class SseController implements SseApi {
 
-  private final SseService sseService;
+  private final SseServiceInterface sseService;
 
   @Override
   @GetMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)

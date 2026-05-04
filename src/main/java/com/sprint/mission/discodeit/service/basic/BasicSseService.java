@@ -3,7 +3,7 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.data.SseMessage;
 import com.sprint.mission.discodeit.repository.SseEmitterRepository;
 import com.sprint.mission.discodeit.repository.SseMessageRepository;
-import com.sprint.mission.discodeit.service.SseService;
+import com.sprint.mission.discodeit.sse.SseServiceInterface;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -18,7 +18,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class BasicSseService implements SseService {
+public class BasicSseService implements SseServiceInterface {
 
   private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 60;
 

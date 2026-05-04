@@ -1,10 +1,10 @@
-package com.sprint.mission.discodeit.service;
+package com.sprint.mission.discodeit.sse;
 
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.util.Collection;
 import java.util.UUID;
 
-public interface SseService {
+public interface SseServiceInterface {
 
   /**
    * 클라이언트가 처음 연결을 요청할 때 사용
