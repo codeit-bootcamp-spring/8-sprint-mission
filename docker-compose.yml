@@ -21,7 +21,8 @@ services:
       context: .
       dockerfile: Dockerfile
     image: discodeit:local
-    container_name: spring-backend
+    deploy:
+      replicas: 3
     restart: unless-stopped
     depends_on:
       db:

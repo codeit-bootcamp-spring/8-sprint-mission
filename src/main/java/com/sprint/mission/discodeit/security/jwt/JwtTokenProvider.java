@@ -61,10 +61,10 @@ public class JwtTokenProvider {
      * @throws JOSEException 서명자/검증자 초기화 실패 시 발생
      */
     public JwtTokenProvider(
-            @Value("${jwt.access-token.secret}") String accessTokenSecret,
-            @Value("${jwt.access-token.exp}") int accessTokenExpirationMs,
-            @Value("${jwt.refresh-token.secret}") String refreshTokenSecret,
-            @Value("${jwt.refresh-token.exp}") int refreshTokenExpirationMs
+            @Value("${discodeit.jwt.access-token.secret}") String accessTokenSecret,
+            @Value("${discodeit.jwt.access-token.exp}") int accessTokenExpirationMs,
+            @Value("${discodeit.jwt.refresh-token.secret}") String refreshTokenSecret,
+            @Value("${discodeit.jwt.refresh-token.exp}") int refreshTokenExpirationMs
     ) throws JOSEException {
 
         log.info("[TokenProvider] 생성자 호출됨: 토큰 서명/검증자 및 만료 시간 초기화");

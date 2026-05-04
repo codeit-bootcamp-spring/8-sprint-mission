@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
+import com.sprint.mission.discodeit.event.UserLoginOutEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -36,6 +37,12 @@ public class KafkaProduceRequiredEventListener {
     @Async("asyncTaskExecutor")
     @EventListener
     public void on(S3UploadFailedEvent event) {
+        sendKafka(event);
+    }
+
+    @Async("asyncTaskExecutor")
+    @EventListener
+    public void on(UserLoginOutEvent event) {
         sendKafka(event);
     }
 

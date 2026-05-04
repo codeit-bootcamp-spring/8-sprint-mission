@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.security.jwt.store;
 import com.sprint.mission.discodeit.security.jwt.JwtTokenProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Slf4j
 @Component
+@ConditionalOnProperty(name = "discodeit.jwt.registry.type", havingValue = "memory", matchIfMissing = true)
 public class InMemoryJwtRegistry implements JwtRegistry {
 
     private final Map<UUID, Queue<JwtInformation>> origin = new ConcurrentHashMap<>();
@@ -102,33 +104,6 @@ public class InMemoryJwtRegistry implements JwtRegistry {
                     });
             return queue;
         });
-    }
-
-    @Override
-    public void invalidateByRefreshToken(String refreshToken) {
-        log.info("[JwtRegistry] Refresh Token 단일 값으로 무효화 처리 시작");
-
-        boolean isRemoved = false;
-
-        // 모든 유저의 토큰 큐를 순회하여 일치하는 Refresh Token을 찾아 제거
-        for (Queue<JwtInformation> tokens : origin.values()) {
-            boolean removedInQueue = tokens.removeIf(
-                    information -> information.getRefreshToken().equals(refreshToken)
-            );
-
-            if (removedInQueue) {
-                isRemoved = true;
-                break;
-            }
-        }
-
-        // 삭제 후 큐가 비어버린 유저가 있는 경우 맵에서 제거하여 메모리를 확보함.
-        if (isRemoved) {
-            origin.entrySet().removeIf(entry -> entry.getValue().isEmpty());
-            log.info("[JwtRegistry] Refresh Token 무효화 완료");
-        } else {
-            log.warn("[JwtRegistry] 무효화하려는 Refresh Token을 찾을 수 없습니다.");
-        }
     }
 
     @Scheduled(fixedDelay = 1000 * 60 * 5)
