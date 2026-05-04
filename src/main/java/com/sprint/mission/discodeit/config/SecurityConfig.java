@@ -84,6 +84,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/messages/*").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/messages/*").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/auth/role").hasRole("ADMIN")
+                        .requestMatchers("/api/notifications/**").authenticated()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 )

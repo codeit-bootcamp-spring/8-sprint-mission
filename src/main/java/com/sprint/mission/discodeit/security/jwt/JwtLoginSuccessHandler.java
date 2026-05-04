@@ -1,14 +1,16 @@
 package com.sprint.mission.discodeit.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sprint.mission.discodeit.DTO.dto.JwtDTO;
-import com.sprint.mission.discodeit.DTO.dto.UserDto;
+import com.nimbusds.jose.JOSEException;
+import com.sprint.mission.discodeit.dto.dto.JwtDTO;
+import com.sprint.mission.discodeit.dto.dto.UserDto;
 import com.sprint.mission.discodeit.security.jwt.store.JwtInformation;
 import com.sprint.mission.discodeit.security.jwt.store.JwtRegistry;
 import com.sprint.mission.discodeit.service.auth.DiscodeitUserDetails;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -19,18 +21,12 @@ import java.io.IOException;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final ObjectMapper objectMapper;
     private final JwtTokenProvider tokenProvider;
     private final JwtRegistry jwtRegistry;
-
-    public JwtLoginSuccessHandler(ObjectMapper objectMapper, JwtTokenProvider tokenProvider, JwtRegistry jwtRegistry) {
-        log.info("[JwtLoginSuccessHandler] 생성자 호출됨: 응답 JSON 직렬화를 위한 매퍼, JWT 생성/쿠키 유틸리티, 토큰 상태 저장소 주입");
-        this.objectMapper = objectMapper;
-        this.tokenProvider = tokenProvider;
-        this.jwtRegistry = jwtRegistry;
-    }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -73,9 +69,9 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
                 response.getWriter().write(objectMapper.writeValueAsString(jwtDto));
 
                 log.info("[JwtLoginSuccessHandler] onAuthenticationSuccess 완료: 응답 전송됨");
-            } catch (Exception e) {
+            } catch (JOSEException e) {
                 // 예외 발생 시 처리(500)
-                log.info("[JwtLoginSuccessHandler] 예외 발생: {}", e.getMessage());
+                log.info("[JwtLoginSuccessHandler] 예외 발생: {}", userDetails.getUsername(), e);
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 response.getWriter().write(objectMapper.createObjectNode()
                         .put("success", false)

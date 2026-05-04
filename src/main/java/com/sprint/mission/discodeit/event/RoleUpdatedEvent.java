@@ -1,11 +1,12 @@
-package com.sprint.mission.discodeit.DTO.request;
+package com.sprint.mission.discodeit.event;
 
 import com.sprint.mission.discodeit.entity.Role;
 
 import java.util.UUID;
 
-public record UserRoleUpdateRequest(
+public record RoleUpdatedEvent(
         UUID userId,
+        Role oldRole,
         Role newRole
 ) {
 }

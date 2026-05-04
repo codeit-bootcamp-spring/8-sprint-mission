@@ -1,13 +1,18 @@
 package com.sprint.mission.discodeit.mapper;
 
-import com.sprint.mission.discodeit.DTO.dto.UserDto;
+import com.sprint.mission.discodeit.dto.dto.UserDto;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.security.jwt.store.JwtRegistry;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Mapper(componentModel = "spring", uses = {BinaryContentMapper.class})
-public interface UserMapper {
-    @Mapping(target = "online", source = "isOnline")
-    UserDto toDto(User user, boolean isOnline);
+public abstract class UserMapper {
+
+    @Autowired
+    protected JwtRegistry jwtRegistry;
+
+    @Mapping(target = "online", expression = "java(jwtRegistry.hasActiveJwtInformationByUserId(user.getId()))")
+    public abstract UserDto toDto(User user);
 }

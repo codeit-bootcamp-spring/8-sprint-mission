@@ -1,0 +1,23 @@
+package com.sprint.mission.discodeit.dto.request;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+@Schema(description = "User 생성 정보")
+public record UserCreateRequest(
+        @NotBlank(message = "유저 이름은 필수 정보입니다.")
+        @Size(min = 2, max = 50, message = "유저 이름의 길이는 2이상 100이하여야 합니다.")
+        String username,
+
+        @NotBlank(message = "이메일은 필수 정보입니다.")
+        @Email(message = "유효하지 않는 이메일 형식입니다.")
+        String email,
+
+        @NotBlank(message = "패스워드는 필수 정보입니다.")
+        @Size(min = 8, message = "패스워드는 8자 이상이여야 합니다.")
+        String password
+) {
+
+}

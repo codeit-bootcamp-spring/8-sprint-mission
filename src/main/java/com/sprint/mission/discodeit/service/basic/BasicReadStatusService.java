@@ -1,8 +1,8 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.DTO.dto.ReadStatusDto;
-import com.sprint.mission.discodeit.DTO.request.ReadStatusCreateRequest;
-import com.sprint.mission.discodeit.DTO.request.ReadStatusUpdateRequest;
+import com.sprint.mission.discodeit.dto.dto.ReadStatusDto;
+import com.sprint.mission.discodeit.dto.request.ReadStatusCreateRequest;
+import com.sprint.mission.discodeit.dto.request.ReadStatusUpdateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
@@ -16,6 +16,7 @@ import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ReadStatusService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)
@@ -67,7 +69,6 @@ public class BasicReadStatusService implements ReadStatusService {
                 .orElseThrow(() -> new ReadStatusNotFoundException(readStatusId));
     }
 
-    //N+1 문제 발생할 수 있음
     @Override
     public List<ReadStatusDto> findAllByUserId(UUID userId) {
         return readStatusRepository.findAllByUserIdWithChannel(userId).stream()
@@ -78,13 +79,13 @@ public class BasicReadStatusService implements ReadStatusService {
     @Override
     @Transactional
     public ReadStatusDto update(UUID readStatusId, ReadStatusUpdateRequest request) {
-        Instant newLastReadAt = request.newLastReadAt();
+        log.info("[ReadStatusService] 읽음 상태 수정 실행 - ID: {}, newLastReadAt: {}", readStatusId, request.newLastReadAt());
+
         ReadStatus readStatus = readStatusRepository.findById(readStatusId)
-                .orElseThrow(
-                        () -> new ReadStatusNotFoundException(readStatusId));
+                .orElseThrow(() -> new ReadStatusNotFoundException(readStatusId));
+        readStatus.update(request.newLastReadAt(), request.newNotificationEnabled());
 
-        readStatus.update(newLastReadAt);
-
+        log.info("[ReadStatusService] 읽음 상태 변경 완료 - ID: {}", readStatusId);
         return readStatusMapper.toDto(readStatusRepository.save(readStatus));
     }
 

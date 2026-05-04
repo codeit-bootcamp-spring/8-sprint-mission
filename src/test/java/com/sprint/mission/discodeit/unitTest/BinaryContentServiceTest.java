@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.unitTest;
 
-import com.sprint.mission.discodeit.DTO.dto.BinaryContentDto;
-import com.sprint.mission.discodeit.DTO.request.BinaryContentCreateRequest;
+import com.sprint.mission.discodeit.dto.dto.BinaryContentDto;
+import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.exception.BinaryContentException.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;

@@ -1,6 +1,6 @@
 package com.sprint.mission.discodeit.mapper;
 
-import com.sprint.mission.discodeit.DTO.dto.MessageDto;
+import com.sprint.mission.discodeit.dto.dto.MessageDto;
 import com.sprint.mission.discodeit.entity.Message;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -8,6 +8,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", uses = {UserMapper.class, BinaryContentMapper.class})
 public interface MessageMapper {
 
-  @Mapping(source = "channel.id", target = "channelId")
-  MessageDto toDto(Message message);
+    @Mapping(source = "channel.id", target = "channelId")
+    MessageDto toDto(Message message);
 }

@@ -1,12 +1,14 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.DTO.dto.UserDto;
-import com.sprint.mission.discodeit.DTO.request.BinaryContentCreateRequest;
-import com.sprint.mission.discodeit.DTO.request.UserCreateRequest;
-import com.sprint.mission.discodeit.DTO.request.UserUpdateRequest;
+import com.sprint.mission.discodeit.dto.dto.UserDto;
+import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
+import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
+import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
-import com.sprint.mission.discodeit.entity.Role;
+import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.BinaryContentDeletedEvent;
 import com.sprint.mission.discodeit.exception.UserException.DuplicateEmailException;
 import com.sprint.mission.discodeit.exception.UserException.DuplicateUsernameException;
 import com.sprint.mission.discodeit.exception.UserException.UserNotFoundException;
@@ -17,13 +19,12 @@ import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.security.jwt.store.JwtRegistry;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,16 +41,17 @@ public class BasicUserService implements UserService {
 
     private final UserRepository userRepository;
     private final BinaryContentRepository binaryContentRepository;
-    private final BinaryContentStorage binaryContentStorage;
     private final MessageRepository messageRepository;
     private final ReadStatusRepository readStatusRepository;
 
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtRegistry jwtRegistry;
+    private final ApplicationEventPublisher eventPublisher;
 
-    @Override
+    @CacheEvict(value = "users", allEntries = true)
     @Transactional
+    @Override
     public UserDto create(UserCreateRequest request,
                           Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
         String username = request.username();
@@ -69,8 +71,8 @@ public class BasicUserService implements UserService {
                 .orElse(null);
 
         if (profile != null) {
-            binaryContentStorage.put(profile.getId(), optionalProfileCreateRequest.get().bytes());
-            log.debug("Service: 사용자 프로필 이미지 생성 완료 - ID: {}", profile.getId());
+            createdEvent(profile.getId(), optionalProfileCreateRequest.get().bytes());
+            log.debug("Service: 사용자 프로필 이미지 이벤트 발행 완료 - ID: {}", profile.getId());
         }
 
         String encodedPassword = passwordEncoder.encode(request.password());
@@ -80,31 +82,29 @@ public class BasicUserService implements UserService {
 
         log.info("Service: 유저 생성 완료 및 DB 저장 완료 - ID: {}", savedUser.getId());
 
-        return userMapper.toDto(savedUser, false);
+
+        return userMapper.toDto(savedUser);
     }
 
     @Override
     public UserDto find(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
-
-        boolean isOnline = isUserOnline(user.getId());
-        return userMapper.toDto(user, isOnline);
+        return userMapper.toDto(user);
     }
 
+    @Cacheable(value = "users", key = "'all'", unless = "#result.isEmpty()")
     @Override
     public List<UserDto> findAll() {
-        return userRepository.findAll().stream()
-                .map(user -> {
-                    boolean isOnline = isUserOnline(user.getId());
-                    return userMapper.toDto(user, isOnline);
-                })
+        return userRepository.findAllWithProfile().stream()
+                .map(userMapper::toDto)
                 .toList();
     }
 
+    @CacheEvict(value = "users", allEntries = true)
     @PreAuthorize("principal.userDto.id == #userId")
-    @Override
     @Transactional
+    @Override
     public UserDto update(UUID userId, UserUpdateRequest request,
                           Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
         String newUsername = request.newUsername();
@@ -139,13 +139,12 @@ public class BasicUserService implements UserService {
             if (user.getProfile() != null) {
                 UUID userProfileId = user.getProfile().getId();
                 //byte를 저장해놓은 기존 파일 삭제
-                binaryContentStorage.delete(userProfileId);
-
+                deletedEvent(newProfile.getId());
                 binaryContentRepository.delete(user.getProfile());
             }
             newProfile = saveBinaryContent(optionalProfileCreateRequest.get());
-            binaryContentStorage.put(newProfile.getId(), optionalProfileCreateRequest.get().bytes());
-            log.debug("Service: 사용자 프로필 수정 완료 - ID: {}", newProfile.getId());
+            createdEvent(newProfile.getId(), optionalProfileCreateRequest.get().bytes());
+            log.debug("Service: 사용자 프로필 수정 이벤트 발행 완료 - ID: {}", newProfile.getId());
         }
 
         String encodedPassword = user.getPassword();
@@ -158,13 +157,13 @@ public class BasicUserService implements UserService {
 
         log.info("Service: 유저 수정 완료 - ID: {}", userId);
 
-        boolean isOnline = isUserOnline(user.getId());
-        return userMapper.toDto(userRepository.save(user), isOnline);
+        return userMapper.toDto(user);
     }
 
+    @CacheEvict(value = "users", allEntries = true)
     @PreAuthorize("principal.userDto.id == #userId")
-    @Override
     @Transactional
+    @Override
     public void delete(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
@@ -186,24 +185,6 @@ public class BasicUserService implements UserService {
         log.info("Service: 사용자 DB 삭제 완료 - ID: {}", userId);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @Override
-    @Transactional
-    public UserDto updateUserRole(UUID userId, Role newRole) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-
-        user.updateRole(newRole);
-        User updatedUser = userRepository.save(user);
-
-        jwtRegistry.invalidateJwtInformationByUserId(userId);
-
-        log.info("[UserService] 사용자 권한 변경 및 JWT 무효화 완료!");
-
-        // 세션이 무효화되어 오프라인 처리
-        return userMapper.toDto(updatedUser, false);
-    }
-
     //중복 코드 제거
     private BinaryContent saveBinaryContent(BinaryContentCreateRequest request) {
         String fileName = request.fileName();
@@ -212,12 +193,26 @@ public class BasicUserService implements UserService {
         BinaryContent binaryContent = new BinaryContent(
                 fileName,
                 (long) bytes.length,
-                contentType
+                contentType,
+                BinaryContentStatus.PROCESSING
         );
         return binaryContentRepository.save(binaryContent);
     }
 
-    private boolean isUserOnline(UUID userId) {
-        return jwtRegistry.hasActiveJwtInformationByUserId(userId);
+    // 생성 이벤트 발행 중복 코드
+    private void createdEvent(UUID id, byte[] bytes) {
+        BinaryContentCreatedEvent event = new BinaryContentCreatedEvent(
+                id,
+                bytes
+        );
+        eventPublisher.publishEvent(event);
+    }
+
+    // 삭제 이벤트 발생
+    private void deletedEvent(UUID id) {
+        BinaryContentDeletedEvent event = new BinaryContentDeletedEvent(
+                id
+        );
+        eventPublisher.publishEvent(event);
     }
 }

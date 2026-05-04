@@ -1,9 +1,9 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.DTO.dto.ChannelDto;
-import com.sprint.mission.discodeit.DTO.request.PrivateChannelCreateRequest;
-import com.sprint.mission.discodeit.DTO.request.PublicChannelCreateRequest;
-import com.sprint.mission.discodeit.DTO.request.PublicChannelUpdateRequest;
+import com.sprint.mission.discodeit.dto.dto.ChannelDto;
+import com.sprint.mission.discodeit.dto.request.PrivateChannelCreateRequest;
+import com.sprint.mission.discodeit.dto.request.PublicChannelCreateRequest;
+import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.entity.*;
 import com.sprint.mission.discodeit.exception.ChannelExcption.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.ChannelExcption.PrivateChannelModificationNotAllowedException;
@@ -16,6 +16,8 @@ import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +41,7 @@ public class BasicChannelService implements ChannelService {
     private final ChannelMapper channelMapper;
 
     @Override
+    @CacheEvict(value = "channels", allEntries = true)
     @PreAuthorize("hasRole('CHANNEL_MANAGER')")
     @Transactional
     public ChannelDto create(PublicChannelCreateRequest request) {
@@ -48,12 +51,14 @@ public class BasicChannelService implements ChannelService {
         log.info("Service: Public 채널 생성 요청 - name: {}, description: {}", name, description);
         Channel channel = new Channel(name, description, ChannelType.PUBLIC);
         Channel savedChannel = channelRepository.save(channel);
+
         log.info("Service: Public 채널 생성 완료 - ID: {}", savedChannel.getId());
 
         return this.toDto(savedChannel);
     }
 
     @Override
+    @CacheEvict(value = "channels", allEntries = true)
     @Transactional
     public ChannelDto create(PrivateChannelCreateRequest request) {
         log.info("Service - Private 채널 생성 요청");
@@ -87,6 +92,7 @@ public class BasicChannelService implements ChannelService {
     }
 
     @Override
+    @Cacheable(value = "channels", key = "#userId", unless = "#result.isEmpty()")
     public List<ChannelDto> findAll(UUID userId) {
         List<UUID> mySubscribedChannelIds = readStatusRepository.findAllByUserIdWithChannel(userId)
                 .stream()
@@ -100,7 +106,9 @@ public class BasicChannelService implements ChannelService {
                 .toList();
     }
 
+
     @Override
+    @CacheEvict(value = "channels", allEntries = true)
     @PreAuthorize("hasRole('CHANNEL_MANAGER')")
     @Transactional
     public ChannelDto update(UUID channelId, PublicChannelUpdateRequest request) {
@@ -123,6 +131,7 @@ public class BasicChannelService implements ChannelService {
     }
 
     @Override
+    @CacheEvict(value = "channels", allEntries = true)
     @PreAuthorize("hasRole('CHANNEL_MANAGER')")
     @Transactional
     public void delete(UUID channelId) {

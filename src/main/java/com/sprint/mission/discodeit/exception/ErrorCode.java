@@ -33,7 +33,6 @@ public enum ErrorCode {
 
     // BinaryContent
     FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "F001", "첨부 파일을 찾을 수 없습니다."),
-    FILE_PROCESSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "F002", "Error processing file"),
 
     // ReadStatus
     READ_STATUS_NOT_FOUND(HttpStatus.NOT_FOUND, "R001", "Message 읽음 상태를 찾을 수 없음"),
@@ -42,7 +41,12 @@ public enum ErrorCode {
     // Auth
     AUTH_USER_NOT_FOUND(HttpStatus.NOT_FOUND, "A001", "사용자를 찾을 수 없습니다."),
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "A002", "비밀번호가 일치하지 않음"),
-    ACCESS_DENIED(HttpStatus.FORBIDDEN, "A003", "해당 리소스에 대한 접근 권한이 없습니다.");
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, "A003", "해당 리소스에 대한 접근 권한이 없습니다."),
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A004", "유효하지 않은 토큰입니다."),
+
+    // Notification
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "N001", "알림을 찾을 수 없습니다."),
+    NOTIFICATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "N002", "요청자 본인의 알림에 대해서만 수행할 수 있습니다.");
 
     private final HttpStatus status;
     private final String code;

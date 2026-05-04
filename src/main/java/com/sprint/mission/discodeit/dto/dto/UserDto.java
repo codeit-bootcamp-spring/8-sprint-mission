@@ -1,4 +1,4 @@
-package com.sprint.mission.discodeit.DTO.dto;
+package com.sprint.mission.discodeit.dto.dto;
 
 import com.sprint.mission.discodeit.entity.Role;
 

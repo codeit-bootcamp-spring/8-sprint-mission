@@ -1,6 +1,6 @@
 package com.sprint.mission.discodeit.security.jwt.store;
 
-import com.sprint.mission.discodeit.DTO.dto.UserDto;
+import com.sprint.mission.discodeit.dto.dto.UserDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

@@ -1,12 +1,14 @@
 package com.sprint.mission.discodeit.controller;
 
-import com.sprint.mission.discodeit.DTO.dto.ReadStatusDto;
-import com.sprint.mission.discodeit.DTO.request.ReadStatusCreateRequest;
-import com.sprint.mission.discodeit.DTO.request.ReadStatusUpdateRequest;
+import com.sprint.mission.discodeit.dto.dto.ReadStatusDto;
+import com.sprint.mission.discodeit.dto.request.ReadStatusCreateRequest;
+import com.sprint.mission.discodeit.dto.request.ReadStatusUpdateRequest;
 import com.sprint.mission.discodeit.controller.api.ReadStatusApi;
 import com.sprint.mission.discodeit.service.ReadStatusService;
+
 import java.util.List;
 import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,35 +26,35 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/readStatuses")
 public class ReadStatusController implements ReadStatusApi {
 
-  private final ReadStatusService readStatusService;
+    private final ReadStatusService readStatusService;
 
-  @PostMapping
-  public ResponseEntity<ReadStatusDto> create(
-      @RequestBody ReadStatusCreateRequest readStatusCreateRequest) {
-    return ResponseEntity
-        .status(HttpStatus.CREATED)
-        .body(readStatusService.create(readStatusCreateRequest));
-  }
+    @PostMapping
+    public ResponseEntity<ReadStatusDto> create(
+            @RequestBody ReadStatusCreateRequest readStatusCreateRequest) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(readStatusService.create(readStatusCreateRequest));
+    }
 
-  @GetMapping
-  public ResponseEntity<List<ReadStatusDto>> findAllByUserId(
-      @RequestParam("userId") UUID userId) {
-    List<ReadStatusDto> readStatuses = readStatusService.findAllByUserId(userId);
-    return ResponseEntity
-        .status(HttpStatus.OK)
-        .body(readStatuses);
-  }
+    @GetMapping
+    public ResponseEntity<List<ReadStatusDto>> findAllByUserId(
+            @RequestParam("userId") UUID userId) {
+        List<ReadStatusDto> readStatuses = readStatusService.findAllByUserId(userId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(readStatuses);
+    }
 
-  @PatchMapping(path = "{readStatusId}")
-  public ResponseEntity<ReadStatusDto> update(
-      @PathVariable("readStatusId") UUID readStatusId,
-      @RequestBody ReadStatusUpdateRequest readStatusUpdateRequest) {
-    ReadStatusDto readStatusDto = readStatusService.update(
-        readStatusId,
-        readStatusUpdateRequest
-    );
-    return ResponseEntity
-        .status(HttpStatus.OK)
-        .body(readStatusDto);
-  }
+    @PatchMapping(path = "{readStatusId}")
+    public ResponseEntity<ReadStatusDto> update(
+            @PathVariable("readStatusId") UUID readStatusId,
+            @RequestBody ReadStatusUpdateRequest readStatusUpdateRequest) {
+        ReadStatusDto readStatusDto = readStatusService.update(
+                readStatusId,
+                readStatusUpdateRequest
+        );
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(readStatusDto);
+    }
 }
