@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -33,23 +34,27 @@ public class AdminInitializer implements ApplicationRunner {
     if (userRepository.findByUsername(adminUsername).isEmpty()) {
       log.info("ADMIN 계정이 존재하지 않습니다. 새로 생성합니다.");
 
-      // ADMIN 비밀번호 암호화
-      String encodedPassword = passwordEncoder.encode(adminPassword);
+      try {
+        // ADMIN 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(adminPassword);
 
-      // User 엔티티 생성
-      User adminUser = new User(
-          adminUsername,
-          "admin@discodeit.com",
-          encodedPassword
-      );
+        // User 엔티티 생성
+        User adminUser = new User(
+            adminUsername,
+            "admin@discodeit.com",
+            encodedPassword
+        );
 
-      // updateRole 메서드로 관리자 권한 부여
-      adminUser.updateRole(Role.ADMIN);
+        // updateRole 메서드로 관리자 권한 부여
+        adminUser.updateRole(Role.ADMIN);
 
-      // db 저장
-      userRepository.save(adminUser);
+        // db 저장
+        userRepository.save(adminUser);
 
-      log.info("ADMIN 계정 생성 완료 : username={}", adminUsername);
+        log.info("ADMIN 계정 생성 완료 : username={}", adminUsername);
+      } catch (DataIntegrityViolationException e) {
+        log.info("다른 서버 인스턴스에서 ADMIN 계정을 이미 생성했습니다. 생성을 건너뜁니다.");
+      }
     } else {
       log.info("ADMIN 계정이 존재합니다.");
     }

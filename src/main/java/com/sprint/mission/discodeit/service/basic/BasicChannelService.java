@@ -22,8 +22,9 @@ import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.security.JwtRegistry;
+import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.service.ChannelService;
+import com.sprint.mission.discodeit.service.SseService;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
@@ -50,6 +51,7 @@ public class BasicChannelService implements ChannelService {
   private final ChannelMapper channelMapper;
   private final UserMapper userMapper;
   private final JwtRegistry jwtRegistry;
+  private final SseService sseService;
 
   @Override
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
@@ -64,6 +66,10 @@ public class BasicChannelService implements ChannelService {
 
     log.info("PUBLIC 채널 생성 완료: channelId={}, name={}, description={}", saved.getId(),
         saved.getName(), saved.getDescription());
+
+    // SSE를 통해 모든 클라이언트에 채널 생성 이벤트 전송
+    sseService.broadcast("channels.created", toChannelResponse(saved));
+
     return toChannelResponse(saved);
   }
 
@@ -85,6 +91,10 @@ public class BasicChannelService implements ChannelService {
       readStatusRepository.save(new ReadStatus(user, saved, saved.getCreatedAt()));
     }
     log.info("PRIVATE(DM) 채널 생성 완료: channelId={}", saved.getId());
+
+    // SSE를 통해 참여자 클라이언트에게 채널 생성 이벤트 전송
+    sseService.send(request.participantIds(), "channels.created", toChannelResponse(saved));
+
     return toChannelResponse(saved);
   }
 
@@ -150,6 +160,10 @@ public class BasicChannelService implements ChannelService {
     }
 
     log.info("채널 수정 완료: channelId={}", channelId);
+
+    // SSE를 통해 클라이언트에 채널 수정 이벤트 전송
+    sseService.broadcast("channels.updated", toChannelResponse(channel));
+
     return toChannelResponse(channel);
   }
 
@@ -163,10 +177,29 @@ public class BasicChannelService implements ChannelService {
     }
     log.info("채널 삭제 요청: channelId={}", channelId);
 
+    // 응답 객체 생성
+    Channel channel = channelRepository.findById(channelId)
+        .orElseThrow(() -> new ChannelException(ChannelErrorCode.CHANNEL_NOT_FOUND));
+
+    ChannelResponse response = toChannelResponse(channel);
+    List<UUID> participantIds = List.of();
+    if (channel.getType() == ChannelType.PRIVATE) {
+      participantIds = channel.getReadStatuses().stream()
+          .map(readStatus -> readStatus.getUser().getId())
+          .toList();
+    }
+
     messageRepository.deleteAllByChannelId(channelId);
     readStatusRepository.deleteAllByChannelId(channelId);
 
     channelRepository.deleteById(channelId);
+
+    // public, private에 따라 SSE 발송
+    if (channel.getType() == ChannelType.PUBLIC) {
+      sseService.broadcast("channels.deleted", response);
+    } else if (!participantIds.isEmpty()) {
+      sseService.send(participantIds, "channels.deleted", response);
+    }
   }
 
   private ChannelResponse toChannelResponse(Channel channel) {

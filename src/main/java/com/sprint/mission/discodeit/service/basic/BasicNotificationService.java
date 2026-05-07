@@ -8,6 +8,8 @@ import com.sprint.mission.discodeit.exception.enums.NotificationErrorCode;
 import com.sprint.mission.discodeit.mapper.NotificationMapper;
 import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.service.NotificationService;
+import com.sprint.mission.discodeit.service.SseService;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ public class BasicNotificationService implements NotificationService {
 
   private final NotificationRepository notificationRepository;
   private final NotificationMapper notificationMapper;
+  private final SseService sseService;
 
   @Override
   @CacheEvict(value = "notifications", key = "#receiverId")
@@ -35,6 +38,10 @@ public class BasicNotificationService implements NotificationService {
     Notification notification = new Notification(receiverId, title, content);
     notificationRepository.save(notification);
     log.info("알림 생성 완료 (receiverId: {}", receiverId);
+
+    // SSE를 통해서 클라이언트에 알림 이벤트 전송
+    NotificationDto notificationDto = notificationMapper.toNotificationDto(notification);
+    sseService.send(Collections.singletonList(receiverId), "notification.created", notificationDto);
   }
 
   @Override

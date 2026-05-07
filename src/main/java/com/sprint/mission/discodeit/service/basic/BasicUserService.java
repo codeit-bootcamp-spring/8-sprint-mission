@@ -15,8 +15,9 @@ import com.sprint.mission.discodeit.exception.enums.UserErrorCode;
 import com.sprint.mission.discodeit.exception.user.UserException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.security.JwtRegistry;
+import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.service.BinaryContentService;
+import com.sprint.mission.discodeit.service.SseService;
 import com.sprint.mission.discodeit.service.UserService;
 import java.util.List;
 import java.util.UUID;
@@ -45,6 +46,7 @@ public class BasicUserService implements UserService {
   private final JwtRegistry jwtRegistry;
 
   private final ApplicationEventPublisher eventPublisher;
+  private final SseService sseService;
 
   @Override
   @CacheEvict(value = "users", allEntries = true)
@@ -78,7 +80,10 @@ public class BasicUserService implements UserService {
 
     log.info("회원가입 완료: userId={}", savedUser.getId());
 
-    return userMapper.toUserResponse(savedUser, isOnline(savedUser.getId()));
+    UserResponse response = userMapper.toUserResponse(savedUser, isOnline(savedUser.getId()));
+    sseService.broadcast("users.created", response);
+
+    return response;
   }
 
   @Override
@@ -147,7 +152,11 @@ public class BasicUserService implements UserService {
     User updated = userRepository.save(user);
 
     log.info("유저 정보 수정 완료 : userId={}", updated.getId());
-    return userMapper.toUserResponse(updated, isOnline(userId));
+
+    UserResponse response = userMapper.toUserResponse(updated, isOnline(userId));
+    sseService.broadcast("users.updated", response);
+
+    return response;
   }
 
   @Override
@@ -171,7 +180,10 @@ public class BasicUserService implements UserService {
     // Jwt Registry에서 해당 유저 토큰 전체 무효화 (강제 로그아웃 처리)
     jwtRegistry.invalidateJwtInformationByUserId(request.userId());
 
-    return userMapper.toUserResponse(user, isOnline(request.userId()));
+    UserResponse response = userMapper.toUserResponse(user, isOnline(request.userId()));
+    sseService.broadcast("users.updated", response);
+
+    return response;
   }
 
   @Override
@@ -184,8 +196,12 @@ public class BasicUserService implements UserService {
       throw new DiscodeitException(CommonErrorCode.INVALID_INPUT_VALUE, "userId는 필수입니다.");
     }
     log.info("유저 삭제 요청 : userId={}", userId);
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+    UserResponse response = userMapper.toUserResponse(user, false);
 
     userRepository.deleteById(userId);
+    sseService.broadcast("users.deleted", response);
   }
 
   private void validateCreateRequest(UserCreateRequest request) {

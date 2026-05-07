@@ -8,7 +8,7 @@ spring:
   sql:
     init:
       schema-locations: classpath:schema.sql
-      mode: always # 항상 스키마 초기화 스크립트 실행
+      mode: never
   servlet:
     multipart:
       max-file-size: 10MB
@@ -87,7 +87,7 @@ info:
       url: ${spring.datasource.url}
       driver-class-name: ${spring.datasource.driver-class-name}
     jpa:
-      ddl-auto: ${spring.jpa.hibernate.ddl-auto}
+      ddl-auto: validate
     storage:
       type: ${discodeit.storage.type}
       path: ${discodeit.storage.local.root-path}

@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.binary.BinaryContentCreateRequest;
+import com.sprint.mission.discodeit.dto.binary.BinaryContentResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.enums.BinaryContentStatus;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
@@ -8,8 +9,10 @@ import com.sprint.mission.discodeit.exception.DiscodeitException;
 import com.sprint.mission.discodeit.exception.binary.BinaryContentException;
 import com.sprint.mission.discodeit.exception.enums.BinaryContentErrorCode;
 import com.sprint.mission.discodeit.exception.enums.CommonErrorCode;
+import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
+import com.sprint.mission.discodeit.service.SseService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +35,9 @@ public class BasicBinaryContentService implements BinaryContentService {
 
   // 이벤트 발행
   private final ApplicationEventPublisher eventPublisher;
+
+  private final SseService sseService;
+  private final BinaryContentMapper binaryContentMapper;
 
   @Override
   @Transactional
@@ -98,6 +104,10 @@ public class BasicBinaryContentService implements BinaryContentService {
 
     binaryContent.updateStatus(status);
     log.info("바이너리 컨텐츠 상태 업데이트 완료: id={}, status={}", binaryContentId, status);
+
+    // SSE를 통해 클라이언트에 파일 업로드 상태 변경 이벤트 전송
+    BinaryContentResponse binaryContentResponse = binaryContentMapper.toBinaryContentResponse(binaryContent);
+    sseService.broadcast("binaryContents.updated", binaryContentResponse); // 모든 클라이언트에게 전송
 
     return binaryContent;
   }

@@ -1,4 +1,4 @@
-package com.sprint.mission.discodeit.security;
+package com.sprint.mission.discodeit.security.jwt;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

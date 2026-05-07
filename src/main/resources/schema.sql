@@ -1,12 +1,12 @@
 -- 기존 테이블 삭제 (순서 중요: FK 참조 관계 역순)
-DROP TABLE IF EXISTS notifications;
-DROP TABLE IF EXISTS message_attachments;
-DROP TABLE IF EXISTS messages;
-DROP TABLE IF EXISTS read_statuses;
-DROP TABLE IF EXISTS user_statuses;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS channels;
-DROP TABLE IF EXISTS binary_contents;
+DROP TABLE IF EXISTS notifications CASCADE;
+DROP TABLE IF EXISTS message_attachments CASCADE;
+DROP TABLE IF EXISTS messages CASCADE;
+DROP TABLE IF EXISTS read_statuses CASCADE;
+DROP TABLE IF EXISTS user_statuses CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS channels CASCADE;
+DROP TABLE IF EXISTS binary_contents CASCADE;
 
 -- 1. 독립적인 테이블(참조가 없는) 먼저 생성
 CREATE TABLE IF NOT EXISTS binary_contents

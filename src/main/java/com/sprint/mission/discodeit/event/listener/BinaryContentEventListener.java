@@ -38,7 +38,7 @@ public class BinaryContentEventListener {
 
       // 실패 시, 상태 업데이트
       binaryContentService.updateStatus(event.binaryContentId(), BinaryContentStatus.FAIL);
-      
+
       // 비동기 스레드 풀의 에러 핸들러로 예외를 전파하여 의도를 명확히 함
       throw e;
     }
