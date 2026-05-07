@@ -1,5 +1,7 @@
 package com.sprint.mission.discodeit.security.jwt.store;
 
+import org.springframework.scheduling.annotation.Scheduled;
+
 import java.util.UUID;
 
 public interface JwtRegistry {
