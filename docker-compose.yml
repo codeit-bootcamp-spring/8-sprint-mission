@@ -37,7 +37,7 @@ services:
       - SERVER_PORT=${SERVER_PORT:-8080}
 
       # Database
-      - SPRING_DATASOURCE_URL=${POSTGRES_URL}/${POSTGRES_DB}
+      - SPRING_DATASOURCE_URL=${POSTGRES_URL:-jdbc:postgresql://db:5432}/${POSTGRES_DB:-discodeit}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
 
@@ -70,13 +70,11 @@ services:
       - AWS_S3_SECRET_KEY=${AWS_S3_SECRET_KEY}
       - AWS_S3_REGION=${AWS_S3_REGION}
       - AWS_S3_BUCKET=${AWS_S3_BUCKET}
-
-      - STORAGE_TYPE=${STORAGE_TYPE}
     volumes:
       - app_logs:/app/logs
       - app_data:/app/data/uploadfiles
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:${SERVER_PORT:-8080}/actuator/health" ]
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:${SERVER_PORT:-8080}/actuator/health" ]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -15,11 +15,15 @@ import com.sprint.mission.discodeit.event.Sse.User.UserUpdatedEvent;
 import com.sprint.mission.discodeit.event.UserLoginOutEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
+
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,6 +32,8 @@ public class KafkaProduceRequiredEventListener {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+
+    private static final Logger FAILED_LOGGER = LoggerFactory.getLogger("KAFKA_FAILED_LOGGER");
 
     @Async("asyncTaskExecutor")
     @TransactionalEventListener
@@ -98,7 +104,16 @@ public class KafkaProduceRequiredEventListener {
     private <T> void sendKafka(T event) {
         try {
             String payload = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send("discodeit.".concat(event.getClass().getSimpleName()), payload);
+            String topic = "discodeit." + event.getClass().getSimpleName();
+
+            kafkaTemplate.send(topic, payload).whenComplete((result, ex) -> {
+                if (ex == null) {
+                    log.debug("Kafka 전송 성공 - topic: {}, offset: {}", topic, result.getRecordMetadata().offset());
+                } else {
+                    log.error("Kafka 전송 실패! 별도 로그 파일(FAILED_LOGGER)에 저장됩니다. {}", topic);
+                    FAILED_LOGGER.error("TOPIC:{}|PAYLOAD:{}", topic, payload);
+                }
+            });
         } catch (JsonProcessingException e) {
             log.error("Kafka 전송 중 오류 발생", e);
             throw new RuntimeException(e);

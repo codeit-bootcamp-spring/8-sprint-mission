@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.security.messaging.access.intercept.AuthorizationChannelInterceptor;
@@ -54,7 +53,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .setDisconnectDelay(5000);
 
         log.info("[WebSocket 설정] STOMP 엔드포인트 등록 완료");
-        log.debug("[STOMP 엔드포인트] 경로: /chat, SockJS 폴백: 활성화, CORS: 모든 오리진 허용");
+        log.debug("[STOMP 엔드포인트] 경로: /ws, SockJS 폴백: 활성화, CORS: 모든 오리진 허용");
     }
 
     @Override

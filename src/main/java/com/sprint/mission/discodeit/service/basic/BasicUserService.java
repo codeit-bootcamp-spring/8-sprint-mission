@@ -161,11 +161,13 @@ public class BasicUserService implements UserService {
             log.debug("Service: 사용자 비밀번호 수정 및 암호화 완료");
         }
 
+        UserDto prevUserDto = userMapper.toDto(user);
+
         user.update(request.newUsername(), request.newEmail(), encodedPassword, newProfile);
 
         UserDto userDto = userMapper.toDto(user);
 
-        eventPublisher.publishEvent(new UserUpdatedEvent(userDto, user.getUpdatedAt()));
+        eventPublisher.publishEvent(new UserUpdatedEvent(prevUserDto, userDto, user.getUpdatedAt()));
 
         if (requiredRelogin) {
             jwtRegistry.invalidateJwtInformationByUserId(userId);
