@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.domain.channel.dto.domain.ChannelDto;
 import com.sprint.mission.discodeit.domain.channel.dto.request.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.domain.channel.dto.request.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.domain.channel.dto.request.PublicChannelUpdateRequest;
+import com.sprint.mission.discodeit.domain.channel.event.ChannelEvent;
 import com.sprint.mission.discodeit.domain.channel.exception.ChannelNotFoundException;
 import com.sprint.mission.discodeit.domain.channel.exception.ChannelUpdateNotAllowedException;
 import com.sprint.mission.discodeit.domain.channel.mapper.ChannelMapper;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,7 @@ public class BasicChannelService implements ChannelService
     private final UserRepository userRepository;
     private final ChannelMapper channelMapper;
     private final UserMapper userMapper;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @CacheEvict(value = "channels", allEntries = true)
     @PreAuthorize("hasRole('CHANNEL_MANAGER')")
@@ -54,9 +57,12 @@ public class BasicChannelService implements ChannelService
 
         channelRepository.save(channel);
 
+        ChannelDto channelDto = channelMapper.toDto(channel);
+        applicationEventPublisher.publishEvent(new ChannelEvent("channels.created", channelDto, channel.getCreatedAt()));
+
         log.info("채널 생성 처리 완료(공개): channelId={}", channel.getId());
 
-        return channelMapper.toDto(channel);
+        return channelDto;
     }
 
     @CacheEvict(value = "channels", allEntries = true)
@@ -78,9 +84,12 @@ public class BasicChannelService implements ChannelService
 
         channelRepository.save(channel);
 
+        ChannelDto channelDto = channelMapper.toDto(channel);
+        applicationEventPublisher.publishEvent(new ChannelEvent("channels.created", channelDto, channel.getCreatedAt()));
+
         log.info("채널 생성 처리 완료(비공개): channelId={}", channel.getId());
 
-        return channelMapper.toDto(channel);
+        return channelDto;
     }
 
     @Transactional(readOnly = true)
@@ -117,9 +126,12 @@ public class BasicChannelService implements ChannelService
 
        channel.update(publicChannelUpdateRequest.newName(), publicChannelUpdateRequest.newDescription());
 
+        ChannelDto channelDto = channelMapper.toDto(channel);
+        applicationEventPublisher.publishEvent(new ChannelEvent("channels.updated", channelDto, channel.getCreatedAt()));
+
        log.info("채널 수정 처리 완료: channelId={}", channel.getId());
 
-       return channelMapper.toDto(channel);
+       return channelDto;
     }
 
     @CacheEvict(value = "channels", allEntries = true)
@@ -131,6 +143,9 @@ public class BasicChannelService implements ChannelService
 
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new ChannelNotFoundException(channelId));
+
+        ChannelDto channelDto = channelMapper.toDto(channel);
+        applicationEventPublisher.publishEvent(new ChannelEvent("channels.deleted", channelDto, channel.getCreatedAt()));
 
         channelRepository.delete(channel);
 

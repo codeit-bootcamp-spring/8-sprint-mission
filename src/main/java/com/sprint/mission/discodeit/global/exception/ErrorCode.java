@@ -28,7 +28,10 @@ public enum ErrorCode
     TOKEN_GENERATION_FAILED("토큰 생성에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 
     NOTIFICATION_NOT_FOUND("알림을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
-    NOTIFICATION_FORBIDDEN("본인의 알림만 삭제할 수 있습니다.", HttpStatus.FORBIDDEN);
+    NOTIFICATION_FORBIDDEN("본인의 알림만 삭제할 수 있습니다.", HttpStatus.FORBIDDEN),
+
+    USER_MISMATCH("인증된 사용자 정보가 일치하지 않습니다.", HttpStatus.FORBIDDEN),
+    LOCK_ACQUISITION_FAILED("락 획득 실패", HttpStatus.SERVICE_UNAVAILABLE);
 
     private final int status;
     private final String message;

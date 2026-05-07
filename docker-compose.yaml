@@ -28,17 +28,57 @@ services:
     networks:
       - discodeit-network
 
-  app:
+  broker:
+    image: apache/kafka:4.0.0
+    container_name: broker
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:29093
+      KAFKA_LISTENERS: PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    expose:
+      - 29092
+    networks:
+      - discodeit-network
+
+  reverse-proxy:
+    image: nginx:1.29.0
+    container_name: reverse-proxy
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    networks:
+      - discodeit-network
+    volumes:
+      - ./src/main/resources/static:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
 
     image: discodeit:latest
-    container_name: discodeit
     restart: unless-stopped
 
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      broker:
         condition: service_healthy
 
     environment:
@@ -52,14 +92,14 @@ services:
 
       TZ: "Asia/Seoul"
 
-    ports:
-      - "${APP_PORT}:${SERVER_PORT}"
-
     env_file:
       - .env
 
     volumes:
       - app_data:/app/uploads
+
+    deploy:
+      replicas: 3
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${SERVER_PORT}/actuator/health"]
@@ -77,6 +117,17 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    expose:
+      - 6379
+    networks:
+      - discodeit-network
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
 volumes:
   postgres_data:
     driver: local
@@ -85,6 +136,8 @@ volumes:
   app_data:
     driver: local
     name: discodeit-app-data
+
+  redis-data:
 
 networks:
   discodeit-network:

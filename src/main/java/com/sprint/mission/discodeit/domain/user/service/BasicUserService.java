@@ -11,6 +11,7 @@ import com.sprint.mission.discodeit.domain.user.dto.domain.UserDto;
 import com.sprint.mission.discodeit.domain.user.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.domain.user.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.domain.user.event.RoleUpdatedEvent;
+import com.sprint.mission.discodeit.domain.user.event.UserEvent;
 import com.sprint.mission.discodeit.domain.user.exception.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.domain.user.exception.UserNotFoundException;
 import com.sprint.mission.discodeit.domain.user.mapper.UserMapper;
@@ -42,6 +43,7 @@ public class BasicUserService implements UserService
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtRegistry jwtRegistry;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @CacheEvict(value = "users", allEntries = true)
     @Transactional
@@ -64,9 +66,12 @@ public class BasicUserService implements UserService
         User user = new User(userCreateRequest.username(), encodedPassword, userCreateRequest.email(), profile);
         User createdUser = userRepository.save(user);
 
+        UserDto userDto = userMapper.toDto(createdUser);
+        applicationEventPublisher.publishEvent(new UserEvent("users.created", userDto, user.getCreatedAt()));
+
         log.info("사용자 생성 처리 완료: userId={}", createdUser.getId());
 
-        return userMapper.toDto(createdUser);
+        return userDto;
     }
 
     @Transactional(readOnly = true)
@@ -113,9 +118,12 @@ public class BasicUserService implements UserService
         BinaryContent profile = createProfile(binaryContentCreateRequest);
         user.update(userUpdateRequest.newUsername(), userUpdateRequest.newEmail(), profile);
 
+        UserDto userDto = userMapper.toDto(user);
+        applicationEventPublisher.publishEvent(new UserEvent("users.updated", userDto, user.getCreatedAt()));
+
         log.info("사용자 정보 수정 완료: userId={}, username={}, email={}", userId, userUpdateRequest.newUsername(), userUpdateRequest.newEmail());
 
-        return userMapper.toDto(user);
+        return userDto;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -137,11 +145,14 @@ public class BasicUserService implements UserService
                 roleUpdateRequest.newRole().name()
         ));
 
+        UserDto userDto = userMapper.toDto(updatedUser);
+        eventPublisher.publishEvent(new UserEvent("users.updated", userDto, user.getCreatedAt()));
+
         jwtRegistry.invalidateJwtInformationByUserId(roleUpdateRequest.userId());
 
         log.info("유저 권한 변경 완료: {}", roleUpdateRequest.userId());
 
-        return userMapper.toDto(updatedUser);
+        return userDto;
     }
 
     @CacheEvict(value = "users", allEntries = true)
@@ -153,6 +164,9 @@ public class BasicUserService implements UserService
 
         User user = userRepository.findById(userId)
                         .orElseThrow(() -> new UserNotFoundException(userId));
+
+        UserDto userDto = userMapper.toDto(user);
+        applicationEventPublisher.publishEvent(new UserEvent("users.deleted", userDto, user.getCreatedAt()));
 
         // pofile 먼저 삭제.
         if (user.getProfile() != null) {

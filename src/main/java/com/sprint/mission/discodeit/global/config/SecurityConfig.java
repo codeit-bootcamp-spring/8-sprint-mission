@@ -77,6 +77,7 @@ public class SecurityConfig
                     .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                     // SPA 환경에 적합한 SpaCsrfTokenRequestHandler로 교체
                     .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
+                    .ignoringRequestMatchers("/ws/**")
             )
             // 2. HTTP 요청 권한 설정
             .authorizeHttpRequests(auth -> auth

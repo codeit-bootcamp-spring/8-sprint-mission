@@ -99,6 +99,13 @@ admin:
   username: ${ADMIN_USERNAME}
   password: ${ADMIN_PASSWORD}
 
+websocket:
+  heartbeat-time: 4000
+  disconnect-delay: 5000
+
+see:
+  delay: 180000
+
 info:
   app:
     name: Discodeit

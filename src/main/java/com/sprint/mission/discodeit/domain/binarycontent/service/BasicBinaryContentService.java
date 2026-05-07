@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.domain.binarycontent.domain.BinaryContentSta
 import com.sprint.mission.discodeit.domain.binarycontent.dto.domain.BinaryContentDto;
 import com.sprint.mission.discodeit.domain.binarycontent.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.domain.binarycontent.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.domain.binarycontent.event.BinaryContentStatusUpdatedEvent;
 import com.sprint.mission.discodeit.domain.binarycontent.exception.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.domain.binarycontent.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.domain.binarycontent.repository.BinaryContentRepository;
@@ -55,6 +56,9 @@ public class BasicBinaryContentService implements BinaryContentService
                 .orElseThrow(() -> new BinaryContentNotFoundException(binaryContentId));
 
         binaryContent.updateStatus(binaryContentStatus);
+
+        BinaryContentDto binaryContentDto = binaryContentMapper.toDto(binaryContent);
+        eventPublisher.publishEvent(new BinaryContentStatusUpdatedEvent("binaryContents.updated", binaryContentDto, binaryContent.getCreatedAt()));
     }
 
     @Transactional(readOnly = true)

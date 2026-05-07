@@ -20,7 +20,7 @@ WORKDIR /app
 RUN yum install -y curl
 
 ENV PROJECT_NAME=discodeit \
-    PROJECT_VERSION=1.2-M8 \
+    PROJECT_VERSION=3.0-M12 \
     JVM_OPTS=""
 
 COPY --from=builder /app/build/libs/${PROJECT_NAME}-${PROJECT_VERSION}.jar app.jar
