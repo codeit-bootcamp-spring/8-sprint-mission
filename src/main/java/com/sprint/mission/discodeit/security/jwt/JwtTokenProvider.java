@@ -5,17 +5,26 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.sprint.mission.discodeit.dto.dto.UserDto;
+import com.sprint.mission.discodeit.entity.Role;
+import com.sprint.mission.discodeit.exception.DiscodeitException;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.service.auth.DiscodeitUserDetails;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Access/Refresh 토큰 생성 및 검증을 담당하는 Bean 클래스
@@ -52,10 +61,10 @@ public class JwtTokenProvider {
      * @throws JOSEException 서명자/검증자 초기화 실패 시 발생
      */
     public JwtTokenProvider(
-            @Value("${jwt.access-token.secret}") String accessTokenSecret,
-            @Value("${jwt.access-token.exp}") int accessTokenExpirationMs,
-            @Value("${jwt.refresh-token.secret}") String refreshTokenSecret,
-            @Value("${jwt.refresh-token.exp}") int refreshTokenExpirationMs
+            @Value("${discodeit.jwt.access-token.secret}") String accessTokenSecret,
+            @Value("${discodeit.jwt.access-token.exp}") int accessTokenExpirationMs,
+            @Value("${discodeit.jwt.refresh-token.secret}") String refreshTokenSecret,
+            @Value("${discodeit.jwt.refresh-token.exp}") int refreshTokenExpirationMs
     ) throws JOSEException {
 
         log.info("[TokenProvider] 생성자 호출됨: 토큰 서명/검증자 및 만료 시간 초기화");
@@ -363,24 +372,39 @@ public class JwtTokenProvider {
         }
     }
 
-    /**
-     * 토큰에서 만료 시간(exp)을 추출한다.
-     * 남은 유효 시간을 계산하거나 만료 임박 알림을 구현할 때 사용할 수 있다.
-     *
-     * @param token JWT 문자열
-     * @return 만료 시간(Date)
-     */
-    public Date getExpiration(String token) {
+    public DiscodeitUserDetails parseAccessToken(String token) {
         try {
-            log.info("[TokenProvider] getExpiration 호출됨: exp 추출 시작");
-
+            log.info("[TokenProvider] parseAccessToken 호출됨: 토큰 파싱 시작");
             SignedJWT signedJWT = SignedJWT.parse(token);
-            Date exp = signedJWT.getJWTClaimsSet().getExpirationTime();
+            JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
 
-            log.info("[TokenProvider] getExpiration 결과: exp={}", exp);
+            String username = claimsSet.getSubject();
+            String userIdString = claimsSet.getStringClaim("userId");
+            UUID userId = userIdString != null ? UUID.fromString(userIdString) : null;
 
-            return exp;
+            List<String> roles = claimsSet.getStringListClaim("roles");
+            // 기본 값
+            Role role = Role.USER;
+
+            if (roles != null && !roles.isEmpty()) {
+                String roleString = roles.get(0).replace("ROLE_", "");
+                role = Role.valueOf(roleString);
+            }
+
+            UserDto userDto = new UserDto(
+                    userId,
+                    username,
+                    null, // email
+                    null, // profile
+                    null, // online
+                    role
+            );
+
+            log.info("[TokenProvider] parseAccessToken 완료: UserDto 생성");
+            return new DiscodeitUserDetails(userDto, null);
+
         } catch (Exception e) {
+            log.error("[TokenProvider] parseAccessToken 중 예외 발생: {}", e.getMessage());
             throw new IllegalArgumentException("Invalid JWT token", e);
         }
     }

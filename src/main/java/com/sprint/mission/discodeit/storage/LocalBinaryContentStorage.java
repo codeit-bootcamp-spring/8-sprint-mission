@@ -51,7 +51,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
 
     @Override
     public UUID put(UUID id, byte[] bytes) {
-        delay(3000);
+//        delay(3000);
         try {
             Path filePath = resolvePath(id);
             Files.write(filePath, bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);

@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.Set;
@@ -31,11 +30,12 @@ public class NotificationRequiredEventListener {
     private String adminName;
 
     private final NotificationService notificationService;
-    private final ReadStatusRepository readStatusRepository;
     private final ChannelService channelService;
+
+    private final ReadStatusRepository readStatusRepository;
     private final UserRepository userRepository;
 
-    @Async("notificationTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener
     public void on(MessageCreatedEvent event) {
         MessageDto message = event.getData();
@@ -59,7 +59,7 @@ public class NotificationRequiredEventListener {
         notificationService.create(receiverIds, title, content);
     }
 
-    @Async("notificationTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener
     public void on(RoleUpdatedEvent event) {
         UUID userId = event.userId();
@@ -75,7 +75,7 @@ public class NotificationRequiredEventListener {
         log.info("[NotificationListener] 권한 변경 알림 생성 완료");
     }
 
-    @Async("notificationTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener
     public void on(S3UploadFailedEvent event) {
         String requestId = event.getRequestId();

@@ -9,6 +9,7 @@ import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
+import com.sprint.mission.discodeit.event.UserLoginOutEvent;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
@@ -51,6 +52,10 @@ public class NotificationRequiredTopicListener {
                     .stream().map(readStatus -> readStatus.getUser().getId())
                     .filter(receiverId -> !receiverId.equals(message.author().id()))
                     .collect(Collectors.toSet());
+
+            log.info("author id: {}", message.author().id());
+            log.info("receiverIds: {}", receiverIds);
+
             String title = message.author().username()
                     .concat(
                             channel.type().equals(ChannelType.PUBLIC) ?
@@ -108,4 +113,23 @@ public class NotificationRequiredTopicListener {
             throw new RuntimeException(e);
         }
     }
+
+//    @KafkaListener(
+//            topics = "discodeit.UserLoginOutEvent",
+//            groupId = "${spring.kafka.consumer.group-id}"
+//    )
+//    public void onUserLoginOutEvent(String kafkaEvent) {
+//        try {
+//            UserLoginOutEvent event = objectMapper.readValue(kafkaEvent, UserLoginOutEvent.class);
+//            UUID userId = event.userId();
+//            boolean isLogin = event.isLogin();
+//
+//            String title = "온라인 상태 변경";
+//            String content = isLogin ? "온라인" : "오프라인";
+//
+//            notificationService.create(Set.of(userId), title, content);
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 }

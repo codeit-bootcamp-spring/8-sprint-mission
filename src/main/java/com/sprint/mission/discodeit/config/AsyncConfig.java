@@ -44,8 +44,8 @@ public class AsyncConfig implements AsyncConfigurer {
         return exec;
     }
 
-    @Bean(name = "notificationTaskExecutor")
-    public ThreadPoolTaskExecutor notificationTaskExecutor() {
-        return buildExecutor(4, 8, 500, 60, "noti-task-");
+    @Bean(name = "asyncTaskExecutor")
+    public ThreadPoolTaskExecutor asyncTaskExecutor() {
+        return buildExecutor(4, 8, 500, 60, "async-task-");
     }
 }

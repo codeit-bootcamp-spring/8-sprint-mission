@@ -1,8 +1,8 @@
 package com.sprint.mission.discodeit.event.listener;
 
 import com.sprint.mission.discodeit.entity.BinaryContentStatus;
-import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
-import com.sprint.mission.discodeit.event.BinaryContentDeletedEvent;
+import com.sprint.mission.discodeit.event.Sse.BinaryContent.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.Sse.BinaryContent.BinaryContentDeletedEvent;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class BinaryContentEventListener {
     private final BinaryContentStorage binaryContentStorage;
     private final BinaryContentService binaryContentService;
 
-    @Async("notificationTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener
     public void handleCreatedEvent(BinaryContentCreatedEvent event) {
         log.info("[BinaryContentEventListener] - 파일 저장 이벤트를 진행중...");
@@ -32,11 +32,11 @@ public class BinaryContentEventListener {
             binaryContentService.updateStatus(id, BinaryContentStatus.SUCCESS);
         } catch (Exception e) {
             binaryContentService.updateStatus(id, BinaryContentStatus.FAIL);
-            log.error("[BinaryContentEventListener] - 파일 저장 이벤트 수행 중 에러 발생: ID: {}", id, e);
+            log.error("[BinaryContentEventListener] - 파일 저장 이벤트 수행 중 에러 발생: ID: {}", id);
         }
     }
 
-    @Async("notificationTaskExecutor")
+    @Async("asyncTaskExecutor")
     @TransactionalEventListener
     public void handleDeletedEvent(BinaryContentDeletedEvent event) {
         log.info("[BinaryContentEventListener] - 파일 삭제 이벤트를 진행중...");

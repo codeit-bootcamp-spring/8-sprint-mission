@@ -15,7 +15,7 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
     consumer:
       group-id: ${KAFKA_GROUP_ID}
-      auto-offset-reset: earliest
+      auto-offset-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   cache:
@@ -63,20 +63,32 @@ discodeit:
   session:
     timeout: 5
 
-  # swagger config
-  # https://springdoc.org/#properties
-  springdoc:
-    api-docs:
-      # OpenAPI 명세서 경로(JSON)
-      path: /api/v3/api-docs
-    swagger-ui:
-      # OpenAPI 명세서 경로(HTML)
-      path: /swagger-ui.html
-      # 요청 응답 시간 표시
-      display-request-duration: true
-      # API 정렬 기준
-      operations-sorter: method # HTTP 메서드의 알파벳 기준
-      # operations-sorter: alpha # Java 메서드의 알파벳 기준
+  # 커스텀 프로퍼티 추가
+  jwt:
+    access-token:
+      secret: ${JWT_ACCESS_TOKEN}
+      exp: 900000        # 15분(ms)
+    refresh-token:
+      secret: ${JWT_REFRESH_TOKEN}
+      exp: 3600000       # 1시간(ms)
+    registry:
+      type: redis # memory 또는 redis
+    max-active-count: 3
+
+# swagger config
+# https://springdoc.org/#properties
+springdoc:
+  api-docs:
+    # OpenAPI 명세서 경로(JSON)
+    path: /api/v3/api-docs
+  swagger-ui:
+    # OpenAPI 명세서 경로(HTML)
+    path: /swagger-ui.html
+    # 요청 응답 시간 표시
+    display-request-duration: true
+    # API 정렬 기준
+    operations-sorter: method # HTTP 메서드의 알파벳 기준
+    # operations-sorter: alpha # Java 메서드의 알파벳 기준
 
 management:
   endpoints:
@@ -113,16 +125,6 @@ info:
   multipart:
     max-file-size: ${spring.servlet.multipart.max-file-size}
     max-request-size: ${spring.servlet.multipart.max-request-size}
-
-# 커스텀 프로퍼티 추가
-jwt:
-  access-token:
-    secret: ${JWT_ACCESS_TOKEN}
-    exp: 900000        # 15분(ms)
-  refresh-token:
-    secret: ${JWT_REFRESH_TOKEN}
-    exp: 3600000       # 1시간(ms)
-  max-active-count: 1
 
 # 개발 환경 권장 쿠키 설정 가이드(메모)
 # - 개발: Secure=false, SameSite=Lax, Path=/

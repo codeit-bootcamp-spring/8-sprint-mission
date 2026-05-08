@@ -5,6 +5,9 @@ import com.sprint.mission.discodeit.dto.request.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.entity.*;
+import com.sprint.mission.discodeit.event.Sse.Channel.ChannelCreatedEvent;
+import com.sprint.mission.discodeit.event.Sse.Channel.ChannelDeletedEvent;
+import com.sprint.mission.discodeit.event.Sse.Channel.ChannelUpdatedEvent;
 import com.sprint.mission.discodeit.exception.ChannelExcption.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.ChannelExcption.PrivateChannelModificationNotAllowedException;
 import com.sprint.mission.discodeit.exception.UserException.UserNotFoundException;
@@ -18,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,8 +41,9 @@ public class BasicChannelService implements ChannelService {
     private final UserRepository userRepository;
     private final MessageRepository messageRepository;
     private final ReadStatusRepository readStatusRepository;
-
     private final ChannelMapper channelMapper;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @CacheEvict(value = "channels", allEntries = true)
@@ -52,9 +57,13 @@ public class BasicChannelService implements ChannelService {
         Channel channel = new Channel(name, description, ChannelType.PUBLIC);
         Channel savedChannel = channelRepository.save(channel);
 
+        ChannelDto channelDto = this.toDto(savedChannel);
+
+        eventPublisher.publishEvent(new ChannelCreatedEvent(channelDto, savedChannel.getCreatedAt()));
+
         log.info("Service: Public 채널 생성 완료 - ID: {}", savedChannel.getId());
 
-        return this.toDto(savedChannel);
+        return channelDto;
     }
 
     @Override
@@ -80,8 +89,12 @@ public class BasicChannelService implements ChannelService {
         //성능 향상을 위해 하나씩 저장하는 것보다 한번에 저장하는 로직
         readStatusRepository.saveAll(readStatuses);
 
+        ChannelDto channelDto = this.toDto(savedChannel);
+
+        eventPublisher.publishEvent(new ChannelCreatedEvent(channelDto, savedChannel.getCreatedAt()));
+
         log.info("Service - Private 채널 생성 완료 - ID: {}", savedChannel.getId());
-        return this.toDto(savedChannel);
+        return channelDto;
     }
 
     @Override
@@ -124,10 +137,20 @@ public class BasicChannelService implements ChannelService {
             throw new PrivateChannelModificationNotAllowedException(channelId);
         }
 
+        ChannelDto prevChannel = this.toDto(channel);
+
         channel.update(request.newName(), request.newDescription());
 
+        ChannelDto updatedChannelDto = this.toDto(channel);
+
+        eventPublisher.publishEvent(new ChannelUpdatedEvent(
+                prevChannel,
+                updatedChannelDto,
+                channel.getUpdatedAt())
+        );
+
         log.info("Service: Public 채널 수정 완료 - ID: {}", channelId);
-        return this.toDto(channelRepository.save(channel));
+        return updatedChannelDto;
     }
 
     @Override
@@ -135,6 +158,8 @@ public class BasicChannelService implements ChannelService {
     @PreAuthorize("hasRole('CHANNEL_MANAGER')")
     @Transactional
     public void delete(UUID channelId) {
+        ChannelDto channelDto = find(channelId);
+
         log.info("Service: 채널 삭제 요청 - ID: {}", channelId);
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> {
@@ -146,6 +171,9 @@ public class BasicChannelService implements ChannelService {
         readStatusRepository.deleteAllByChannelId(channelId);
 
         channelRepository.delete(channel);
+
+        eventPublisher.publishEvent(new ChannelDeletedEvent(channelDto, Instant.now()));
+
         log.info("Service: 채널 삭제 성공 - ID: {}", channelId);
     }
 

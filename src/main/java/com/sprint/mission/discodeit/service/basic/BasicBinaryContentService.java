@@ -4,12 +4,12 @@ import com.sprint.mission.discodeit.dto.dto.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.BinaryContentStatus;
-import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.Sse.BinaryContent.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.Sse.BinaryContent.BinaryContentUpdatedEvent;
 import com.sprint.mission.discodeit.exception.BinaryContentException.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,7 +28,7 @@ public class BasicBinaryContentService implements BinaryContentService {
 
     private final BinaryContentRepository binaryContentRepository;
     private final BinaryContentMapper binaryContentMapper;
-    private final ApplicationEventPublisher applicationEventPublisher;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -92,8 +92,13 @@ public class BasicBinaryContentService implements BinaryContentService {
 
         binaryContent.updateStatus(status);
 
+        BinaryContentDto binaryContentDto = binaryContentMapper.toDto(binaryContent);
+
+        eventPublisher.publishEvent(new BinaryContentUpdatedEvent(binaryContentDto, status));
+
         log.info("Service: 바이너리 상태 변경이 성공하였습니다. ID: {}, status: {}", binaryContentId, status);
-        return binaryContentMapper.toDto(binaryContent);
+
+        return binaryContentDto;
     }
 
     // 생성 이벤트 발행 중복 코드
@@ -102,6 +107,6 @@ public class BasicBinaryContentService implements BinaryContentService {
                 id,
                 bytes
         );
-        applicationEventPublisher.publishEvent(event);
+        eventPublisher.publishEvent(event);
     }
 }
