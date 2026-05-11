@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Gateway 테스트 대시보드</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 API Gateway 마이크로서비스 테스트</h1>
+            <p class="subtitle">Nginx를 통한 API 라우팅 및 Rate Limiting 테스트</p>
+        </header>
+
+        <main>
+            <!-- 서비스 상태 확인 -->
+            <section class="status-section">
+                <h2>📊 서비스 상태 확인</h2>
+                <div class="service-grid">
+                    <div class="service-card" id="api-gateway-status">
+                        <h3>API Gateway</h3>
+                        <div class="status-indicator" id="gateway-status">확인 중...</div>
+                        <button onclick="checkGatewayHealth()">상태 확인</button>
+                    </div>
+                    <div class="service-card" id="user-service-status">
+                        <h3>User Service</h3>
+                        <div class="status-indicator" id="user-status">확인 중...</div>
+                        <button onclick="checkServiceHealth('users')">상태 확인</button>
+                    </div>
+                    <div class="service-card" id="order-service-status">
+                        <h3>Order Service</h3>
+                        <div class="status-indicator" id="order-status">확인 중...</div>
+                        <button onclick="checkServiceHealth('orders')">상태 확인</button>
+                    </div>
+                    <div class="service-card" id="payment-service-status">
+                        <h3>Payment Service</h3>
+                        <div class="status-indicator" id="payment-status">확인 중...</div>
+                        <button onclick="checkServiceHealth('payments')">상태 확인</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- API 테스트 -->
+            <section class="test-section">
+                <h2>🧪 API 기능 테스트</h2>
+                
+                <!-- User Service 테스트 -->
+                <div class="test-group">
+                    <h3>👤 User Service (Rate Limit: 20/분)</h3>
+                    <div class="test-controls">
+                        <button onclick="testAPI('/api/users', 'GET')">전체 사용자 조회</button>
+                        <button onclick="testAPI('/api/users/1', 'GET')">사용자 상세 조회</button>
+                        <button onclick="testUserCreate()">사용자 생성 테스트</button>
+                        <button onclick="stressTest('users', 20)">Rate Limit 테스트 (20회)</button>
+                    </div>
+                </div>
+
+                <!-- Order Service 테스트 -->
+                <div class="test-group">
+                    <h3>📦 Order Service (Rate Limit: 15/분)</h3>
+                    <div class="test-controls">
+                        <button onclick="testAPI('/api/orders', 'GET')">전체 주문 조회</button>
+                        <button onclick="testAPI('/api/orders/1', 'GET')">주문 상세 조회</button>
+                        <button onclick="testOrderCreate()">주문 생성 테스트</button>
+                        <button onclick="stressTest('orders', 15)">Rate Limit 테스트 (15회)</button>
+                    </div>
+                </div>
+
+                <!-- Payment Service 테스트 -->
+                <div class="test-group">
+                    <h3>💳 Payment Service (Rate Limit: 10/분)</h3>
+                    <div class="test-controls">
+                        <button onclick="testAPI('/api/payments', 'GET')">전체 결제 조회</button>
+                        <button onclick="testAPI('/api/payments/1', 'GET')">결제 상세 조회</button>
+                        <button onclick="testPaymentCreate()">결제 생성 테스트</button>
+                        <button onclick="stressTest('payments', 10)">Rate Limit 테스트 (10회)</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 결과 표시 -->
+            <section class="result-section">
+                <h2>📋 테스트 결과</h2>
+                <div class="result-container">
+                    <div class="result-header">
+                        <button onclick="clearResults()">결과 지우기</button>
+                    </div>
+                    <div id="test-results" class="result-content">
+                        <p class="placeholder">테스트를 실행하면 결과가 여기에 표시됩니다.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 API Gateway Demo - Microservices Architecture</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

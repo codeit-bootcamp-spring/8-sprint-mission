@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서버 오류 - 잠시 후 다시 시도해주세요</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            color: #333;
+        }
+        
+        .error-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .error-code {
+            font-size: 6rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            line-height: 1;
+        }
+        
+        .error-message {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            color: #555;
+        }
+        
+        .error-description {
+            font-size: 1rem;
+            color: #777;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+        .home-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+        
+        .home-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .retry-button {
+            background: transparent;
+            color: #ff6b6b;
+            border: 2px solid #ff6b6b;
+            padding: 13px 28px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .retry-button:hover {
+            background: #ff6b6b;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .status-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-code">5XX</div>
+        <div class="error-message">서버에 일시적인 문제가 발생했습니다</div>
+        <div class="error-description">
+            현재 서비스에 일시적인 장애가 발생했습니다.<br>
+            잠시 후 다시 시도해주시거나 관리자에게 문의하세요.
+        </div>
+        <a href="/" class="home-button">메인 페이지로 돌아가기</a>
+        <button class="retry-button" onclick="location.reload()">다시 시도</button>
+        
+        <div class="status-info">
+            <strong>장애 대응 절차:</strong><br>
+            1. 서비스 상태를 확인 중입니다<br>
+            2. 자동 복구를 시도하고 있습니다<br>
+            3. 문제가 지속되면 관리자가 직접 대응합니다
+        </div>
+    </div>
+</body>
+</html>

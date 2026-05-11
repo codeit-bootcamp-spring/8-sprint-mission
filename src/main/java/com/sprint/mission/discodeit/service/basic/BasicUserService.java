@@ -16,6 +16,7 @@ import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.service.sse.SseService;
 import com.sprint.mission.discodeit.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,7 @@ public class BasicUserService implements UserService {
     private final BinaryContentRepository binaryContentRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final PasswordEncoder passwordEncoder;
+    private final SseService sseService;
 
     @CacheEvict(value = "users", key = "'all'")
     @Transactional
@@ -75,13 +77,12 @@ public class BasicUserService implements UserService {
                 .orElse(null);
 
         String password = passwordEncoder.encode(userCreateRequest.password());
-
         User user = new User(username, email, password, Role.USER, nullableProfile);
-        Instant now = Instant.now();
 
-        userRepository.save(user);
+        UserDto dto = userMapper.toDto(userRepository.save(user));
+        sseService.broadcast("users.created", dto);   // SSE 이벤트 발송: 유저 생성
         log.info("사용자 생성 완료: id={}, username={}", user.getId(), username);
-        return userMapper.toDto(user);
+        return dto;
     }
 
     @Cacheable(value = "users", key = "'all'", unless = "#result.isEmpty()")
@@ -148,9 +149,11 @@ public class BasicUserService implements UserService {
 
         String newPassword = userUpdateRequest.newPassword();
         user.update(newUsername, newEmail, newPassword, nullableProfile);
+        UserDto dto = userMapper.toDto(user);
 
+        sseService.broadcast("users.updated", dto);  // SSE 이벤트 발송: 유저 업데이트
         log.info("사용자 수정 완료: id={}", userId);
-        return userMapper.toDto(user);
+        return dto;
     }
 
     @Transactional
@@ -177,13 +180,14 @@ public class BasicUserService implements UserService {
     @Transactional
     @Override
     public void delete(UUID userId) {
-        log.debug("사용자 삭제 시작: id={}", userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> UserNotFoundException.withId(userId));
 
-        if (!userRepository.existsById(userId)) {
-            throw UserNotFoundException.withId(userId);
-        }
-
+        UserDto deletedUserDto = userMapper.toDto(user);
         userRepository.deleteById(userId);
+
+        // SSE 이벤트 발송: 유저 삭제 (UI에서 삭제된 유저 렌더링에 사용)
+        sseService.broadcast("users.deleted", deletedUserDto);
         log.info("사용자 삭제 완료: id={}", userId);
     }
 }

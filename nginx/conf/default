@@ -1,0 +1,26 @@
+server {
+    listen 80;
+
+    # 1. API 요청 프록시
+    location /api/ {
+        proxy_pass http://backend:8080/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    # 2. WebSocket 요청 프록시
+    location /ws/ {
+        proxy_pass http://backend:8080/ws/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+    }
+
+    # 3. 그 외 모든 요청: 정적 리소스 서빙
+    location / {
+        root /usr/share/nginx/html;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+}

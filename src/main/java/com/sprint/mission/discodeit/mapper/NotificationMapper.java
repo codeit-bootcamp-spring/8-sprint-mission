@@ -8,5 +8,8 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface NotificationMapper {
     @Mapping(target = "receiverId", source = "user.id")
+    @Mapping(target = "createAt", ignore = true)
+    @Mapping(target = "title", ignore = true)
+    @Mapping(target = "content", ignore = true)
     NotificationDto ReadToNoteDto(ReadStatus readStatus);
 }

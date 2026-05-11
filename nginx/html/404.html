@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - 페이지를 찾을 수 없습니다</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            color: #333;
+        }
+        
+        .error-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .error-code {
+            font-size: 8rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            line-height: 1;
+        }
+        
+        .error-message {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            color: #555;
+        }
+        
+        .error-description {
+            font-size: 1rem;
+            color: #777;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+        .home-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .home-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-code">404</div>
+        <div class="error-message">페이지를 찾을 수 없습니다</div>
+        <div class="error-description">
+            요청하신 페이지가 존재하지 않거나 이동되었을 수 있습니다.<br>
+            URL을 확인하시거나 메인 페이지로 돌아가세요.
+        </div>
+        <a href="/" class="home-button">메인 페이지로 돌아가기</a>
+    </div>
+</body>
+</html>

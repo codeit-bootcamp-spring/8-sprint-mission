@@ -1,65 +1,111 @@
+version: '3.8'
+
 services:
-  postgres:
+  # 1. Reverse Proxy (Nginx)
+  reverse-proxy:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: discodeit-proxy
+    ports:
+      - "3000:80" # 외부와 통신하는 유일한 관문
+    depends_on:
+      - backend
+    networks:
+      - proxy-network
+
+  # 2. Backend (Spring Boot) - 기존 app과 backend를 하나로 통합
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    # ports 매핑은 제거하거나 주석 처리합니다. (Nginx를 통해서만 접근)
+    deploy:
+      replicas: 3
+    depends_on:
+      - db
+      - redis
+      - kafka
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      
+      # DB 연결 정보 (아래 db 컨테이너와 연결)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${RDS_DATABASE:-menudb}
+      SPRING_DATASOURCE_USERNAME: ${RDS_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${RDS_PASSWORD:-postgres}
+      
+      # Redis, Kafka 연결 정보
+      SPRING_REDIS_HOST: redis
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      
+      # 프로젝트 정보/JVM 옵션
+      PROJECT_NAME: ${PROJECT_NAME:-discodeit}
+      PROJECT_VERSION: ${PROJECT_VERSION:-1.2-M8}
+      JVM_OPTS: ${JVM_OPTS:-}
+      TZ: "Asia/Seoul"
+    volumes:
+      - binary-content-data:/app/.binary-content
+    networks:
+      - proxy-network
+      - infra-network
+    # ports 매핑 삭제: Nginx를 통해서만 접근하도록 완전히 내부망으로 숨김
+
+  # 3. Database (PostgreSQL) - 기존 postgres와 db를 하나로 통합
+  db:
     image: postgres:17
     container_name: discodeit-db
     restart: unless-stopped
-
     environment:
       POSTGRES_DB: ${RDS_DATABASE:-menudb}
       POSTGRES_USER: ${RDS_USERNAME:-postgres}
       POSTGRES_PASSWORD: ${RDS_PASSWORD:-postgres}
       TZ: "Asia/Seoul"
-
-    ports:
-      # 로컬 DB 포트(요구대로 .env의 DB_PORT 사용)
-      - "${DB_PORT:-5432}:5432"
-
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # 최초 초기화 시 schema 실행(현재 프로젝트에 schema2.sql이 있으므로 그걸 사용)
       - ./schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
-
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${RDS_USERNAME:-postgres} -d ${RDS_DATABASE:-menudb}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${RDS_USERNAME:-postgres} -d ${RDS_DATABASE:-menudb}" ]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 30s
+    networks:
+      - infra-network
+    # ports 매핑 삭제: 외부 접근 차단
 
-  app:
-    container_name: discodeit-app
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: unless-stopped
+  # 4. Memory DB (Redis)
+  redis:
+    image: redis:7-alpine
+    container_name: discodeit-redis
+    networks:
+      - infra-network
 
-    depends_on:
-      postgres:
-        condition: service_healthy
-
+  # 5. Message Broker (Kafka & Zookeeper) - Confluent 이미지로 교체
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: discodeit-zookeeper
     environment:
-      # 프로필
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - infra-network
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: discodeit-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - infra-network
 
-      # DB 연결: RDS_ENDPOINT는 무시하고, compose 서비스명 postgres로 고정
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${RDS_DATABASE:-menudb}
-      SPRING_DATASOURCE_USERNAME: ${RDS_USERNAME:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${RDS_PASSWORD:-postgres}
-
-      # 프로젝트 정보/JVM 옵션(요구사항)
-      PROJECT_NAME: ${PROJECT_NAME:-discodeit}
-      PROJECT_VERSION: ${PROJECT_VERSION:-1.2-M8}
-      JVM_OPTS: ${JVM_OPTS:-}
-
-      TZ: "Asia/Seoul"
-
-    ports:
-      # http://localhost:8081 접속
-      - "${APP_PORT:-8081}:8080"
-
-    volumes:
-      # BinaryContentStorage 영속화(경로는 실제 설정에 맞게 필요 시 변경)
-      - binary-content-data:/app/.binary-content
+networks:
+  proxy-network:
+  infra-network:
+    internal: true # 외부망과 완전히 차단된 내부 전용 네트워크
 
 volumes:
   postgres_data:
