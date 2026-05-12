@@ -1,10 +1,11 @@
 package com.sprint.mission.discodeit.security.jwt;
 
 import com.sprint.mission.discodeit.dto.data.JwtInformation;
-import com.sprint.mission.discodeit.event.message.UserLogInOutEvent;
+import com.sprint.mission.discodeit.event.UserLogInOutEvent;
 import com.sprint.mission.discodeit.redis.RedisLockProvider.RedisLockAcquisitionException;
 import com.sprint.mission.discodeit.redis.RedisLockProvider;
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -12,7 +13,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -140,7 +144,24 @@ public class RedisJwtRegistry implements JwtRegistry {
   @Scheduled(fixedDelay = 1000 * 60 * 5)
   @Override
   public void clearExpiredJwtInformation() {
-    Set<String> userKeys = redisTemplate.keys(USER_JWT_KEY_PREFIX + "*");
+    Set<String> userKeys = redisTemplate.execute((RedisCallback<Set<String>>) connection -> {
+      Set<String> keys = new HashSet<>();
+      try (Cursor<byte[]> cursor = connection.scan(
+          ScanOptions.scanOptions()
+              .match(USER_JWT_KEY_PREFIX + "*")
+              .count(100)
+              .build()
+      )) {
+        while (cursor.hasNext()) {
+          keys.add(new String(cursor.next()));
+        }
+      }
+      return keys;
+    });
+
+    if (userKeys == null) {
+      return;
+    }
 
     for (String userKey : userKeys) {
       List<Object> tokens = redisTemplate.opsForList().range(userKey, 0, -1);
@@ -179,10 +200,6 @@ public class RedisJwtRegistry implements JwtRegistry {
     // Set에 토큰 추가 (add: 중복되면 무시됨)
     redisTemplate.opsForSet().add(ACCESS_TOKEN_INDEX_KEY, accessToken);
     redisTemplate.opsForSet().add(REFRESH_TOKEN_INDEX_KEY, refreshToken);
-
-    // 인덱스 키에도 만료 시간 설정 (메모리 누수 방지)
-    redisTemplate.expire(ACCESS_TOKEN_INDEX_KEY, DEFAULT_TTL);
-    redisTemplate.expire(REFRESH_TOKEN_INDEX_KEY, DEFAULT_TTL);
   }
 
   private void removeTokenIndex(String accessToken, String refreshToken) {

@@ -2,7 +2,7 @@ package com.sprint.mission.discodeit.config;
 
 import java.util.List;
 import java.util.Optional;
-import org.jboss.logging.MDC;
+import org.slf4j.MDC;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskDecorator;
