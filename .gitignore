@@ -55,4 +55,4 @@ uploads
 discodeit-storage-bucket
 .env
 discodeit_uploads
-discodeit.env
+.env
