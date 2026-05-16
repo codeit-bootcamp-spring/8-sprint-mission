@@ -9,4 +9,5 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
 
   List<Notification> findAllByReceiverIdOrderByCreatedAtDesc(UUID receiverId);
 
+  void deleteByIdAndReceiverId(UUID id, UUID receiverId);
 }

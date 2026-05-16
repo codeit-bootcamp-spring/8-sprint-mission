@@ -1,16 +1,11 @@
 package com.sprint.mission.discodeit.event;
 
-import com.sprint.mission.discodeit.entity.Message;
-import lombok.Getter;
+import com.sprint.mission.discodeit.dto.data.MessageDto;
+import java.time.Instant;
 
-@Getter
-public class MessageCreatedEvent {
+public class MessageCreatedEvent extends CreatedEvent<MessageDto> {
 
-  private final Message message;
-  private final String authorName;
-
-  public MessageCreatedEvent(Message message) {
-    this.message = message;
-    this.authorName = message.getAuthor().getUsername();
+  public MessageCreatedEvent(MessageDto data, Instant createdAt) {
+    super(data, createdAt);
   }
 }

@@ -12,8 +12,8 @@ import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.sse.SseServiceInterface;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,11 +35,11 @@ public class BasicUserService implements UserService {
   private final UserRepository userRepository;
   private final UserMapper userMapper;
   private final BinaryContentRepository binaryContentRepository;
-  //private final BinaryContentStorage binaryContentStorage; //이것도 나중에 지워야함
-  private final ApplicationEventPublisher eventPublisher;
   private final PasswordEncoder passwordEncoder;
+  private final ApplicationEventPublisher eventPublisher;
+  private final SseServiceInterface sseService;
 
-  @CacheEvict(value = "users", allEntries = true)
+  @CacheEvict(value = "users", key = "'all'")
   @Transactional
   @Override
   public UserDto create(UserCreateRequest userCreateRequest,
@@ -64,13 +64,11 @@ public class BasicUserService implements UserService {
           BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
               contentType);
           binaryContentRepository.save(binaryContent);
-
-          eventPublisher.publishEvent(new BinaryContentCreatedEvent(
-              binaryContent,
-              binaryContent.getCreatedAt(),
-              bytes
-          ));
-
+          eventPublisher.publishEvent(
+              new BinaryContentCreatedEvent(
+                  binaryContent, binaryContent.getCreatedAt(), bytes
+              )
+          );
           return binaryContent;
         })
         .orElse(null);
@@ -80,9 +78,12 @@ public class BasicUserService implements UserService {
     User user = new User(username, email, encodedPassword, nullableProfile);
 
     userRepository.save(user);
-    log.info("사용자 생성 완료: id={}, username={}", user.getId(), username);
-    log.info("[Cache Evict] 새 사용자 생성으로 사용자 목록 캐시를 비웁니다.");
-    return userMapper.toDto(user);
+    UserDto dto = userMapper.toDto(user);
+
+    sseService.broadcast("users.created", dto);
+
+    log.info("사용자 생성 및 SSE 방송 완료: id={}, username={}", dto.id(), dto.username());
+    return dto;
   }
 
   @Transactional(readOnly = true)
@@ -96,10 +97,10 @@ public class BasicUserService implements UserService {
     return userDto;
   }
 
+  @Cacheable(value = "users", key = "'all'", unless = "#result.isEmpty()")
   @Transactional(readOnly = true)
   @Override
   public List<UserDto> findAll() {
-    log.info("[Cache Miss] DB에서 모든 사용자 목록을 가져옵니다.");
     log.debug("모든 사용자 조회 시작");
     List<UserDto> userDtos = userRepository.findAllWithProfile()
         .stream()
@@ -109,7 +110,7 @@ public class BasicUserService implements UserService {
     return userDtos;
   }
 
-  @CacheEvict(value = "users", allEntries = true)
+  @CacheEvict(value = "users", key = "'all'")
   @PreAuthorize("principal.userDto.id == #userId")
   @Transactional
   @Override
@@ -143,11 +144,11 @@ public class BasicUserService implements UserService {
           BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
               contentType);
           binaryContentRepository.save(binaryContent);
-          eventPublisher.publishEvent(new BinaryContentCreatedEvent(
-              binaryContent,
-              binaryContent.getCreatedAt(),
-              bytes
-          ));
+          eventPublisher.publishEvent(
+              new BinaryContentCreatedEvent(
+                  binaryContent, binaryContent.getCreatedAt(), bytes
+              )
+          );
           return binaryContent;
         })
         .orElse(null);
@@ -157,24 +158,25 @@ public class BasicUserService implements UserService {
         .orElse(user.getPassword());
     user.update(newUsername, newEmail, encodedPassword, nullableProfile);
 
-    log.info("사용자 수정 완료: id={}", userId);
-    log.info("[Cache Evict] 사용자 정보 수정으로 사용자 목록 캐시를 비웁니다.");
-    return userMapper.toDto(user);
+    UserDto dto = userMapper.toDto(user);
+    sseService.broadcast("users.updated", dto);
+    log.info("사용자 수정 및 SSE 방송 완료: id={}", userId);
+    return dto;
   }
 
-  @CacheEvict(value = "users", allEntries = true)
+  @CacheEvict(value = "users", key = "'all'")
   @PreAuthorize("principal.userDto.id == #userId")
   @Transactional
   @Override
   public void delete(UUID userId) {
     log.debug("사용자 삭제 시작: id={}", userId);
 
-    if (!userRepository.existsById(userId)) {
-      throw UserNotFoundException.withId(userId);
-    }
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> UserNotFoundException.withId(userId));
+    UserDto dto = userMapper.toDto(user);
 
     userRepository.deleteById(userId);
-    log.info("사용자 삭제 완료: id={}", userId);
-    log.info("[Cache Evict] 사용자 삭제로 사용자 목록 캐시를 비웁니다.");
+    sseService.broadcast("users.deleted", dto);
+    log.info("사용자 삭제 및 SSE 방송 완료: id={}", userId);
   }
 }

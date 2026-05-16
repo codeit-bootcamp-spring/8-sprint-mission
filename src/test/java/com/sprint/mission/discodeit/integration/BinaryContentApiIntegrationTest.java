@@ -21,10 +21,10 @@ import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.service.UserService;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +37,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-@Disabled
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -56,6 +55,9 @@ class BinaryContentApiIntegrationTest {
 
   @Autowired
   private UserService userService;
+  
+  @Autowired
+  private BinaryContentStorage binaryContentStorage;
 
   @Autowired
   private ChannelService channelService;
@@ -190,6 +192,9 @@ class BinaryContentApiIntegrationTest {
     BinaryContentDto binaryContent = binaryContentService.create(createRequest);
     UUID binaryContentId = binaryContent.id();
 
+    // Manually store the file for test (skip status update due to transaction issues)
+    binaryContentStorage.put(binaryContentId, fileContent.getBytes());
+    
     // When & Then
     mockMvc.perform(get("/api/binaryContents/{binaryContentId}/download", binaryContentId))
         .andExpect(status().isOk())

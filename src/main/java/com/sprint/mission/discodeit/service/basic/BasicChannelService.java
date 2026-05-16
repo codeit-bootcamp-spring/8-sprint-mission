@@ -15,9 +15,12 @@ import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
+import com.sprint.mission.discodeit.sse.SseServiceInterface;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,6 +39,8 @@ public class BasicChannelService implements ChannelService {
   private final MessageRepository messageRepository;
   private final UserRepository userRepository;
   private final ChannelMapper channelMapper;
+  private final CacheManager cacheManager;
+  private final SseServiceInterface sseService;
 
   @CacheEvict(value = "channels", allEntries = true)
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
@@ -48,12 +53,13 @@ public class BasicChannelService implements ChannelService {
     Channel channel = new Channel(ChannelType.PUBLIC, name, description);
 
     channelRepository.save(channel);
-    log.info("채널 생성 완료: id={}, name={}", channel.getId(), channel.getName());
-    log.info("[Cache Evict] 공용 채널 생성으로 모든 채널 캐시를 초기화합니다.");
-    return channelMapper.toDto(channel);
+    ChannelDto dto = channelMapper.toDto(channel);
+    sseService.broadcast("channels.created", dto);
+
+    log.info("채널 생성 완료: id={}, name={}", dto.id(), dto.name());
+    return dto;
   }
 
-  @CacheEvict(value = "channels", allEntries = true)
   @Transactional
   @Override
   public ChannelDto create(PrivateChannelCreateRequest request) {
@@ -65,10 +71,12 @@ public class BasicChannelService implements ChannelService {
         .map(user -> new ReadStatus(user, channel, channel.getCreatedAt()))
         .toList();
     readStatusRepository.saveAll(readStatuses);
+    evictCache(request.participantIds());
+    ChannelDto dto = channelMapper.toDto(channel);
+    sseService.send(request.participantIds(), "channels.created", dto);
 
-    log.info("채널 생성 완료: id={}, name={}", channel.getId(), channel.getName());
-    log.info("[Cache Evict] 개인 채널 생성으로 채널 캐시를 초기화합니다.");
-    return channelMapper.toDto(channel);
+    log.info("비공개 채널 생성 및 SSE 전송 완료: id={}", channel.getId());
+    return dto;
   }
 
   @Transactional(readOnly = true)
@@ -79,11 +87,10 @@ public class BasicChannelService implements ChannelService {
         .orElseThrow(() -> ChannelNotFoundException.withId(channelId));
   }
 
-  @Cacheable(value = "channels", key = "#userId")
+  @Cacheable(value = "channels", key = "#userId", unless = "#result.isEmpty()")
   @Transactional(readOnly = true)
   @Override
   public List<ChannelDto> findAllByUserId(UUID userId) {
-    log.info("[Cache Miss] DB에서 사용자의 채널 목록을 조회합니다: userId={}", userId);
     List<UUID> mySubscribedChannelIds = readStatusRepository.findAllByUserId(userId).stream()
         .map(ReadStatus::getChannel)
         .map(Channel::getId)
@@ -109,8 +116,11 @@ public class BasicChannelService implements ChannelService {
       throw PrivateChannelUpdateException.forChannel(channelId);
     }
     channel.update(newName, newDescription);
-    log.info("채널 수정 완료: id={}, name={}", channelId, channel.getName());
-    return channelMapper.toDto(channel);
+    ChannelDto dto = channelMapper.toDto(channel);
+    sseService.broadcast("channels.updated", dto);
+
+    log.info("채널 수정 및 SSE 방송 완료: id={}", channelId);
+    return dto;
   }
 
   @CacheEvict(value = "channels", allEntries = true)
@@ -119,15 +129,28 @@ public class BasicChannelService implements ChannelService {
   @Override
   public void delete(UUID channelId) {
     log.debug("채널 삭제 시작: id={}", channelId);
-    if (!channelRepository.existsById(channelId)) {
-      throw ChannelNotFoundException.withId(channelId);
-    }
+    Channel channel = channelRepository.findById(channelId)
+        .orElseThrow(() -> ChannelNotFoundException.withId(channelId));
+    ChannelDto dto = channelMapper.toDto(channel);
 
     messageRepository.deleteAllByChannelId(channelId);
     readStatusRepository.deleteAllByChannelId(channelId);
 
     channelRepository.deleteById(channelId);
-    log.info("채널 삭제 완료: id={}", channelId);
-    log.info("[Cache Evict] 채널 삭제로 채널 캐시를 초기화합니다.");
+    sseService.broadcast("channels.deleted", dto);
+
+    log.info("채널 삭제 및 SSE 방송 완료: id={}", channelId);
+  }
+
+  private void evictCache(List<UUID> userIds) {
+    Cache cache = cacheManager.getCache("channels");
+    if (cache != null) {
+      for (UUID userId : userIds) {
+        cache.evict(userId);
+      }
+      log.debug("채널 캐시를 제거했습니다: userIds={}", userIds);
+    } else {
+      log.warn("채널 캐시가 존재하지 않습니다.");
+    }
   }
 }

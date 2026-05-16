@@ -2,21 +2,24 @@ package com.sprint.mission.discodeit.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.entity.Role;
+import com.sprint.mission.discodeit.redis.RedisLockProvider;
 import com.sprint.mission.discodeit.security.Http403ForbiddenAccessDeniedHandler;
 import com.sprint.mission.discodeit.security.LoginFailureHandler;
 import com.sprint.mission.discodeit.security.SpaCsrfTokenRequestHandler;
-import com.sprint.mission.discodeit.security.jwt.InMemoryJwtRegistry;
 import com.sprint.mission.discodeit.security.jwt.JwtAuthenticationFilter;
 import com.sprint.mission.discodeit.security.jwt.JwtLoginSuccessHandler;
 import com.sprint.mission.discodeit.security.jwt.JwtLogoutHandler;
 import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.security.jwt.JwtTokenProvider;
+import com.sprint.mission.discodeit.security.jwt.RedisJwtRegistry;
 import java.util.List;
 import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
@@ -34,6 +37,8 @@ import org.springframework.security.web.authentication.Http403ForbiddenEntryPoin
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 @Slf4j
 @Configuration
@@ -68,20 +73,16 @@ public class SecurityConfig {
                 new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
         )
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
-            .requestMatchers(HttpMethod.POST, "/api/users", "/api/auth/login", "/api/auth/refresh",
-                "/api/auth/logout").permitAll()
 
-            .requestMatchers(HttpMethod.GET, "/api/binaryContents/download/**", "/api/binaryContents/view/**").permitAll()
-
-            .requestMatchers("/actuator/**").permitAll()
-            .requestMatchers("/error").permitAll()
-
-            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**")
-            .permitAll()
-
-            .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico").permitAll()
-
+            .requestMatchers(
+                AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/health"),
+                AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/auth/csrf-token"),
+                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/users"),
+                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/login"),
+                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/refresh"),
+                AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/logout"),
+                new NegatedRequestMatcher(AntPathRequestMatcher.antMatcher("/api/**"))
+            ).permitAll()
             .anyRequest().authenticated()
         )
         .exceptionHandling(ex -> ex
@@ -135,7 +136,12 @@ public class SecurityConfig {
   }
 
   @Bean
-  public JwtRegistry jwtRegistry(JwtTokenProvider jwtTokenProvider) {
-    return new InMemoryJwtRegistry(1, jwtTokenProvider);
+  public JwtRegistry jwtRegistry(RedisTemplate<String, Object> redisTemplate,
+      JwtTokenProvider jwtTokenProvider,
+      ApplicationEventPublisher eventPublisher, RedisLockProvider redisLockProvider) {
+    return new RedisJwtRegistry(
+        1, jwtTokenProvider, eventPublisher,
+        redisTemplate, redisLockProvider
+    );
   }
 }

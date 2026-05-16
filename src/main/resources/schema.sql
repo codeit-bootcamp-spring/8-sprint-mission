@@ -22,8 +22,8 @@ CREATE TABLE binary_contents
     size         bigint                   NOT NULL,
     content_type varchar(100)             NOT NULL,
     status       varchar(20)              NOT NULL
+--     ,bytes        bytea        NOT NULL
 );
-
 
 -- Channel
 CREATE TABLE channels
@@ -68,6 +68,7 @@ CREATE TABLE read_statuses
     UNIQUE (user_id, channel_id)
 );
 
+
 CREATE TABLE notifications
 (
     id          uuid PRIMARY KEY,
@@ -77,7 +78,6 @@ CREATE TABLE notifications
     title       varchar(255)             NOT NULL,
     content     text                     NOT NULL
 );
-
 
 -- 제약 조건
 -- User (1) -> BinaryContent (1)
@@ -120,10 +120,4 @@ ALTER TABLE read_statuses
     ADD CONSTRAINT fk_read_status_channel
         FOREIGN KEY (channel_id)
             REFERENCES channels (id)
-            ON DELETE CASCADE;
-
-ALTER TABLE notifications
-    ADD CONSTRAINT fk_notification_user
-        FOREIGN KEY (receiver_id)
-            REFERENCES users (id)
             ON DELETE CASCADE;

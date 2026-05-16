@@ -1,32 +1,96 @@
+version: '3.8'
+
 services:
-  # 1. PostgreSQL 서비스
+  # 1. Reverse Proxy (Nginx) - 외부 3000번
+  nginx:
+    image: nginx:stable-alpine
+    container_name: discodeit-nginx
+    ports:
+      - "3001:80" #그라파나 때문에 3001
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+    depends_on:
+      - backend
+    networks:
+      - discodeit-net
+
+  # 2. Backend (Spring Boot) - 외부 8080 (직접 확인용)
+  backend:
+    build: .
+    #    container_name: discodeit-backend
+    #    #    ports: #테스트 끝나면 주석처리
+    #    #      - "8080:8080"
+    deploy:
+      replicas: 3
+    env_file:
+      - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${DB_NAME}
+      - REDIS_HOST=redis
+      - KAFKA_BOOTSTRAP_SERVERS=broker:29092
+      - STORAGE_TYPE=local
+      - STORAGE_LOCAL_ROOT_PATH=/app/binary-storage
+    volumes:
+      - ./binary-storage:/app/binary-storage
+    depends_on:
+      - db
+      - redis
+      - broker
+    networks:
+      - discodeit-net
+
+  # 3. PostgreSQL - 외부 5432 (데이터 확인용)
   db:
     image: postgres:17
     container_name: discodeit-db
+    #    ports: #테스트 끝나면 주석처리
+    #      - "5432:5432"
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data  # DB 데이터 유지
-      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql   # schema.sql 자동 실행용
-    ports:
-      - "5432:5432"
+      - ./postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - discodeit-net
 
-  # 2. 애플리케이션 서비스
-  app:
-    build: .  # 로컬 Dockerfile 활용
-    container_name: discodeit-app
-    depends_on:
-      - db   # DB가 먼저 켜져야 함
-    env_file:
-      - .env
-    environment:
-      SPRING_PROFILES_ACTIVE: ${APP_PROFILE}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
-      SPRING_DATASOURCE_USERNAME: ${DB_USER}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+  # 4. Redis - 외부 6379 (캐시 확인용)
+  redis:
+    image: redis:7.2-alpine
+    container_name: discodeit-redis
+    #    ports: #테스트 끝나면 주석처리
+    #      - "6379:6379"
     volumes:
-      - ./binary-storage:/app/binary-storage # 파일 데이터 유지
-    ports:
-      - "8081:80"
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - discodeit-net
+
+  # 5. Kafka Broker - 외부 9092 (메시지 확인용)
+  broker:
+    image: apache/kafka:latest
+    container_name: broker
+    #    ports: #테스트 끝나면 주석처리
+    #      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:29093
+      KAFKA_LISTENERS: PLAINTEXT://broker:29092,CONTROLLER://broker:29093,EXTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    networks:
+      - discodeit-net
+
+networks:
+  discodeit-net:
+    driver: bridge
+
+volumes:
+  redis-data:

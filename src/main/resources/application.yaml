@@ -9,7 +9,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     open-in-view: false
   profiles:
     active:
@@ -22,14 +22,19 @@ spring:
       - channels
       - notifications
       - users
+    caffeine:
+      spec: >
+        maximumSize=100,
+        expireAfterAccess=600s,
+        recordStats
     redis:
       enable-statistics: true
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -39,12 +44,11 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
-
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,loggers,caches
+        include: health,info,metrics,loggers
   endpoint:
     health:
       show-details: always
@@ -74,9 +78,9 @@ info:
 
 discodeit:
   storage:
-    type: local  # local | s3 (기본값: local)
+    type: ${STORAGE_TYPE:local}  # local | s3 (기본값: local)
     local:
-      root-path: .discodeit/storage
+      root-path: ${STORAGE_LOCAL_ROOT_PATH:.discodeit/storage}
     s3:
       access-key: ${AWS_S3_ACCESS_KEY}
       secret-key: ${AWS_S3_SECRET_KEY}
@@ -84,9 +88,9 @@ discodeit:
       bucket: ${AWS_S3_BUCKET}
       presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600} # (기본값: 10분)
   admin:
-    username: ${DISCODEIT_ADMIN_USERNAME:admin}
-    email: ${DISCODEIT_ADMIN_EMAIL:admin@example.com}
-    password: ${DISCODEIT_ADMIN_PASSWORD:admin1234}
+    username: ${DISCODEIT_ADMIN_USERNAME}
+    email: ${DISCODEIT_ADMIN_EMAIL}
+    password: ${DISCODEIT_ADMIN_PASSWORD}
   jwt:
     access-token:
       secret: ${JWT_ACCESS_SECRET:your-access-token-secret-key-here-make-it-long-and-random}

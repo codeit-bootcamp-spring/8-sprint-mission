@@ -2,16 +2,16 @@ package com.sprint.mission.discodeit.event.kafka;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sprint.mission.discodeit.dto.kafka.MessageCreatedKafkaEvent;
-import com.sprint.mission.discodeit.dto.kafka.RoleUpdatedKafkaEvent;
-import com.sprint.mission.discodeit.dto.kafka.S3UploadFailedKafkaEvent;
+import com.sprint.mission.discodeit.event.BinaryContentStatusUpdatedEvent;
+import com.sprint.mission.discodeit.event.ChannelEvent;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
+import com.sprint.mission.discodeit.event.NotificationCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
-import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.event.UserEvent;
+import com.sprint.mission.discodeit.event.UserLogInOutEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -21,7 +21,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-@ConditionalOnProperty(name = "discodeit.notification.mode", havingValue = "kafka")
 public class KafkaProduceRequiredEventListener {
 
   private final KafkaTemplate<String, String> kafkaTemplate;
@@ -29,44 +28,61 @@ public class KafkaProduceRequiredEventListener {
 
   @Async("eventTaskExecutor")
   @TransactionalEventListener
-  public void on(MessageCreatedEvent event) throws JsonProcessingException {
-    Message message = event.getMessage();
-    MessageCreatedKafkaEvent kafkaEvent = new MessageCreatedKafkaEvent(
-        message.getId(),
-        message.getChannel().getId(),
-        message.getAuthor().getId(),
-        message.getContent(),
-        event.getAuthorName(),
-        message.getChannel().getName(),
-        message.getCreatedAt()
-    );
-    String payload = objectMapper.writeValueAsString(kafkaEvent);
-    kafkaTemplate.send("discodeit.MessageCreatedEvent", payload);
-    log.info("[Kafka] 메시지 생성 이벤트 전송 완료");
+  public void on(MessageCreatedEvent event) {
+    sendToKafka(event);
   }
 
   @Async("eventTaskExecutor")
   @TransactionalEventListener
-  public void on(RoleUpdatedEvent event) throws JsonProcessingException {
-    RoleUpdatedKafkaEvent kafkaEvent = new RoleUpdatedKafkaEvent(
-        event.getUser().getId(),
-        event.getUser().getUsername(),
-        event.getOldRole(),
-        event.getNewRole()
-    );
-    String payload = objectMapper.writeValueAsString(kafkaEvent);
-    kafkaTemplate.send("discodeit.RoleUpdatedEvent", payload);
-    log.info("[Kafka] 권한 변경 이벤트 전송 완료");
+  public void on(RoleUpdatedEvent event) {
+    sendToKafka(event);
   }
 
   @Async("eventTaskExecutor")
   @EventListener
-  public void on(S3UploadFailedEvent event) throws JsonProcessingException {
-    S3UploadFailedKafkaEvent kafkaEvent = new S3UploadFailedKafkaEvent(
-        event.getBinaryContentId()
-    );
-    String payload = objectMapper.writeValueAsString(kafkaEvent);
-    kafkaTemplate.send("discodeit.S3UploadFailedEvent", payload);
-    log.info("[Kafka] S3 업로드 실패 이벤트 전송 완료");
+  public void on(S3UploadFailedEvent event) {
+    sendToKafka(event);
+  }
+
+  @Async("eventTaskExecutor")
+  @TransactionalEventListener
+  public void on(NotificationCreatedEvent event) {
+    sendToKafka(event);
+  }
+
+  @Async("eventTaskExecutor")
+  @TransactionalEventListener
+  public void on(BinaryContentStatusUpdatedEvent event) {
+    sendToKafka(event);
+  }
+
+  @Async("eventTaskExecutor")
+  @TransactionalEventListener
+  public void on(ChannelEvent event) {
+    sendToKafka(event);
+  }
+
+  @Async("eventTaskExecutor")
+  @TransactionalEventListener
+  public void on(UserEvent event) {
+    sendToKafka(event);
+  }
+
+
+  @Async("eventTaskExecutor")
+  @EventListener
+  public void on(UserLogInOutEvent event) {
+    sendToKafka(event);
+  }
+
+
+  private <T> void sendToKafka(T event) {
+    try {
+      String payload = objectMapper.writeValueAsString(event);
+      kafkaTemplate.send("discodeit.".concat(event.getClass().getSimpleName()), payload);
+    } catch (JsonProcessingException e) {
+      log.error("Failed to send event to Kafka", e);
+      throw new RuntimeException(e);
+    }
   }
 }

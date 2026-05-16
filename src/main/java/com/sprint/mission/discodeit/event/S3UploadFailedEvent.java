@@ -9,12 +9,12 @@ import org.slf4j.MDC;
 public class S3UploadFailedEvent {
 
   private final UUID binaryContentId;
-  private final Throwable exception;
+  private final Throwable e;
   private final String requestId;
 
-  public S3UploadFailedEvent(UUID binaryContentId, Throwable exception) {
+  public S3UploadFailedEvent(UUID binaryContentId, Throwable e) {
     this.binaryContentId = binaryContentId;
-    this.exception = exception;
+    this.e = e;
     this.requestId = MDC.get(MDCLoggingInterceptor.REQUEST_ID);
   }
 }

@@ -31,9 +31,9 @@ public enum ErrorCode {
   INVALID_TOKEN("토큰이 유효하지 않습니다."),
   INVALID_USER_DETAILS("사용자 인증 정보(UserDetails)가 유효하지 않습니다."),
 
-  // notification 관련 에러 코드
+  // Notification 관련 에러 코드
   NOTIFICATION_NOT_FOUND("알림을 찾을 수 없습니다."),
-  NOTIFICATION_FORBIDDEN("해당 알림에 대한 접근 권한이 없습니다."),
+  NOTIFICATION_FORBIDDEN("알림을 삭제할 권한이 없습니다."),
   ;
 
   private final String message;

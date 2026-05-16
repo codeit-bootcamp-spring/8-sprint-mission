@@ -9,7 +9,7 @@ import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoun
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import com.sprint.mission.discodeit.sse.SseServiceInterface;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +26,8 @@ public class BasicBinaryContentService implements BinaryContentService {
 
   private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentMapper binaryContentMapper;
-  //private final BinaryContentStorage binaryContentStorage; //나중에 제거해야함
   private final ApplicationEventPublisher eventPublisher;
+  private final SseServiceInterface sseService;
 
   @Transactional
   @Override
@@ -44,11 +44,9 @@ public class BasicBinaryContentService implements BinaryContentService {
         contentType
     );
     binaryContentRepository.save(binaryContent);
-
-    eventPublisher.publishEvent(new BinaryContentCreatedEvent(
-            binaryContent,
-            binaryContent.getCreatedAt(),
-            bytes
+    eventPublisher.publishEvent(
+        new BinaryContentCreatedEvent(
+            binaryContent, binaryContent.getCreatedAt(), bytes
         )
     );
 
@@ -92,11 +90,15 @@ public class BasicBinaryContentService implements BinaryContentService {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @Override
   public BinaryContentDto updateStatus(UUID binaryContentId, BinaryContentStatus status) {
+    log.debug("바이너리 컨텐츠 상태 업데이트 시작: id={}, status={}", binaryContentId, status);
     BinaryContent binaryContent = binaryContentRepository.findById(binaryContentId)
         .orElseThrow(() -> BinaryContentNotFoundException.withId(binaryContentId));
     binaryContent.updateStatus(status);
-    log.info("바이너리 컨텐츠 상태 업데이트 완료: id={}, status={}", binaryContentId, status);
     binaryContentRepository.save(binaryContent);
-    return binaryContentMapper.toDto(binaryContent);
+    BinaryContentDto dto = binaryContentMapper.toDto(binaryContent);
+    sseService.broadcast("binaryContents.updated", dto);
+
+    log.info("바이너리 컨텐츠 상태 업데이트 및 SSE 방송 완료: id={}, status={}", binaryContentId, status);
+    return dto;
   }
 }
