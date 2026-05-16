@@ -102,3 +102,6 @@ discodeit:
 logging:
   level:
     root: info
+
+sse:
+  timeout: 300_000
