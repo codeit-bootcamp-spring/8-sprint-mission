@@ -80,10 +80,12 @@ public class BasicUserService implements UserService {
     User user = new User(username, email, encodedPassword, nullableProfile);
 
     userRepository.save(user);
-    UserDto dto = userMapper.toDto(user);
-    eventPublisher.publishEvent(new UserCreatedEvent(dto, Instant.now()));
     log.info("사용자 생성 완료: id={}, username={}", user.getId(), username);
-    return dto;
+    UserDto created = userMapper.toDto(user);
+    eventPublisher.publishEvent(
+        new UserCreatedEvent(created, user.getCreatedAt())
+    );
+    return created;
   }
 
   @Transactional(readOnly = true)
@@ -153,16 +155,18 @@ public class BasicUserService implements UserService {
         })
         .orElse(null);
 
+    UserDto previousUser = userMapper.toDto(user);
     String newPassword = userUpdateRequest.newPassword();
     String encodedPassword = Optional.ofNullable(newPassword).map(passwordEncoder::encode)
         .orElse(user.getPassword());
-    UserDto before = userMapper.toDto(user);
     user.update(newUsername, newEmail, encodedPassword, nullableProfile);
-    UserDto after = userMapper.toDto(user);
-    eventPublisher.publishEvent(new UserUpdatedEvent(before, after, Instant.now()));
 
     log.info("사용자 수정 완료: id={}", userId);
-    return after;
+    UserDto updated = userMapper.toDto(user);
+    eventPublisher.publishEvent(
+        new UserUpdatedEvent(previousUser, updated, user.getUpdatedAt())
+    );
+    return updated;
   }
 
   @CacheEvict(value = "users", key = "'all'")
@@ -172,15 +176,14 @@ public class BasicUserService implements UserService {
   public void delete(UUID userId) {
     log.debug("사용자 삭제 시작: id={}", userId);
 
-    if (!userRepository.existsById(userId)) {
-      throw UserNotFoundException.withId(userId);
-    }
-
-    UserDto deleted = userRepository.findById(userId)
+    UserDto deletedUser = userRepository.findById(userId)
         .map(userMapper::toDto)
         .orElseThrow(() -> UserNotFoundException.withId(userId));
+
     userRepository.deleteById(userId);
-    eventPublisher.publishEvent(new UserDeletedEvent(deleted, Instant.now()));
     log.info("사용자 삭제 완료: id={}", userId);
+    eventPublisher.publishEvent(
+        new UserDeletedEvent(deletedUser, Instant.now())
+    );
   }
 }

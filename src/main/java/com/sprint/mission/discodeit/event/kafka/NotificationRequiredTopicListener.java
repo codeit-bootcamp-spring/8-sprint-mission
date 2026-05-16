@@ -42,6 +42,7 @@ public class NotificationRequiredTopicListener {
     try {
       MessageCreatedEvent event = objectMapper.readValue(kafkaEvent,
           MessageCreatedEvent.class);
+      log.info("Received MessageCreatedEvent: {}", event);
 
       MessageDto message = event.getData();
       UUID channelId = message.channelId();

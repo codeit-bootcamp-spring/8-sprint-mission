@@ -57,10 +57,14 @@ public class BasicChannelService implements ChannelService {
     Channel channel = new Channel(ChannelType.PUBLIC, name, description);
 
     channelRepository.save(channel);
-    ChannelDto dto = channelMapper.toDto(channel);
-    eventPublisher.publishEvent(new ChannelCreatedEvent(dto, Instant.now()));
     log.info("채널 생성 완료: id={}, name={}", channel.getId(), channel.getName());
-    return dto;
+    ChannelDto created = channelMapper.toDto(channel);
+    eventPublisher.publishEvent(
+        new ChannelCreatedEvent(
+            created, channel.getCreatedAt()
+        )
+    );
+    return created;
   }
 
   @Transactional
@@ -75,10 +79,14 @@ public class BasicChannelService implements ChannelService {
         .toList();
     readStatusRepository.saveAll(readStatuses);
     evictCache(request.participantIds());
-    ChannelDto dto = channelMapper.toDto(channel);
-    eventPublisher.publishEvent(new ChannelCreatedEvent(dto, Instant.now()));
     log.info("채널 생성 완료: id={}, name={}", channel.getId(), channel.getName());
-    return dto;
+    ChannelDto created = channelMapper.toDto(channel);
+    eventPublisher.publishEvent(
+        new ChannelCreatedEvent(
+            created, channel.getCreatedAt()
+        )
+    );
+    return created;
   }
 
   @Transactional(readOnly = true)
@@ -117,12 +125,16 @@ public class BasicChannelService implements ChannelService {
     if (channel.getType().equals(ChannelType.PRIVATE)) {
       throw PrivateChannelUpdateException.forChannel(channelId);
     }
-    ChannelDto before = channelMapper.toDto(channel);
+    ChannelDto previousChannel = channelMapper.toDto(channel);
     channel.update(newName, newDescription);
-    ChannelDto after = channelMapper.toDto(channel);
-    eventPublisher.publishEvent(new ChannelUpdatedEvent(before, after, Instant.now()));
     log.info("채널 수정 완료: id={}, name={}", channelId, channel.getName());
-    return after;
+    ChannelDto updated = channelMapper.toDto(channel);
+    eventPublisher.publishEvent(
+        new ChannelUpdatedEvent(
+            previousChannel, updated, channel.getUpdatedAt()
+        )
+    );
+    return updated;
   }
 
   @CacheEvict(value = "channels", allEntries = true)
@@ -131,19 +143,18 @@ public class BasicChannelService implements ChannelService {
   @Override
   public void delete(UUID channelId) {
     log.debug("채널 삭제 시작: id={}", channelId);
-    if (!channelRepository.existsById(channelId)) {
-      throw ChannelNotFoundException.withId(channelId);
-    }
-
-    ChannelDto deleted = channelRepository.findById(channelId)
+    ChannelDto deletedChannel = channelRepository.findById(channelId)
         .map(channelMapper::toDto)
         .orElseThrow(() -> ChannelNotFoundException.withId(channelId));
+
     messageRepository.deleteAllByChannelId(channelId);
     readStatusRepository.deleteAllByChannelId(channelId);
 
     channelRepository.deleteById(channelId);
-    eventPublisher.publishEvent(new ChannelDeletedEvent(deleted, Instant.now()));
     log.info("채널 삭제 완료: id={}", channelId);
+    eventPublisher.publishEvent(
+        new ChannelDeletedEvent(deletedChannel, Instant.now())
+    );
   }
 
   private void evictCache(List<UUID> userIds) {

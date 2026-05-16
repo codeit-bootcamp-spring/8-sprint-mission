@@ -1,10 +1,7 @@
 package com.sprint.mission.discodeit.config;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
-import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import java.time.Duration;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,19 +14,12 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 public class CacheConfig {
 
   @Bean
-  public RedisCacheConfiguration redisCacheConfiguration(ObjectMapper objectMapper) {
-    ObjectMapper redisObjectMapper = objectMapper.copy();
-    redisObjectMapper.activateDefaultTyping(
-        LaissezFaireSubTypeValidator.instance,
-        DefaultTyping.EVERYTHING,
-        As.PROPERTY
-    );
+  public RedisCacheConfiguration redisCacheConfiguration(
+      @Qualifier("redisSerializer") GenericJackson2JsonRedisSerializer redisSerializer) {
 
     return RedisCacheConfiguration.defaultCacheConfig()
         .serializeValuesWith(
-            RedisSerializationContext.SerializationPair.fromSerializer(
-                new GenericJackson2JsonRedisSerializer(redisObjectMapper)
-            )
+            RedisSerializationContext.SerializationPair.fromSerializer(redisSerializer)
         )
         .prefixCacheNameWith("discodeit:")
         .entryTtl(Duration.ofSeconds(600))

@@ -8,6 +8,7 @@ import com.sprint.mission.discodeit.exception.notification.NotificationNotFoundE
 import com.sprint.mission.discodeit.mapper.NotificationMapper;
 import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.service.NotificationService;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -77,10 +78,14 @@ public class BasicNotificationService implements NotificationService {
             content
         )).toList();
     notificationRepository.saveAll(notifications);
-    notifications.stream()
-        .map(notificationMapper::toDto)
-        .forEach(dto -> eventPublisher.publishEvent(new NotificationCreatedEvent(dto, dto.createdAt())));
     evictNotificationCache(receiverIds);
+
+    List<NotificationDto> createdNotifications = notifications.stream()
+        .map(notificationMapper::toDto)
+        .toList();
+    eventPublisher.publishEvent(
+        new NotificationCreatedEvent(createdNotifications, Instant.now())
+    );
     log.info("새 알림 생성 완료: receiverIds={}", receiverIds);
   }
 
