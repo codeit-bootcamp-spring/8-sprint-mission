@@ -84,19 +84,21 @@ public class GlobalExceptionHandler {
     return ResponseEntity.badRequest().body(body);
   }
 
+  @ExceptionHandler(com.sprint.mission.discodeit.exception.UnauthenticatedException.class)
+  public ResponseEntity<ErrorResponse> handleUnauthenticatedException(com.sprint.mission.discodeit.exception.UnauthenticatedException e) {
+    ErrorResponse body = toErrorResponse(
+        Instant.now(),
+        "UNAUTHORIZED",
+        "인증이 필요합니다.",
+        Collections.emptyMap(),
+        e.getClass().getName(),
+        HttpStatus.UNAUTHORIZED.value()
+    );
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+  }
+
   @ExceptionHandler(IllegalStateException.class)
   public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException e) {
-    if ("Unauthenticated".equals(e.getMessage())) {
-      ErrorResponse body = toErrorResponse(
-          Instant.now(),
-          "UNAUTHORIZED",
-          "인증이 필요합니다.",
-          Collections.emptyMap(),
-          e.getClass().getName(),
-          HttpStatus.UNAUTHORIZED.value()
-      );
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
-    }
     ErrorResponse body = toErrorResponse(
         Instant.now(),
         "INTERNAL_ERROR",

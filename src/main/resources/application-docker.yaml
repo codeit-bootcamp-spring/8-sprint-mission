@@ -1,0 +1,18 @@
+# Docker Compose 네트워크에서의 기본 연결 (환경 변수로 덮어쓸 수 있음)
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  boot:
+    admin:
+      client:
+        enabled: ${SPRING_BOOT_ADMIN_CLIENT_ENABLED:false}
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:broker:29092}
+
+# 인스턴스별 WS/SSE Kafka consumer group (예: K8s Pod 이름). 미지정 시 기본값은 JVM 기동 시 random.uuid.
+# discodeit.kafka.realtime-push-group-id: discodeit-realtime-push-${POD_NAME}

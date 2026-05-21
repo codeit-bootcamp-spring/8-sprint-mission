@@ -9,6 +9,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
@@ -50,12 +52,16 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
         var usersCache = cacheManager.getCache(CacheNames.USERS_ALL);
         if (usersCache != null) {
-            usersCache.clear();
+            try {
+                usersCache.clear();
+            } catch (RuntimeException e) {
+                log.warn("사용자 목록 캐시 무효화 실패(백엔드 캐시/Redis 연결 확인): {}", e.getMessage());
+            }
         }
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME, refreshToken)
                 .httpOnly(true)
-                .secure(true) // HTTPS 환경에서만 전송
+                .secure(request.isSecure())
                 .sameSite("Strict") // CSRF 공격 방지
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60) // 7 days in seconds

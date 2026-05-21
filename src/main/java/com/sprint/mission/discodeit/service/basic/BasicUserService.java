@@ -5,17 +5,20 @@ import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.cache.CacheNames;
-import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
+import com.sprint.mission.discodeit.service.BinaryContentService;
+import com.sprint.mission.discodeit.service.SseEventNames;
+import com.sprint.mission.discodeit.service.SseService;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.security.jwt.JwtRegistry;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -39,9 +42,11 @@ public class BasicUserService implements UserService {
 		private final UserMapper userMapper;
 		private final PasswordEncoder passwordEncoder;
 		private final BinaryContentRepository binaryContentRepository;
-		// private final BinaryContentStorage binaryContentStorage;
+		private final BinaryContentStorage binaryContentStorage;
 		private final JwtRegistry jwtRegistry;
 		private final ApplicationEventPublisher applicationEventPublisher;
+		private final SseService sseService;
+		private final BinaryContentService binaryContentService;
 
 		/**
 		 * 사용자 생성 (이메일/사용자명 중복 시 예외).
@@ -73,7 +78,7 @@ public class BasicUserService implements UserService {
 								BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
 										contentType);
 								binaryContentRepository.save(binaryContent);
-								applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
+								persistProfileBinaryToStorage(binaryContent, bytes);
 								return binaryContent;
 						})
 						.orElse(null);
@@ -82,7 +87,9 @@ public class BasicUserService implements UserService {
 				User user = new User(username, email, password, Role.USER, nullableProfile);
 				userRepository.save(user);
 				log.info("사용자 생성 완료, id={}, username={}", user.getId(), username);
-				return withOnline(userMapper.toDto(user));
+				UserDto dto = withOnline(userMapper.toDto(user));
+				sseService.broadcast(SseEventNames.USERS_CREATED, dto);
+				return dto;
 		}
 
 		@Override
@@ -94,6 +101,7 @@ public class BasicUserService implements UserService {
 		}
 
 		@Override
+		@Transactional(readOnly = true)
 		@Cacheable(cacheNames = CacheNames.USERS_ALL, key = "'all'")
 		public List<UserDto> findAll() {
 				return userRepository.findAllWithProfile()
@@ -141,7 +149,7 @@ public class BasicUserService implements UserService {
 								BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
 										contentType);
 								binaryContentRepository.save(binaryContent);
-								applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
+								persistProfileBinaryToStorage(binaryContent, bytes);
 								return binaryContent;
 						})
 						.orElse(null);
@@ -152,7 +160,9 @@ public class BasicUserService implements UserService {
 				}
 				user.update(newUsername, newEmail, newPassword, nullableProfile);
 				log.info("사용자 수정 완료, userId={}, username={}", userId, newUsername);
-				return withOnline(userMapper.toDto(user));
+				UserDto dto = withOnline(userMapper.toDto(user));
+				sseService.broadcast(SseEventNames.USERS_UPDATED, dto);
+				return dto;
 		}
 
 		@Transactional
@@ -171,7 +181,9 @@ public class BasicUserService implements UserService {
 								new RoleUpdatedEvent(userId, previousRole, newRole));
 				}
 				log.info("사용자 권한 변경 완료, userId={}, role={}", userId, newRole);
-				return withOnline(userMapper.toDto(user));
+				UserDto dto = withOnline(userMapper.toDto(user));
+				sseService.broadcast(SseEventNames.USERS_UPDATED, dto);
+				return dto;
 		}
 
 		/**
@@ -187,7 +199,9 @@ public class BasicUserService implements UserService {
 						log.warn("사용자 삭제 실패: 사용자 없음, userId={}", userId);
 						throw new NoSuchElementException("User with id " + userId + " not found");
 				}
+				UserDto snapshot = find(userId);
 				userRepository.deleteById(userId);
+				sseService.broadcast(SseEventNames.USERS_DELETED, snapshot);
 				log.info("사용자 삭제 완료, userId={}", userId);
 		}
 
@@ -200,6 +214,17 @@ public class BasicUserService implements UserService {
 						jwtRegistry.hasActiveJwtInformationByUserId(dto.id()),
 						dto.role()
 				);
+		}
+
+		/**
+		 * 프로필은 UI가 곧바로 조회하므로 이벤트 비동기 저장 대신 동기로 스토리지에 기록한다.
+		 */
+		private void persistProfileBinaryToStorage(BinaryContent binaryContent, byte[] bytes) {
+				binaryContentStorage.put(binaryContent.getId(), bytes);
+				binaryContent.updateStatus(BinaryContentStatus.SUCCESS);
+				binaryContentRepository.save(binaryContent);
+				sseService.broadcast(SseEventNames.BINARY_CONTENTS_UPDATED,
+						binaryContentService.find(binaryContent.getId()));
 		}
 
 }

@@ -33,7 +33,7 @@ public class JwtLogoutHandler implements LogoutHandler {
                         // 쿠키 삭제 및 Secure/SameSite 속성 동일하게 지정
                         ResponseCookie deleteCookie = ResponseCookie.from(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME, "")
                                 .httpOnly(true)
-                                .secure(true) // 삭제 시에도 속성을 맞춰주는게 좋습니다.
+                                .secure(request.isSecure())
                                 .sameSite("Strict")
                                 .path("/")
                                 .maxAge(0)

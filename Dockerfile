@@ -19,5 +19,5 @@ WORKDIR /app
 # 빌드 스테이지에서 생성된 jar 파일만 가져오기
 COPY --from=build /app/build/libs/*.jar app.jar
 
-EXPOSE 80
+EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

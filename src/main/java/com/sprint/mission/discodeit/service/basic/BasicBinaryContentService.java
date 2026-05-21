@@ -8,12 +8,17 @@ import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
+import com.sprint.mission.discodeit.service.SseEventNames;
+import com.sprint.mission.discodeit.service.SseService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import java.io.InputStream;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.List;
 import java.util.Base64;
 import java.io.IOException;
+import java.io.File;
+import java.nio.file.Files;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +36,7 @@ public class BasicBinaryContentService implements BinaryContentService {
 		private final BinaryContentStorage binaryContentStorage;
 		private final ApplicationEventPublisher applicationEventPublisher;
 		private final BinaryContentMapper binaryContentMapper;
+		private final SseService sseService;
 
 		/**
 		 * 파일 업로드 (프로필 사진, 첨부파일 등).
@@ -45,7 +51,15 @@ public class BasicBinaryContentService implements BinaryContentService {
 						contentType);
 				BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length, contentType);
 				binaryContentRepository.save(binaryContent);
-				applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
+
+				try {
+						File tempFile = File.createTempFile("upload-", ".tmp");
+						Files.write(tempFile.toPath(), bytes);
+						applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), tempFile));
+				} catch (IOException e) {
+						throw new RuntimeException("Failed to create temporary file for upload", e);
+				}
+
 				log.info("파일 업로드 완료, binaryContentId={}, fileName={}, size={}",
 						binaryContent.getId(), fileName, bytes.length);
 
@@ -53,7 +67,8 @@ public class BasicBinaryContentService implements BinaryContentService {
 						binaryContent.getId(),
 						binaryContent.getFileName(),
 						binaryContent.getSize(),
-						binaryContent.getContentType()
+						binaryContent.getContentType(),
+						binaryContent.getStatus()
 				);
 		}
 
@@ -62,7 +77,7 @@ public class BasicBinaryContentService implements BinaryContentService {
 				return binaryContentRepository.findById(binaryContentId)
 						.map(binaryContentMapper::toDto)
 						.orElseThrow(() -> {
-								log.warn("바이?�리 조회 ?�패: ?�음, binaryContentId={}", binaryContentId);
+								log.warn("바이너리 조회 실패: 없음, binaryContentId={}", binaryContentId);
 								return new NoSuchElementException(
 										"BinaryContent with id " + binaryContentId + " not found");
 						});
@@ -71,18 +86,32 @@ public class BasicBinaryContentService implements BinaryContentService {
 		@Override
 		public BinaryContentWithBytesDto findWithBytes(UUID binaryContentId) {
 				BinaryContentDto dto = find(binaryContentId);
-				try {
-						byte[] bytes = binaryContentStorage.get(binaryContentId).readAllBytes();
+				try (InputStream in = binaryContentStorage.get(binaryContentId)) {
+						byte[] bytes = in.readAllBytes();
 						String base64 = Base64.getEncoder().encodeToString(bytes);
+						BinaryContentStatus status = dto.status() == BinaryContentStatus.FAIL
+								? BinaryContentStatus.FAIL
+								: BinaryContentStatus.SUCCESS;
 						return new BinaryContentWithBytesDto(
 								dto.id(),
 								dto.fileName(),
 								dto.size(),
 								dto.contentType(),
+								status,
 								base64
 						);
+				} catch (NoSuchElementException e) {
+						log.debug("바이너리 파일 없음(비동기 저장 대기), binaryContentId={}", binaryContentId);
+						return new BinaryContentWithBytesDto(
+								dto.id(),
+								dto.fileName(),
+								dto.size(),
+								dto.contentType(),
+								dto.status(),
+								""
+						);
 				} catch (IOException e) {
-						log.error("바이?�리 ?�기 ?�패, binaryContentId={}", binaryContentId, e);
+						log.error("바이너리 읽기 실패, binaryContentId={}", binaryContentId, e);
 						throw new RuntimeException("Failed to read binary content: " + binaryContentId, e);
 				}
 		}
@@ -97,14 +126,14 @@ public class BasicBinaryContentService implements BinaryContentService {
 		@Transactional
 		@Override
 		public void delete(UUID binaryContentId) {
-				log.debug("바이?리 ?? ?도, binaryContentId={}", binaryContentId);
+				log.debug("바이너리 삭제 시도, binaryContentId={}", binaryContentId);
 				if (!binaryContentRepository.existsById(binaryContentId)) {
-						log.warn("바이?리 ?? ?패: ?음, binaryContentId={}", binaryContentId);
+						log.warn("바이너리 삭제 실패: 없음, binaryContentId={}", binaryContentId);
 						throw new NoSuchElementException(
 								"BinaryContent with id " + binaryContentId + " not found");
 				}
 				binaryContentRepository.deleteById(binaryContentId);
-				log.info("바이?리 ?? ?료, binaryContentId={}", binaryContentId);
+				log.info("바이너리 삭제 완료, binaryContentId={}", binaryContentId);
 		}
 
 		@Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -113,6 +142,8 @@ public class BasicBinaryContentService implements BinaryContentService {
 				BinaryContent binaryContent = binaryContentRepository.findById(binaryContentId)
 						.orElseThrow(() -> new NoSuchElementException("BinaryContent with id " + binaryContentId + " not found"));
 				binaryContent.updateStatus(status);
-				return binaryContentMapper.toDto(binaryContent);
+				BinaryContentDto dto = binaryContentMapper.toDto(binaryContent);
+				sseService.broadcast(SseEventNames.BINARY_CONTENTS_UPDATED, dto);
+				return dto;
 		}
 }

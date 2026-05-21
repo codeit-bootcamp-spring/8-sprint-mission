@@ -1,8 +1,9 @@
 package com.sprint.mission.discodeit.security.jwt;
 
-import org.springframework.stereotype.Component;
-import org.springframework.scheduling.annotation.Scheduled;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.Queue;
@@ -12,12 +13,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Component
 @RequiredArgsConstructor
+@ConditionalOnMissingBean(RedisJwtRegistry.class)
 public class InMemoryJwtRegistry implements JwtRegistry {
 
     // <userId, Queue<JwtInformation>>
     private final Map<UUID, Queue<JwtInformation>> origin = new ConcurrentHashMap<>();
 
-    private final JwtTokenProvider jwtTokenProvider;
     private final JwtProperties jwtProperties;
 
     @Override
@@ -43,9 +44,13 @@ public class InMemoryJwtRegistry implements JwtRegistry {
 
     @Override
     public boolean hasActiveJwtInformationByAccessToken(String accessToken) {
+        if (accessToken == null || accessToken.isEmpty()) {
+            return false;
+        }
+        String normalized = accessToken.trim();
         return origin.values().stream()
                 .flatMap(Queue::stream)
-                .anyMatch(info -> info.getAccessToken().equals(accessToken));
+                .anyMatch(info -> normalized.equals(info.getAccessToken().trim()));
     }
 
     @Override
@@ -82,7 +87,7 @@ public class InMemoryJwtRegistry implements JwtRegistry {
         origin.entrySet().removeIf(entry -> entry.getValue().isEmpty());
     }
 
-    // 로그아웃 시 리프레시 토큰으로 무효화하기 위한 편의 메서드 추가 (명세 외)
+    @Override
     public void invalidateJwtInformationByRefreshToken(String refreshToken) {
         origin.values().forEach(queue -> queue.removeIf(info -> info.getRefreshToken().equals(refreshToken)));
     }

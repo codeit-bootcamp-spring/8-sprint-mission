@@ -14,6 +14,8 @@ import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.cache.CacheNames;
 import com.sprint.mission.discodeit.service.ChannelService;
+import com.sprint.mission.discodeit.service.SseEventNames;
+import com.sprint.mission.discodeit.service.SseService;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -35,6 +37,7 @@ public class BasicChannelService implements ChannelService {
 		private final MessageRepository messageRepository;
 		private final UserRepository userRepository;
 		private final ChannelMapper channelMapper;
+		private final SseService sseService;
 
 		/**
 		 * 공개 채널 생성.
@@ -50,7 +53,9 @@ public class BasicChannelService implements ChannelService {
 				Channel channel = new Channel(ChannelType.PUBLIC, name, description);
 				channelRepository.save(channel);
 				log.info("공개 채널 생성 완료, channelId={}, name={}", channel.getId(), name);
-				return channelMapper.toDto(channel);
+				ChannelDto dto = channelMapper.toDto(channel);
+				sseService.broadcast(SseEventNames.CHANNELS_CREATED, dto);
+				return dto;
 		}
 
 		/**
@@ -70,7 +75,9 @@ public class BasicChannelService implements ChannelService {
 						.toList();
 				readStatusRepository.saveAll(readStatuses);
 				log.info("비공개 채널 생성 완료, channelId={}", channel.getId());
-				return channelMapper.toDto(channel);
+				ChannelDto dto = channelMapper.toDto(channel);
+				sseService.broadcast(SseEventNames.CHANNELS_CREATED, dto);
+				return dto;
 		}
 
 		@Transactional(readOnly = true)
@@ -119,7 +126,9 @@ public class BasicChannelService implements ChannelService {
 				}
 				channel.update(newName, newDescription);
 				log.info("채널 수정 완료, channelId={}, name={}", channelId, newName);
-				return channelMapper.toDto(channel);
+				ChannelDto dto = channelMapper.toDto(channel);
+				sseService.broadcast(SseEventNames.CHANNELS_UPDATED, dto);
+				return dto;
 		}
 
 		/**
@@ -131,13 +140,16 @@ public class BasicChannelService implements ChannelService {
 		@PreAuthorize("hasRole('CHANNEL_MANAGER')")
 		public void delete(UUID channelId) {
 				log.debug("채널 삭제 시도, channelId={}", channelId);
-				if (!channelRepository.existsById(channelId)) {
-						log.warn("채널 삭제 실패: 채널 없음, channelId={}", channelId);
-						throw new NoSuchElementException("Channel with id " + channelId + " not found");
-				}
+				Channel channel = channelRepository.findById(channelId)
+						.orElseThrow(() -> {
+								log.warn("채널 삭제 실패: 채널 없음, channelId={}", channelId);
+								return new NoSuchElementException("Channel with id " + channelId + " not found");
+						});
+				ChannelDto dto = channelMapper.toDto(channel);
 				messageRepository.deleteAllByChannelId(channelId);
 				readStatusRepository.deleteAllByChannelId(channelId);
 				channelRepository.deleteById(channelId);
+				sseService.broadcast(SseEventNames.CHANNELS_DELETED, dto);
 				log.info("채널 삭제 완료, channelId={}", channelId);
 		}
 }

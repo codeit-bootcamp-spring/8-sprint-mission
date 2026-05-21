@@ -3,7 +3,6 @@ package com.sprint.mission.discodeit.mapper;
 import com.sprint.mission.discodeit.dto.data.ChannelDto;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.entity.Channel;
-import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
@@ -31,9 +30,6 @@ public abstract class ChannelMapper {
 		abstract public ChannelDto toDto(Channel channel);
 
 		protected List<UUID> resolveParticipantIds(Channel channel) {
-				if (!channel.getType().equals(ChannelType.PRIVATE)) {
-						return List.of();
-				}
 				return readStatusRepository.findAllByChannelIdWithUser(channel.getId()).stream()
 						.map(ReadStatus::getUser)
 						.map(u -> u.getId())
@@ -48,13 +44,11 @@ public abstract class ChannelMapper {
 
 		protected List<UserDto> resolveParticipants(Channel channel) {
 				List<UserDto> participants = new ArrayList<>();
-				if (channel.getType().equals(ChannelType.PRIVATE)) {
-						readStatusRepository.findAllByChannelIdWithUser(channel.getId())
-								.stream()
-								.map(ReadStatus::getUser)
-								.map(userMapper::toDto)
-								.forEach(participants::add);
-				}
+				readStatusRepository.findAllByChannelIdWithUser(channel.getId())
+						.stream()
+						.map(ReadStatus::getUser)
+						.map(userMapper::toDto)
+						.forEach(participants::add);
 				return participants;
 		}
 }

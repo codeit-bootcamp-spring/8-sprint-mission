@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.sprint.mission'
-version = '2.2-M11'
+version = '3.0-M12'
 
 // 2. Repositories 블록은 최상위 레벨에 위치해야 합니다.
 repositories {
@@ -29,15 +29,13 @@ dependencies {
     implementation 'org.springframework.retry:spring-retry'
     implementation 'org.springframework.boot:spring-boot-starter-aop'
 
-    // Spring Cache + Caffeine
+    // Spring Cache
     implementation 'org.springframework.boot:spring-boot-starter-cache'
-    implementation 'com.github.ben-manes.caffeine:caffeine'
 
     // Spring Kafka
     implementation 'org.springframework.kafka:spring-kafka'
 
     // Redis Cache
-    implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // Spring Validation
@@ -45,6 +43,10 @@ dependencies {
 
     // Spring Data JPA
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // Spring WebSocket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
 
     // PostgreSQL JDBC Driver
     runtimeOnly 'org.postgresql:postgresql'
@@ -76,6 +78,7 @@ dependencies {
 
     // Spring Security 의존성 추가
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.security:spring-security-messaging'
 
     // JWT 라이브러리 추가
     implementation 'com.nimbusds:nimbus-jose-jwt:10.3'
@@ -104,4 +107,12 @@ jacocoTestReport {
 // 6. Jar 파일명 설정 (Dockerfile의 PROJECT_NAME과 일치)
 bootJar {
     archiveBaseName = 'discodeit'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
 }

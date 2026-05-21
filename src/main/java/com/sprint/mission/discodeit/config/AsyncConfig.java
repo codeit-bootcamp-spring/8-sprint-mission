@@ -13,13 +13,25 @@ public class AsyncConfig {
   public static final String ASYNC_EXECUTOR = "taskExecutor";
   public static final String EVENT_TASK_EXECUTOR = "eventTaskExecutor";
 
-  @Bean(name = {ASYNC_EXECUTOR, EVENT_TASK_EXECUTOR})
+  @Bean(name = ASYNC_EXECUTOR)
   public TaskExecutor taskExecutor() {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     executor.setCorePoolSize(2);
     executor.setMaxPoolSize(10);
     executor.setQueueCapacity(200);
     executor.setThreadNamePrefix("discodeit-async-");
+    executor.setTaskDecorator(new MdcAndSecurityContextTaskDecorator());
+    executor.initialize();
+    return executor;
+  }
+
+  @Bean(name = EVENT_TASK_EXECUTOR)
+  public TaskExecutor eventTaskExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(2);
+    executor.setMaxPoolSize(10);
+    executor.setQueueCapacity(200);
+    executor.setThreadNamePrefix("discodeit-event-");
     executor.setTaskDecorator(new MdcAndSecurityContextTaskDecorator());
     executor.initialize();
     return executor;

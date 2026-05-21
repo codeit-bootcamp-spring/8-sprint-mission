@@ -9,6 +9,8 @@ import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.service.NotificationService;
+import com.sprint.mission.discodeit.service.SseEventNames;
+import com.sprint.mission.discodeit.service.SseService;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -27,6 +29,7 @@ public class BasicNotificationService implements NotificationService {
   private final NotificationRepository notificationRepository;
   private final UserRepository userRepository;
   private final NotificationMapper notificationMapper;
+  private final SseService sseService;
 
   @Override
   @Transactional(readOnly = true)
@@ -66,13 +69,15 @@ public class BasicNotificationService implements NotificationService {
     if (receiver == null) {
       return;
     }
-    notificationRepository.save(new Notification(receiver, title, content));
+    Notification saved = notificationRepository.save(new Notification(receiver, title, content));
+    NotificationDto dto = notificationMapper.toDto(saved);
+    sseService.send(List.of(receiverUserId), SseEventNames.NOTIFICATIONS_CREATED, dto);
   }
 
   private static UUID currentUserId(Authentication authentication) {
     if (authentication == null
         || !(authentication.getPrincipal() instanceof DiscodeitUserDetails details)) {
-      throw new IllegalStateException("Unauthenticated");
+      throw new com.sprint.mission.discodeit.exception.UnauthenticatedException("Unauthenticated");
     }
     return details.getUserDto().id();
   }
