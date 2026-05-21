@@ -70,7 +70,7 @@ public class BasicMessageService implements MessageService {
               contentType);
           binaryContentRepository.save(binaryContent);
           applicationEventPublisher.publishEvent(
-              new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
+              new BinaryContentCreatedEvent(binaryContent.getId(), bytes, authorId));
           return binaryContent;
         })
         .toList();

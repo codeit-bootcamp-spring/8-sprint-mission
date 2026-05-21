@@ -11,6 +11,8 @@ import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
+import com.sprint.mission.discodeit.event.UserEvent;
+import com.sprint.mission.discodeit.event.UserEvent.UserEventType;
 import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.jwt.JwtRegistry;
@@ -68,8 +70,6 @@ public class BasicUserService implements UserService {
           BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
               contentType);
           binaryContentRepository.save(binaryContent);
-          applicationEventPublisher.publishEvent(
-              new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
           return binaryContent;
         })
         .orElse(null);
@@ -79,10 +79,22 @@ public class BasicUserService implements UserService {
     user.setRole(Role.USER);
 
     userRepository.save(user);
+
+    if (nullableProfile != null) {
+      byte[] bytes = optionalProfileCreateRequest.get().bytes();
+      applicationEventPublisher.publishEvent(
+          new BinaryContentCreatedEvent(
+              nullableProfile.getId(),
+              bytes,
+              user.getId()
+          )
+      );
+    }
     log.info("사용자 생성 완료: id={}, username={}", user.getId(), username);
     return userMapper.toDto(user, isOnline(user.getId()));
   }
 
+  @Cacheable(value = "users")
   @Transactional(readOnly = true)
   @Override
   public UserDto find(UUID userId) {
@@ -142,7 +154,7 @@ public class BasicUserService implements UserService {
               contentType);
           binaryContentRepository.save(binaryContent);
           applicationEventPublisher.publishEvent(
-              new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
+              new BinaryContentCreatedEvent(binaryContent.getId(), bytes, userId));
           return binaryContent;
         })
         .orElse(null);
@@ -153,6 +165,14 @@ public class BasicUserService implements UserService {
     user.update(newUsername, newEmail, encodedPassword, nullableProfile);
     UserDto updatedUserDto = userMapper.toDto(user, isOnline(user.getId()));
     updateSecurityContext(user);
+
+    applicationEventPublisher.publishEvent(
+        new UserEvent(
+            userId,
+            UserEventType.UPDATED
+        )
+    );
+
     log.info("사용자 수정 완료: id={}", userId);
     return updatedUserDto;
   }
@@ -169,10 +189,16 @@ public class BasicUserService implements UserService {
     }
 
     userRepository.deleteById(userId);
+
+    applicationEventPublisher.publishEvent(
+        new UserEvent(
+            userId,
+            UserEvent.UserEventType.DELETED
+        )
+    );
     log.info("사용자 삭제 완료: id={}", userId);
   }
 
-  @CacheEvict(value = "users", allEntries = true)
   @PreAuthorize("hasRole('ADMIN')")
   @Transactional
   @Override

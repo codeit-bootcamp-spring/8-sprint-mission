@@ -2,9 +2,8 @@ package com.sprint.mission.discodeit.event;
 
 import java.util.UUID;
 
-public record BinaryContentCreatedEvent(
+public record BinaryContentUpdatedEvent(
     UUID binaryContentId,
-    byte[] bytes,
     UUID uploaderId
 ) {
 

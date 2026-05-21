@@ -73,6 +73,7 @@ public class SecurityConfig {
             .requestMatchers("/api/auth/logout").permitAll()              // 로그아웃
             .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
             .requestMatchers("/api/auth/role").hasRole("ADMIN")
+            .requestMatchers("/ws/**").permitAll()
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
