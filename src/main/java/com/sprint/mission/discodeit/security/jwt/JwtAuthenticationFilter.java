@@ -10,6 +10,7 @@ import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,6 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final UserDetailsService userDetailsService;
   private final ObjectMapper objectMapper;
   private final JwtRegistry jwtRegistry;
+  private final RoleHierarchy roleHierarchy;
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -37,7 +39,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       String token = resolveToken(request);
 
       if (StringUtils.hasText(token)) {
-        if (tokenProvider.validateAccessToken(token) && jwtRegistry.hasActiveJwtInformationByAccessToken(
+        if (tokenProvider.validateAccessToken(token)
+            && jwtRegistry.hasActiveJwtInformationByAccessToken(
             token)) {
           String username = tokenProvider.getUsernameFromToken(token);
 
@@ -47,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
               new UsernamePasswordAuthenticationToken(
                   userDetails,
                   null,
-                  userDetails.getAuthorities()
+                  roleHierarchy.getReachableGrantedAuthorities(userDetails.getAuthorities())
               );
 
           authentication.setDetails(

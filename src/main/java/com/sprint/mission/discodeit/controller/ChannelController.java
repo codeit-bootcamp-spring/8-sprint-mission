@@ -42,8 +42,7 @@ public class ChannelController implements ChannelApi {
   }
 
   @PostMapping(path = "private")
-  public ResponseEntity<ChannelDto> create(
-      @RequestBody @Valid PrivateChannelCreateRequest request) {
+  public ResponseEntity<ChannelDto> create(@RequestBody @Valid PrivateChannelCreateRequest request) {
     log.info("비공개 채널 생성 요청: {}", request);
     ChannelDto createdChannel = channelService.create(request);
     log.debug("비공개 채널 생성 응답: {}", createdChannel);

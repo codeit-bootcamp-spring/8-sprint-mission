@@ -31,8 +31,7 @@ public class BinaryContentEventListener {
       binaryContentService.updateStatus(
           binaryContent.getId(), BinaryContentStatus.SUCCESS
       );
-    } catch (Exception e) {
-      log.error("바이너리 업로드 실패, id={}", binaryContent.getId(), e);
+    } catch (RuntimeException e) {
       binaryContentService.updateStatus(
           binaryContent.getId(), BinaryContentStatus.FAIL
       );

@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.security.jwt;
 
 import com.sprint.mission.discodeit.dto.data.JwtInformation;
+import com.sprint.mission.discodeit.event.message.UserLogInOutEvent;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -9,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 
 
@@ -22,6 +24,7 @@ public class InMemoryJwtRegistry implements JwtRegistry {
 
   private final int maxActiveJwtCount;
   private final JwtTokenProvider jwtTokenProvider;
+  private final ApplicationEventPublisher eventPublisher;
 
   @CacheEvict(value = "users", key = "'all'")
   @Override
@@ -47,6 +50,9 @@ public class InMemoryJwtRegistry implements JwtRegistry {
       );
       return queue;
     });
+    eventPublisher.publishEvent(
+        new UserLogInOutEvent(jwtInformation.getUserDto().id(), true)
+    );
   }
 
   @CacheEvict(value = "users", key = "'all'")
@@ -62,6 +68,9 @@ public class InMemoryJwtRegistry implements JwtRegistry {
       queue.clear(); // Clear the queue for this user
       return null; // Remove the user from the registry
     });
+    eventPublisher.publishEvent(
+        new UserLogInOutEvent(userId, false)
+    );
   }
 
   @Override
@@ -107,7 +116,7 @@ public class InMemoryJwtRegistry implements JwtRegistry {
       queue.removeIf(jwtInformation -> {
         boolean isExpired =
             !jwtTokenProvider.validateAccessToken(jwtInformation.getAccessToken()) ||
-            !jwtTokenProvider.validateRefreshToken(jwtInformation.getRefreshToken());
+                !jwtTokenProvider.validateRefreshToken(jwtInformation.getRefreshToken());
         if (isExpired) {
           removeTokenIndex(
               jwtInformation.getAccessToken(),

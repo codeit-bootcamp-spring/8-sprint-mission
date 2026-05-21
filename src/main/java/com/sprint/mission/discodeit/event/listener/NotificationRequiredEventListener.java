@@ -19,12 +19,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
 @RequiredArgsConstructor
-@Component
+//@Component
 public class NotificationRequiredEventListener {
 
   private final NotificationService notificationService;
@@ -76,14 +75,14 @@ public class NotificationRequiredEventListener {
   public void on(S3UploadFailedEvent event) {
     String requestId = event.getRequestId();
     UUID binaryContentId = event.getBinaryContentId();
-    String errorMessage = event.getErrorMessage();
+    Throwable e = event.getE();
 
     String title = "S3 파일 업로드 실패";
 
     StringBuffer sb = new StringBuffer();
     sb.append("RequestId: ").append(requestId).append("\n");
     sb.append("BinaryContentId: ").append(binaryContentId).append("\n");
-    sb.append("Error: ").append(errorMessage).append("\n");
+    sb.append("Error: ").append(e.getMessage()).append("\n");
     String content = sb.toString();
 
     Set<UUID> receiverIds = userRepository.findByUsername(adminUsername)
