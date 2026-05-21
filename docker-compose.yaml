@@ -1,5 +1,51 @@
 services:
-  # 데이터베이스 서비스
+
+  # ─── Reverse Proxy ───────────────────────────────────────────────────────────
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    container_name: discodeit-nginx
+    ports:
+      - "3000:80"
+    depends_on:
+      app:
+        condition: service_started
+    networks:
+      - proxy-network
+
+  # ─── Backend ─────────────────────────────────────────────────────────────────
+  app:
+    build: .
+    container_name: discodeit-app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}?currentSchema=discodeit_schema
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      STORAGE_TYPE: ${STORAGE_TYPE:-local}
+      DISCODEIT_STORAGE_LOCAL_ROOT_PATH: /app/uploadedFiles
+      AWS_S3_ACCESS_KEY: ${AWS_S3_ACCESS_KEY:-}
+      AWS_S3_SECRET_KEY: ${AWS_S3_SECRET_KEY:-}
+      AWS_S3_REGION: ${AWS_S3_REGION:-ap-northeast-2}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-}
+      DISCODEIT_JWT_SECRET: ${DISCODEIT_JWT_SECRET}
+      JVM_OPTS: ${JVM_OPTS:--XX:MaxRAMPercentage=75.0 -XX:MinRAMPercentage=50.0 -XX:+UseSerialGC}
+    volumes:
+      - app_uploads:/app/uploadedFiles
+    networks:
+      - proxy-network
+      - internal-network
+
+  # ─── DB (PostgreSQL) ─────────────────────────────────────────────────────────
   db:
     image: postgres:17-alpine
     container_name: discodeit-db
@@ -8,40 +54,70 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      # 데이터 유지: (실제 데이터가 저장되는 볼륨)
       - postgres_data:/var/lib/postgresql/data
-      # 자동 실행: 스프링 프로젝트의 schema.sql, DB 초기화 경로로 연결
       - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - internal-network
 
-  # 애플리케이션 서비스
-  app:
-    build: .
-    container_name: discodeit-app
-    depends_on:
-      db:
-        condition: service_healthy
+  # ─── Memory DB (Redis) ───────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: discodeit-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal-network
+
+  # ─── Message Broker (Kafka / KRaft) ──────────────────────────────────────────
+  kafka:
+    image: apache/kafka:latest
+    container_name: discodeit-kafka
     ports:
-      - "8081:80"
+      - "9092:9092"   # 로컬 개발 시 Spring 앱이 localhost:9092로 접근
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE}
-      STORAGE_TYPE: ${STORAGE_TYPE}
-      AWS_S3_ACCESS_KEY: ${AWS_S3_ACCESS_KEY}
-      AWS_S3_SECRET_KEY: ${AWS_S3_SECRET_KEY}
-      AWS_S3_REGION: ${AWS_S3_REGION}
-      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
-      # schema.sql에서 정의한 스키마(discodeit_schema)를 지정
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}?currentSchema=discodeit_schema
-      SPRING_DATASOURCE_USERNAME: ${DB_USER}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      JVM_OPTS: ${JVM_OPTS}
-    volumes:
-      - app_uploads:/app/uploadedFiles
+      KAFKA_BROKER_ID: 1
+      # PLAINTEXT     : Docker 내부 컨테이너 간 통신 (app 서비스 → kafka:29092)
+      # PLAINTEXT_HOST: 호스트 머신에서 접근 (로컬 Spring 앱 → localhost:9092)
+      # CONTROLLER    : KRaft 컨트롤러 전용
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://kafka:29093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    networks:
+      - internal-network
+      - kafka-dev-network   # internal:true 가 아닌 네트워크여야 ports: 바인딩이 동작
 
+# ─── Networks ──────────────────────────────────────────────────────────────────
+networks:
+  # Nginx ↔ App 통신 (외부 인터넷 접근 가능)
+  proxy-network:
+
+  # App ↔ DB / Redis / Kafka 통신 (외부 네트워크 차단)
+  internal-network:
+    internal: true
+
+  # 로컬 개발용: 호스트 → Kafka 포트 바인딩을 위해 internal:true 없이 사용
+  kafka-dev-network:
+
+# ─── Volumes ───────────────────────────────────────────────────────────────────
 volumes:
   postgres_data:
   app_uploads:

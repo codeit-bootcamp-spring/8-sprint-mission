@@ -80,6 +80,7 @@ public class BasicMessageService implements MessageService {
     log.info("[MESSAGE] create success messageId={}", savedMessage.getId());
 
     eventPublisher.publishEvent(new MessageCreatedEvent(
+        savedMessage.getId(),
         channel.getId(),
         channel.getName(),
         author.getId(),

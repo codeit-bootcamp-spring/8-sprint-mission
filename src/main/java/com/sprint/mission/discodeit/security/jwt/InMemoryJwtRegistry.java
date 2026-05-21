@@ -1,19 +1,29 @@
 package com.sprint.mission.discodeit.security.jwt;
 
 import com.sprint.mission.discodeit.dto.auth.JwtInformation;
+import com.sprint.mission.discodeit.dto.user.UserDto;
+import com.sprint.mission.discodeit.event.UserPresenceChangedEvent;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class InMemoryJwtRegistry implements JwtRegistry{
+
+  private final ApplicationEventPublisher eventPublisher;
 
   private final Map<UUID, Queue<JwtInformation>> origin = new ConcurrentHashMap<>();
   private final int maxActiveJwtCount = 1; // 최대 동시 로그인 수
@@ -90,10 +100,34 @@ public class InMemoryJwtRegistry implements JwtRegistry{
   @Override
   public void clearExpiredJwtInformation() {
     Instant now = Instant.now();
+
+    // 만료로 인해 오프라인이 될 사용자 DTO를 미리 수집
+    List<UserDto> goingOffline = new ArrayList<>();
+    origin.forEach((userId, queue) -> {
+      boolean allExpired = !queue.isEmpty() && queue.stream().allMatch(info -> info.getExpiresAt().isBefore(now));
+      if (allExpired) {
+        queue.stream().findFirst().map(JwtInformation::getUserDto).ifPresent(goingOffline::add);
+      }
+    });
+
     origin.values().forEach(queue ->
         queue.removeIf(info -> info.getExpiresAt().isBefore(now))
     );
     origin.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+
+    goingOffline.forEach(dto -> {
+      UserDto offlineDto = new UserDto(dto.id(), dto.username(), dto.email(), dto.profile(), false, dto.role());
+      eventPublisher.publishEvent(new UserPresenceChangedEvent(offlineDto));
+    });
+
     log.debug("만료된 JWT 레지스트리 정보를 정리했습니다.");
+  }
+
+  @Override
+  public Optional<JwtInformation> findJwtInformationByRefreshToken(String refreshToken) {
+    return origin.values().stream()
+        .flatMap(Queue::stream)
+        .filter(info -> info.getRefreshToken().equals(refreshToken))
+        .findFirst();
   }
 }

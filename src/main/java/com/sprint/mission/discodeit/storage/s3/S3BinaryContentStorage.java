@@ -23,10 +23,12 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
@@ -45,9 +47,11 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
 
   @Override
   @Retryable(
-      retryFor = {Exception.class},    // 모든 예외 발생 시 재시도
-      maxAttempts = 3,                 // 최대 3번 시도 (처음 시도 + 2번 재시도)
-      backoff = @Backoff(delay = 2000) // 실패 시 2초 대기 후 다시 시도
+      // 네트워크 타임아웃·연결 오류(SdkClientException), 일시적 S3 서버 오류(S3Exception)만 재시도한다.
+      // NPE·IllegalArgumentException 같은 프로그래밍 오류는 재시도해도 의미 없으므로 제외한다.
+      retryFor = {SdkClientException.class, S3Exception.class},
+      maxAttempts = 3,
+      backoff = @Backoff(delay = 2000)
   )
   public UUID put(UUID id, byte[] bytes) {
     log.info("[S3_STORAGE] 업로드 시도 - binaryContentId={}", id);

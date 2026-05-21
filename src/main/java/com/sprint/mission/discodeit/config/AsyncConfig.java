@@ -8,11 +8,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 @Configuration
 @EnableAsync
+@org.springframework.scheduling.annotation.EnableScheduling
 public class AsyncConfig {
 
   // 메서드 이름 변경 가능성 염두해서 빈 이름 명시
@@ -46,18 +48,21 @@ public class AsyncConfig {
   static class ContextCopyTaskDecorator implements TaskDecorator {
     @Override
     public Runnable decorate(Runnable runnable) {
-      // 부모 스레드의 MDC와 SecurityContext를 캡처
       Map<String, String> contextMap = MDC.getCopyOfContextMap();
-      SecurityContext securityContext = SecurityContextHolder.getContext();
+      // SecurityContext 참조가 아닌 Authentication만 캡처한다.
+      // SecurityContext는 mutable이라, 참조를 공유하면 부모 스레드의 clearContext()가
+      // 자식 스레드의 인증 정보를 날리거나, 반대로 자식의 clear가 부모에 영향을 줄 수 있다.
+      Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
       return () -> {
         try {
-          // 자식 스레드에 복사
           if (contextMap != null) MDC.setContextMap(contextMap);
-          SecurityContextHolder.setContext(securityContext);
+          // 자식 스레드 전용 새 컨텍스트를 생성하고 Authentication만 복사
+          SecurityContext childContext = SecurityContextHolder.createEmptyContext();
+          childContext.setAuthentication(auth);
+          SecurityContextHolder.setContext(childContext);
           runnable.run();
         } finally {
-          // 작업 종료 후 자식 스레드 컨텍스트 클리어
           MDC.clear();
           SecurityContextHolder.clearContext();
         }

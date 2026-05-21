@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.dto.auth.JwtDto;
 import com.sprint.mission.discodeit.dto.auth.JwtInformation;
 import com.sprint.mission.discodeit.dto.user.UserDto;
+import com.sprint.mission.discodeit.event.UserPresenceChangedEvent;
 import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -22,6 +24,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
   private final JwtTokenProvider jwtTokenProvider;
   private final ObjectMapper objectMapper;
   private final JwtRegistry jwtRegistry;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Override
   public void onAuthenticationSuccess(
@@ -50,6 +53,10 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
     jwtRegistry.registerJwtInformation(userDto.id(), new JwtInformation(
         userDto, accessToken, refreshToken, jwtTokenProvider.getExpirationTime(refreshToken)
     ));
+
+    // 로그인 완료 후 온라인 상태 브로드캐스트
+    UserDto onlineDto = new UserDto(userDto.id(), userDto.username(), userDto.email(), userDto.profile(), true, userDto.role());
+    eventPublisher.publishEvent(new UserPresenceChangedEvent(onlineDto));
 
     JwtDto jwtDto = new JwtDto(accessToken, userDto);
 

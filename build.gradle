@@ -86,6 +86,9 @@ dependencies {
 
     // Spring Kafka
     implementation 'org.springframework.kafka:spring-kafka'
+
+    // WebSocket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 }
 
 tasks.named('test') {
