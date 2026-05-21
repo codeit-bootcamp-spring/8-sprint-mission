@@ -15,12 +15,12 @@ spring:
   aop:
     proxy-target-class: true
 
-async:
-  executors:
-    core-size: 2
-    max-size: 4
-    queue-capacity: 100
-    keep-alive-second: 60
+  kafka:
+    bootstrap-servers: localhost:9092
+
+  data:
+    redis:
+      host: localhost
 
 logging:
   level:

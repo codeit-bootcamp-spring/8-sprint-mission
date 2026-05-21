@@ -71,6 +71,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
         );
 
         evictCache(discodeitUserDetails.getUserDto().id());
+
       } catch (Exception e) {
         ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
 
@@ -109,7 +110,6 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
     Cache userCache = cacheManager.getCache("user");
 
     if (userCache != null) {
-      userCache.evict(userId);
       userCache.clear();
       log.info("[JwtLoginSuccessHandler] 로그인 성공으로 인한 사용자 캐시 삭제: {}", userId);
     }

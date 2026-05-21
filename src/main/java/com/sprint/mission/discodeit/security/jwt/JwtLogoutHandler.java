@@ -2,8 +2,7 @@ package com.sprint.mission.discodeit.security.jwt;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.sprint.mission.discodeit.exception.DiscodeitException;
-import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -11,16 +10,22 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtLogoutHandler implements LogoutHandler {
 
   private final JwtTokenProvider jwtTokenProvider;
   private final JwtRegistry jwtRegistry;
+  private final UserRepository userRepository;
+  private final CacheManager cacheManager;
 
   @Override
   public void logout(HttpServletRequest request, HttpServletResponse response,
@@ -44,10 +49,23 @@ public class JwtLogoutHandler implements LogoutHandler {
           if (!userIdString.isEmpty()) {
             UUID userId = UUID.fromString(userIdString);
 
+            userRepository.findById(userId).ifPresent(user -> {
+                  Cache userCache = cacheManager.getCache("user");
+                  if (userCache != null) {
+                    userCache.clear();
+                  }
+
+                  Cache channelCache = cacheManager.getCache("channel");
+                  if (channelCache != null) {
+                    channelCache.clear();
+                  }
+                }
+            );
+
             jwtRegistry.invalidateJwtInformationByUserId(userId);
           }
         } catch (Exception e) {
-          throw new DiscodeitException(ErrorCode.INVALID_TOKEN);
+          //throw new DiscodeitException(ErrorCode.INVALID_TOKEN);
         }
       });
     }

@@ -7,21 +7,26 @@ import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.BinaryContentType;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.message.MessageNotFoundException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
+import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.MessageService;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,6 +52,8 @@ public class BasicMessageService implements MessageService {
   private final MessageMapper messageMapper;
   private final PageResponseMapper pageResponseMapper;
   private final ApplicationEventPublisher eventPublisher;
+  private final ReadStatusRepository readStatusRepository;
+  private final BinaryContentMapper binaryContentMapper;
 
   public boolean isAuthor(UUID messageId, UUID userId) {
     return messageRepository.findById(messageId)
@@ -79,6 +86,16 @@ public class BasicMessageService implements MessageService {
 
     String content = messageCreateRequest.content();
 
+    List<UUID> participantIds;
+    if (channel.getType() == ChannelType.PRIVATE) {
+      participantIds = readStatusRepository.findAllByChannelId(channel.getId())
+          .stream()
+          .map(readStatus -> readStatus.getUser().getId()) // ID만 추출
+          .toList();
+    } else {
+      participantIds = Collections.emptyList();
+    }
+
     List<BinaryContent> attachments = binaryContentCreateRequests.stream()
         .map(attachmentRequest -> {
           String fileName = attachmentRequest.fileName();
@@ -92,9 +109,11 @@ public class BasicMessageService implements MessageService {
           BinaryContent savedBinaryContent = binaryContentRepository.save(binaryContent);
 
           BinaryContentCreatedEvent event = BinaryContentCreatedEvent.now(
-              savedBinaryContent.getId(),
-              savedBinaryContent.getFileName(),
-              bytes
+              binaryContentMapper.toDto(savedBinaryContent),
+              bytes,
+              BinaryContentType.MESSAGE_FILE,
+              channel.getType(),
+              participantIds
           );
 
           eventPublisher.publishEvent(event);
@@ -106,20 +125,16 @@ public class BasicMessageService implements MessageService {
 
     Message message = new Message(content, channel, author, attachments);
     Message savedMessage = messageRepository.save(message);
+    MessageDto savedMessageDto = messageMapper.toDto(savedMessage);
 
     MessageCreatedEvent event = MessageCreatedEvent.now(
-        savedMessage.getId(),
-        savedMessage.getContent(),
-        savedMessage.getChannel().getId(),
-        savedMessage.getChannel().getName(),
-        savedMessage.getAuthor().getId(),
-        savedMessage.getAuthor().getUsername()
+        savedMessageDto
     );
 
     eventPublisher.publishEvent(event);
 
     log.info("[MessageService] 메시지 생성 완료 - Id: {}", message.getId());
-    return messageMapper.toDto(message);
+    return savedMessageDto;
   }
 
   @Override

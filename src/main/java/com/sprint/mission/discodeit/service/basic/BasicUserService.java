@@ -7,13 +7,17 @@ import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.BinaryContentType;
+import com.sprint.mission.discodeit.event.SseBroadcastMessage;
 import com.sprint.mission.discodeit.exception.user.UserEmailAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.exception.user.UsernameAlreadyExistsException;
+import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.UserService;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,6 +42,7 @@ public class BasicUserService implements UserService {
   private final UserMapper userMapper;
   private final PasswordEncoder passwordEncoder;
   private final ApplicationEventPublisher eventPublisher;
+  private final BinaryContentMapper binaryContentMapper;
 
   @CacheEvict(value = "user", allEntries = true)
   @Transactional
@@ -72,9 +77,11 @@ public class BasicUserService implements UserService {
           BinaryContent savedBinaryContent = binaryContentRepository.save(binaryContent);
 
           BinaryContentCreatedEvent event = BinaryContentCreatedEvent.now(
-              savedBinaryContent.getId(),
-              savedBinaryContent.getFileName(),
-              bytes
+              binaryContentMapper.toDto(savedBinaryContent),
+              bytes,
+              BinaryContentType.PROFILE_IMAGE,
+              null,
+              Collections.emptyList()
           );
 
           eventPublisher.publishEvent(event);
@@ -87,12 +94,13 @@ public class BasicUserService implements UserService {
     String encryptedPassword = passwordEncoder.encode(password);
 
     User user = new User(username, email, encryptedPassword, profile);
+    User savedUser = userRepository.save(user);
+    UserDto savedUserDto = userMapper.toDto(savedUser);
 
-    userRepository.save(user);
+    eventPublisher.publishEvent(new SseBroadcastMessage("users.updated", savedUserDto, null));
 
-    log.info("[UserService] 사용자 생성 완료 - ID: {},  프로필 여부: {}", user.getId(),
-        (profile != null));
-    return userMapper.toDto(user);
+    log.info("[UserService] 사용자 생성 완료 - ID: {},  프로필 여부: {}", user.getId(), (profile != null));
+    return savedUserDto;
   }
 
   @Override
@@ -124,7 +132,6 @@ public class BasicUserService implements UserService {
     String newUsername = userUpdateRequest.newUsername();
     String newEmail = userUpdateRequest.newEmail();
     String newPassword = userUpdateRequest.newPassword();
-    String encryptedPassword = passwordEncoder.encode(newPassword);
 
     if (newUsername != null && !newUsername.equals(user.getUsername())) {
       if (userRepository.existsByUsername(newUsername)) { // username 중복 확인
@@ -138,6 +145,11 @@ public class BasicUserService implements UserService {
         log.warn("[UserService] 사용자 수정 실패 - 중복된 이메일: {}", newEmail);
         throw new UserEmailAlreadyExistsException(newEmail);
       }
+    }
+
+    String encryptedPassword = user.getPassword();
+    if (newPassword != null && !newPassword.isBlank()) {
+      encryptedPassword = passwordEncoder.encode(newPassword);
     }
 
     BinaryContent newProfile = null;
@@ -157,9 +169,11 @@ public class BasicUserService implements UserService {
       BinaryContent updatedBinaryContent = binaryContentRepository.save(newProfile);
 
       BinaryContentCreatedEvent event = BinaryContentCreatedEvent.now(
-          updatedBinaryContent.getId(),
-          updatedBinaryContent.getFileName(),
-          bytes
+          binaryContentMapper.toDto(updatedBinaryContent),
+          bytes,
+          BinaryContentType.PROFILE_IMAGE,
+          null,
+          Collections.emptyList()
       );
 
       eventPublisher.publishEvent(event);
@@ -168,9 +182,12 @@ public class BasicUserService implements UserService {
     }
 
     user.update(newUsername, newEmail, encryptedPassword, newProfile);
+    UserDto updatedUserDto = userMapper.toDto(user);
+
+    eventPublisher.publishEvent(new SseBroadcastMessage("users.updated", updatedUserDto, null));
 
     log.info("[UserService] 사용자 수정 완료 - ID: {}", userId);
-    return userMapper.toDto(user);
+    return updatedUserDto;
   }
 
   @CacheEvict(value = "user", allEntries = true)
@@ -186,7 +203,12 @@ public class BasicUserService implements UserService {
           return new UserNotFoundException(userId);
         });
 
+    UserDto userDto = userMapper.toDto(user);
+
     userRepository.deleteById(userId);
+
+    eventPublisher.publishEvent(new SseBroadcastMessage("users.deleted", userDto, null));
+
     log.info("[UserService] 사용자 삭제 완료 - ID: {}", user.getId());
   }
 

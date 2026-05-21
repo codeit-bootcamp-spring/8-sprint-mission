@@ -5,10 +5,12 @@ import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.base.BinaryContentStatus;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.BinaryContentType;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -47,9 +49,11 @@ public class BasicBinaryContentService implements BinaryContentService {
     log.debug("[BinaryContentService] DB 저장 완료 - ID: {}", binaryContent.getId());
 
     BinaryContentCreatedEvent event = BinaryContentCreatedEvent.now(
-        savedBinaryContent.getId(),
-        savedBinaryContent.getFileName(),
-        bytes
+        binaryContentMapper.toDto(savedBinaryContent),
+        bytes,
+        BinaryContentType.UNKNOWN,
+        null,
+        Collections.emptyList()
     );
 
     eventPublisher.publishEvent(event);
